@@ -8,19 +8,22 @@ import { isAndroid, isIOS, osVersion } from '../utils';
 import usePredict from '../hooks/usePredict';
 import useEnroll from '../hooks/useEnroll';
 import useContinuousPredict from '../hooks/useContinuousPredict';
+import useDelete from '../hooks/useDelete';
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
   const { ready, init, device, devices, faceMode, setDevice } = useCamera('userVideo');
   const [deviceId, setDeviceId] = useState("");
 
+
   // Use Predict
   // I have created callbacks here for usePredict hook to use for now i am just printing statuses
-  const usePredictSuccess = () => console.log("Prediction successful.");
+  const [predictResultData, setPredictResultData] = useState(null);
+  const usePredictSuccess = (x,y) => setPredictResultData({x,y});
   const usePredictUnsuccessful = () => console.log("Prediction unseccessful.");
   const usePredictNotFound = () => console.log("Prediction face not found.")
   const predictRetryTimes = 100;
-  const { faceDetected, predictUser } = usePredict('userVideo', usePredictSuccess, usePredictUnsuccessful, usePredictNotFound, predictRetryTimes)
+  const { faceDetected, predictUser, resultData } = usePredict('userVideo', usePredictSuccess, usePredictUnsuccessful, usePredictNotFound, predictRetryTimes)
 
   // Use Continuous Predict
   const { faceDetected: continuousFaceDetected, predictUser: continuousPredictUser } = useContinuousPredict('userVideo', usePredictSuccess, usePredictUnsuccessful, usePredictNotFound, predictRetryTimes)
@@ -28,6 +31,10 @@ const Ready = () => {
   // Use Enroll
   const useEnrollSuccess = () => console.log("=======ENROLL SUCCESS=======");
   const { faceDetected: enrollFaceDetected, enrollStatus, enrollUser, progress } = useEnroll('userVideo', useEnrollSuccess, null, deviceId);
+
+  // Use Delete
+  const useDeleteCallback = () => console.log("===== Use Delete Ended =====")
+  const { loading, onDeleteUser } = useDelete(useDeleteCallback, ready)
 
   const [currentAction, setCurrentAction] = useState(null)
 
@@ -40,21 +47,7 @@ const Ready = () => {
       console.log("Old version of Android");
     }
     console.log("--- wasm status ", wasmReady, ready)
-    if (wasmReady && ready) {
-      console.log("ACTION: ", currentAction)
-      switch (currentAction) {
-        case "isValid":
-          handleIsValid()
-          break;
-        case "usePredict":
-          handlePredict();
-          break;
-        default:
-          console.log("Please select an action!");
-          break;
-      }
-    };
-  }, [wasmReady, ready, currentAction]);
+  }, [ wasmReady, ready ]);
 
   const handleIsValid = async () => {
     setCurrentAction("isValid")
@@ -69,26 +62,27 @@ const Ready = () => {
 
 
   const handleEnroll = async () => {
-    console.log("------enrollPredict(Enroll)------");
     setCurrentAction("useEnroll");
     enrollUser();
   }
 
   const handlePredict = async () => {
-    setCurrentAction("usePredict");
+    setCurrentAction("usePredict")
     await predictUser();
     console.log("Face detection: ", faceDetected);
   }
 
   const handleContinuousPredict = async () => {
-    setCurrentAction("useContinuousPredict");
+    setCurrentAction("useContinuousPredict")
     await continuousPredictUser();
     console.log("Continuous Face detection: ", continuousFaceDetected);
   }
 
   const handleDelete = async () => {
-
-  }
+    setCurrentAction("useDelete")
+    onDeleteUser(); 
+    console.log("handle delete");
+  } 
 
 
   const handleSwitchCamera = (e) => {
@@ -123,6 +117,11 @@ const Ready = () => {
               <li> Progress: {`${progress} %`}</li>
             </ul>
           }
+
+          {currentAction === "usePredict" &&
+          <div>
+            </div>
+          }
         </div>
 
         <div id="module_functions" >
@@ -130,7 +129,7 @@ const Ready = () => {
           <button onClick={handleEnroll}> Enroll </button>
           <button onClick={handlePredict}> Predict </button>
           <button onClick={handleContinuousPredict}> Continuous Predict </button>
-          <button> Delete </button>
+          <button onClick={handleDelete}> Delete </button>
         </div>
       </div>
 

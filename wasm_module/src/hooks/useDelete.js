@@ -1,9 +1,14 @@
 import { useState } from 'react';
 import { deleteUser } from '@privateid/privid-fhe-modules';
-import { deleteUser as deleteUUID } from '../api/config';
+import usePredict from './usePredict';
 
-const useDelete = (onDeleteEnd, ready) => {
+const useDelete = (onDeleteEnd, ready,) => {
   const [loading, setLoading] = useState(false);
+  const [predictData, setPredictData] = useState(null)
+  const callbackPredict = (x,y) =>{
+    setPredictData({x,y});
+  }
+  const { faceDetected, predictUser, resultData } = usePredict('userVideo', callbackPredict)
 
   const callback = (result) => {
     setLoading(false);
@@ -11,17 +16,14 @@ const useDelete = (onDeleteEnd, ready) => {
   };
 
   const onDeleteUser = async (uuid) => {
-    const guid = localStorage.getItem('guid');
-
-    try {
-      await deleteUUID(guid);
-    } catch (e) {
-      console.log(e);
-    }
-
+    
+    await predictUser();
+    console.log("Is face detected: ", faceDetected);
+    console.log("Predict result data: ", resultData);
+    console.log("Predict data:", predictData);
     if (ready) {
       setLoading(true);
-      deleteUser(uuid, callback);
+      deleteUser("123456", callback);
     }
   };
 

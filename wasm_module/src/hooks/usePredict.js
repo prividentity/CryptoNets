@@ -3,6 +3,7 @@ import { enrollPredict } from '@privateid/privid-fhe-modules';
 
 const usePredict = (element, onSuccess, onFailure, onNotFound, retryTimes = 1) => {
   const [faceDetected, setFaceDetected] = useState(false);
+
   let successCallback = null;
   let tries = 0;
   let failureTries = 0;
@@ -24,6 +25,7 @@ const usePredict = (element, onSuccess, onFailure, onNotFound, retryTimes = 1) =
     switch (result.status) {
       case 'VALID_FACE':
         setFaceDetected(true);
+        console.log("VALID_FACE: ", result)
         break;
       case 'INVALID_FACE':
         if (failureTries === retryTimes) {
@@ -38,9 +40,9 @@ const usePredict = (element, onSuccess, onFailure, onNotFound, retryTimes = 1) =
           // stopTracks();
 
           if (successCallback) {
-            successCallback(result.returnValue.PI.guid, result.returnValue.PI.uuid);
+            successCallback({guid: result.returnValue.PI.guid, uuid: result.returnValue.PI.uuid});
           } else {
-            onSuccess(result.returnValue.PI.guid, result.returnValue.PI.uuid);
+            onSuccess();
           }
           successCallback = null;
         }
@@ -59,7 +61,7 @@ const usePredict = (element, onSuccess, onFailure, onNotFound, retryTimes = 1) =
     }
   };
 
-  return { faceDetected, predictUser };
+  return { faceDetected, predictUser, };
 };
 
 export default usePredict;
