@@ -3,6 +3,7 @@ import { continuousEnrollPredict } from '@privateid/privid-fhe-modules';
 
 const useContinuousPredict = (element, onSuccess, onFailure, onNotFound, retryTimes = 1) => {
   const [faceDetected, setFaceDetected] = useState(false);
+  const [continuousPredictData, setContinuousPredictData] = useState(null);
   let successCallback = null;
   let tries = 0;
   let failureTries = 0;
@@ -26,6 +27,7 @@ const useContinuousPredict = (element, onSuccess, onFailure, onNotFound, retryTi
         setFaceDetected(true);
         break;
       case 'INVALID_FACE':
+        setFaceDetected(false);
         if (failureTries === retryTimes) {
           onNotFound();
         } else {

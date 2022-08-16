@@ -3,7 +3,7 @@ import { enrollPredict } from '@privateid/privid-fhe-modules';
 
 const usePredict = (element, onSuccess, onFailure, onNotFound, retryTimes = 1) => {
   const [faceDetected, setFaceDetected] = useState(false);
-
+  const [predictResultData, setPredictResultData] = useState(null);
   let successCallback = null;
   let tries = 0;
   let failureTries = 0;
@@ -38,11 +38,11 @@ const usePredict = (element, onSuccess, onFailure, onNotFound, retryTimes = 1) =
       case -1:
         if (result.returnValue.status === 0) {
           // stopTracks();
-
+          setPredictResultData(result.returnValue.PI.guid, result.returnValue.PI.uuid)
           if (successCallback) {
-            successCallback({guid: result.returnValue.PI.guid, uuid: result.returnValue.PI.uuid});
+            successCallback(result.returnValue.PI.guid, result.returnValue.PI.uuid);
           } else {
-            onSuccess();
+            onSuccess(result.returnValue.PI.guid, result.returnValue.PI.uuid);
           }
           successCallback = null;
         }
@@ -61,7 +61,7 @@ const usePredict = (element, onSuccess, onFailure, onNotFound, retryTimes = 1) =
     }
   };
 
-  return { faceDetected, predictUser, };
+  return { faceDetected, predictUser, predictResultData};
 };
 
 export default usePredict;

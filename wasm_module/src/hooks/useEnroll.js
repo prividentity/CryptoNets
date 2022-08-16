@@ -5,6 +5,7 @@ const useEnroll = (element = 'userVideo', onSuccess, retryTimes = 4 , deviceId =
   const [faceDetected, setFaceDetected] = useState(false);
   const [enrollStatus, setEnrollStatus] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [enrollData, setEnrollData] = useState(null)
 
   let tries = 0;
 
@@ -83,6 +84,7 @@ const useEnroll = (element = 'userVideo', onSuccess, retryTimes = 4 , deviceId =
         if (result.returnValue.status === 0) {
           console.log("ENROLL RESULT DATA", result.returnValue)
           setEnrollStatus('ENROLL SUCCESS');
+          setEnrollData(result.returnValue);
           onSuccess();
         }
         if (result.returnValue.status === -1) {
@@ -98,7 +100,7 @@ const useEnroll = (element = 'userVideo', onSuccess, retryTimes = 4 , deviceId =
     }
   };
 
-  return { faceDetected, enrollStatus, enrollUser, progress };
+  return { faceDetected, enrollStatus, enrollData, enrollUser, progress };
 };
 
 export default useEnroll;

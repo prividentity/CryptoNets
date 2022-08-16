@@ -12,16 +12,13 @@ const useCamera = (element = 'userVideo', facingMode = 'face') => {
   const init = async () => {
     if (ready) return;
     try {
-      console.log("line 14")
       const { devices, faceMode } = await openCamera(element);
-      console.log("device" ,device, "faceMode", faceMode);
       setFaceMode(faceMode);
       if (devices.length > 0) {
         const options = devices.map((d) => ({ label: d.label, value: d.deviceId }));
         setDevices(options);
         setDevice(options[0]);
       }
-      console.log("line 23")
       setReady(true);
     } catch (e) {
       console.log("Error Message", e)
