@@ -13,7 +13,7 @@ To install and be ready for development and running execute these step:
 
 To see logs from the Node Module add debug_type to the url parameter.
 <br/> Sample: http://localhost:3000/?debug_type=1
-# Debug Levels: 
+#### Debug Levels: 
 - 0- no logs will be displayed from the package
 - 1- error logs will be displayed from the package
 - 2- warning and error logs will be displayed from the package
