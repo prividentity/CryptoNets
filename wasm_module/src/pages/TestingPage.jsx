@@ -1,13 +1,15 @@
 /* eslint-disable */
 import { useCallback, useEffect, useState } from 'react';
 import { isValid, switchCamera } from '@privateid/privid-fhe-modules';
-
+import './styles.css'
 import useCamera from '../hooks/useCamera';
 import useWasm from '../hooks/useWasm';
 import { isAndroid, isIOS, osVersion } from '../utils';
 import useEnroll from '../hooks/useEnroll';
 import useContinuousPredict from '../hooks/useContinuousPredict';
 import useDelete from '../hooks/useDelete';
+import usePredict from '../hooks/usePredict';
+
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
@@ -34,11 +36,6 @@ const Ready = () => {
   const useEnrollSuccess = () => console.log("=======ENROLL SUCCESS=======");
   const { faceDetected: enrollFaceDetected, enrollStatus, enrollData, enrollUser, progress } = useEnroll('userVideo', useEnrollSuccess, null, deviceId);
 
-  // Use Delete
-  const [deletionStatus, setDeletionStatus] = useState(null);
-  const useDeleteCallback = (deleteStatus) => { setDeletionStatus(deleteStatus) }
-  const { loading, onDeleteUser, userUUID: useDeleteUUID } = useDelete(useDeleteCallback, ready)
-
   const [currentAction, setCurrentAction] = useState(null)
 
   useEffect(() => {
@@ -58,30 +55,19 @@ const Ready = () => {
       imageData,
       resultData,
     } = await isValid('userVideo');
-    console.log("Is Valid Result Data:", imageData, resultData)
     setIsValidCallData(resultData.result === 0 ? "Valid Face Detected" : "Invalid Face");
     // handleIsValid();
   };
 
-  const printEnrollData = useCallback(() => {
-    console.log("enroll data:", enrollData)
-  }, [enrollData])
 
   const handleEnroll = async () => {
     setCurrentAction("useEnroll");
     enrollUser();
-    printEnrollData();
   }
 
   const handleContinuousPredict = async () => {
     setCurrentAction("useContinuousPredict")
     await continuousPredictUser();
-  }
-
-  const handleDelete = async () => {
-    setCurrentAction("useDelete")
-    onDeleteUser();
-    console.log("DELETE STATUS: ", deletionStatus)
   }
 
 
@@ -90,8 +76,41 @@ const Ready = () => {
     switchCamera(null, e.target.value);
   }
 
+
+  // Use Delete
+  // for useDelete, first we need to get the UUID of the user by doing a predict
+  const [deletionStatus, setDeletionStatus] = useState(null);
+  const useDeleteCallback = (deleteStatus) => { setDeletionStatus(deleteStatus) }
+  const { loading, onDeleteUser } = useDelete(useDeleteCallback, ready)
+  const [predictData, setPredictData] = useState(null)
+  const callbackPredict = (guid, uuid) => {
+    setPredictData({ guid, uuid });
+  };
+  const predictFailureCallback = () => {
+    console.log("Face not detected.");
+  };
+  const { faceDetected, predictUser, predictResultData } = usePredict(
+    "userVideo",
+    callbackPredict,
+    predictFailureCallback,
+    predictFailureCallback
+  );
+
+  const handleDelete = useCallback(async () => {
+    setCurrentAction("useDelete")
+    predictUser();
+  }, [predictResultData])
+  // deleting
+  useEffect(()=>{
+    if(currentAction === "useDelete"){
+      if(predictData){
+        onDeleteUser(predictData.uuid)
+      }
+    }
+  }, [currentAction,predictData])
+
   return (
-    <div id="canvasInput" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+    <div id="canvasInput" className='container'>
       <div style={{ height: "100%", display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column", flexWrap: "wrap", gap: "10px" }}>
         <label> Select Camera: </label>
         <select onChange={(e) => handleSwitchCamera(e)}>
@@ -99,10 +118,10 @@ const Ready = () => {
             return <option id={e.value} value={e.value} key={index} > {e.label} </option>
           })}
         </select>
-        <div style={{ position: "relative", height: "50vh", marginBottom: "10px", border: "3px solid red" }}>
+        <div className='cameraContainer'>
           <video
-            style={{ height: "100%", width: "100%", objectFit: "cover" }}
             id="userVideo"
+            className='cameraDisplay'
             muted
             autoPlay
             playsInline
@@ -111,13 +130,13 @@ const Ready = () => {
 
         <div>
           {currentAction === "useEnroll" &&
-            <ul>
-              <li> Enroll Face Detected: {enrollFaceDetected ? "Face Detected" : "No Face Detected"}</li>
-              <li> Enroll Status: {enrollStatus} </li>
-              <li> Progress: {`${progress} %`}</li>
-              <li> Enroll UUID: {`${enrollData ? enrollData.PI.uuid : ""}`}</li>
-              <li> Enroll GUID: {`${enrollData ? enrollData.PI.guid : ""}`}</li>
-            </ul>
+            <div>
+              <div> Enroll Face Detected: {enrollFaceDetected ? "Face Detected" : "No Face Detected"}</div>
+              <div> Enroll Status: {enrollStatus} </div>
+              <div> Progress: {`${progress} %`}</div>
+              <div> Enroll UUID: {`${enrollData ? enrollData.PI.uuid : ""}`}</div>
+              <div> Enroll GUID: {`${enrollData ? enrollData.PI.guid : ""}`}</div>
+            </div>
           }
 
           {currentAction === "isValid" &&
@@ -148,21 +167,20 @@ const Ready = () => {
                 {`Deletion Status: ${deletionStatus}`}
               </div>
               <div>
-                {`User UUID: ${useDeleteUUID ? useDeleteUUID : ""}`}
+                {`User UUID: ${predictData ? predictData.uuid : ""}`}
               </div>
             </div>
           }
 
         </div>
 
-        <div id="module_functions" >
-          <button onClick={handleIsValid}> Is Valid </button>
-          <button onClick={handleEnroll}> Enroll </button>
-          <button onClick={handleContinuousPredict}> Continuous Predict </button>
-          <button onClick={handleDelete}> Delete </button>
+        <div id="module_functions" className='buttonContainer' >
+          <button className='button' onClick={handleIsValid}> Is Valid </button>
+          <button className='button' onClick={handleEnroll}> Enroll </button>
+          <button className='button' onClick={handleContinuousPredict}> Continuous Predict </button>
+          <button className='button' onClick={handleDelete}> Delete </button>
         </div>
       </div>
-
 
     </div>
   );

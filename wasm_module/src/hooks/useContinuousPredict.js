@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { continuousEnrollPredict } from '@privateid/privid-fhe-modules';
 
 const useContinuousPredict = (element, onSuccess, onFailure, onNotFound, retryTimes = 1) => {
   const [faceDetected, setFaceDetected] = useState(false);
-  const [continuousPredictData, setContinuousPredictData] = useState(null);
   let successCallback = null;
   let tries = 0;
   let failureTries = 0;
@@ -21,7 +20,6 @@ const useContinuousPredict = (element, onSuccess, onFailure, onNotFound, retryTi
   };
 
   const callback = async (result) => {
-    console.log("Continuous Predict callback result:", result)
     switch (result.status) {
       case 'VALID_FACE':
         setFaceDetected(true);
@@ -38,7 +36,6 @@ const useContinuousPredict = (element, onSuccess, onFailure, onNotFound, retryTi
       case -1:
         if (result.returnValue.status === 0) {
           // stopTracks();
-
           if (successCallback) {
             successCallback(result.returnValue.PI.guid, result.returnValue.PI.uuid);
           } else {

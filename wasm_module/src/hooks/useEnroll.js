@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { enrollPredict } from '@privateid/privid-fhe-modules';
 
 const useEnroll = (element = 'userVideo', onSuccess, retryTimes = 4 , deviceId = null) => {
@@ -10,10 +10,8 @@ const useEnroll = (element = 'userVideo', onSuccess, retryTimes = 4 , deviceId =
   let tries = 0;
 
   const enrollUser = async () => {
-        console.log("DEVICE ID BEFORE ENROLL: ", deviceId) ;
+      // eslint-disable-next-line no-unused-vars
       const portrait = await enrollPredict(true, callback, {}, element, deviceId);
-      // portrait is a 64bit code convertable to image
-      // console.log("enroll portrait:", portrait);
   };
 
 
@@ -59,7 +57,6 @@ const useEnroll = (element = 'userVideo', onSuccess, retryTimes = 4 , deviceId =
   };
 
   const callback = async (result) => {
-    console.log("Enroll result: " , result);
     switch (result.status) {
       case 'VALID_FACE':
         setFaceDetected(true);
@@ -82,7 +79,6 @@ const useEnroll = (element = 'userVideo', onSuccess, retryTimes = 4 , deviceId =
         break;
       case 'WASM_RESPONSE':
         if (result.returnValue.status === 0) {
-          console.log("ENROLL RESULT DATA", result.returnValue)
           setEnrollStatus('ENROLL SUCCESS');
           setEnrollData(result.returnValue);
           onSuccess();

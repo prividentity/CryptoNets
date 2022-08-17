@@ -1,0 +1,63 @@
+.container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: rgb(73, 73, 73);
+    height: 100vh;
+    width: 100vw;
+    color: rgb(255, 255, 255);
+}
+
+.cameraContainer{
+    position: relative;
+    height: "480px";
+    margin-bottom: "10px";
+    object-fit: cover;
+}
+
+.cameraDisplay{
+    height: 500px;
+    width: 600px;
+    border: 2px solid white;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.button {
+  background-color: #4155c4;
+  border-radius: 8px;
+  border-style: none;
+  box-sizing: border-box;
+  color: #FFFFFF;
+  cursor: pointer;
+  display: inline-block;
+  font-family: "Haas Grot Text R Web", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  height: 40px;
+  line-height: 20px;
+  list-style: none;
+  margin: 0;
+  outline: none;
+  padding: 10px 16px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  transition: color 100ms;
+  vertical-align: baseline;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.button:hover,
+.button:focus {
+  background-color: #5d71e2;
+}
+
+
+.buttonContainer{
+    display: flex;
+    gap:  10px;
+}

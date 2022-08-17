@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { enrollPredict } from '@privateid/privid-fhe-modules';
 
 const usePredict = (element, onSuccess, onFailure, onNotFound, retryTimes = 1) => {
@@ -15,17 +15,15 @@ const usePredict = (element, onSuccess, onFailure, onNotFound, retryTimes = 1) =
       await enrollPredict(false, callback, {}, element);
   };
 
-  const stopTracks = () => {
-    const { srcObject } = document.getElementById(element || 'userVideo');
-    srcObject.getTracks().forEach((track) => track.stop());
-  };
+  // const stopTracks = () => {
+  //   const { srcObject } = document.getElementById(element || 'userVideo');
+  //   srcObject.getTracks().forEach((track) => track.stop());
+  // };
 
   const callback = async (result) => {
-    console.log("Predict callback result:", result)
     switch (result.status) {
       case 'VALID_FACE':
         setFaceDetected(true);
-        console.log("VALID_FACE: ", result)
         break;
       case 'INVALID_FACE':
         if (failureTries === retryTimes) {
