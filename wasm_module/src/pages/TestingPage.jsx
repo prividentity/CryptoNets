@@ -49,15 +49,26 @@ const Ready = () => {
     console.log("--- wasm status ", wasmReady, ready)
   }, [wasmReady, ready]);
 
+  // isValid
   const handleIsValid = async () => {
     setCurrentAction("isValid")
-    const {
-      imageData,
-      resultData,
-    } = await isValid('userVideo');
-    setIsValidCallData(resultData.result === 0 ? "Valid Face Detected" : "Invalid Face");
-    // handleIsValid();
   };
+  // do isValid call every 2 sec
+  useEffect(() => {
+    const doIsValid = async () => {
+      const {
+        imageData,
+        resultData,
+      } = await isValid('userVideo');
+      setIsValidCallData(resultData.result === 0 ? "Valid Face Detected" : "No Face Detected");
+    }
+    let interval;
+    if (currentAction === "isValid") {
+      doIsValid();
+      interval = setInterval(doIsValid, 2000)
+    }
+    return () => clearInterval(interval)
+  }, [currentAction])
 
 
   const handleEnroll = async () => {
@@ -101,13 +112,13 @@ const Ready = () => {
     predictUser();
   }, [predictResultData])
   // deleting
-  useEffect(()=>{
-    if(currentAction === "useDelete"){
-      if(predictData){
+  useEffect(() => {
+    if (currentAction === "useDelete") {
+      if (predictData) {
         onDeleteUser(predictData.uuid)
       }
     }
-  }, [currentAction,predictData])
+  }, [currentAction, predictData])
 
   return (
     <div id="canvasInput" className='container'>

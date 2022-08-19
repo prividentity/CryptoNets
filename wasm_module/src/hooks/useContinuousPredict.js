@@ -14,10 +14,10 @@ const useContinuousPredict = (element, onSuccess, onFailure, onNotFound, retryTi
       await continuousEnrollPredict(false, callback, {}, element);
   };
 
-  const stopTracks = () => {
-    const { srcObject } = document.getElementById(element || 'userVideo');
-    srcObject.getTracks().forEach((track) => track.stop());
-  };
+  // const stopTracks = () => {
+  //   const { srcObject } = document.getElementById(element || 'userVideo');
+  //   srcObject.getTracks().forEach((track) => track.stop());
+  // };
 
   const callback = async (result) => {
     switch (result.status) {
@@ -49,7 +49,7 @@ const useContinuousPredict = (element, onSuccess, onFailure, onNotFound, retryTi
             onFailure();
           } else {
             tries += 1;
-            await predictUser();
+            // await predictUser();
           }
         }
         break;
