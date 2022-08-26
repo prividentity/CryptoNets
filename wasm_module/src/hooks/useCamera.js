@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { openCamera } from '@privateid/privid-fhe-modules';
 
-const useCamera = (element = 'userVideo', facingMode = 'face') => {
+const useCamera = (element = 'userVideo') => {
   // Initialize the state
   const [ready, setReady] = useState(false);
   const [devices, setDevices] = useState([]);
@@ -12,7 +12,7 @@ const useCamera = (element = 'userVideo', facingMode = 'face') => {
   const init = async () => {
     if (ready) return;
     try {
-      const { devices, faceMode } = await openCamera(element);
+      const { devices, faceMode } = await openCamera(element,null,"front");
       setFaceMode(faceMode);
       if (devices.length > 0) {
         const options = devices.map((d) => ({ label: d.label, value: d.deviceId }));

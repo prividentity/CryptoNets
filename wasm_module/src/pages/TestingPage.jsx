@@ -9,6 +9,8 @@ import useEnroll from '../hooks/useEnroll';
 import useContinuousPredict from '../hooks/useContinuousPredict';
 import useDelete from '../hooks/useDelete';
 import usePredict from '../hooks/usePredict';
+import useScanFrontDocument from '../hooks/useScanFrontDocument';
+import useScanBackDocument from '../hooks/useScanBackDocument';
 
 
 const Ready = () => {
@@ -56,11 +58,9 @@ const Ready = () => {
   // do isValid call every 2 sec
   useEffect(() => {
     const doIsValid = async () => {
-      const {
-        imageData,
-        resultData,
-      } = await isValid('userVideo');
-      setIsValidCallData(resultData.result === 0 ? "Valid Face Detected" : "No Face Detected");
+      const result = await isValid();
+      console.log("result react: ", result)
+      setIsValidCallData(result.result === 0 ? "Valid Face Detected" : "No Face Detected");
     }
     let interval;
     if (currentAction === "isValid") {
@@ -111,6 +111,7 @@ const Ready = () => {
     setCurrentAction("useDelete")
     predictUser();
   }, [predictResultData])
+
   // deleting
   useEffect(() => {
     if (currentAction === "useDelete") {
@@ -119,6 +120,51 @@ const Ready = () => {
       }
     }
   }, [currentAction, predictData])
+
+
+  // Scan Document Front
+  const { scanResult, scanFrontDocument, isFound, scannedIdData, resultStatus } = useScanFrontDocument();
+  const handleScanDLFront = async () => {
+    setCurrentAction("useScanDocumentFront")
+  }
+
+  // useEffect To scan front of the DL every 0.3 sec
+  useEffect(()=>{
+    const doScan = async () => {
+      console.log("scanning front:")
+      await scanFrontDocument();
+    }
+    let interval;
+    if (currentAction === "useScanDocumentFront") {
+      if (!isFound) {
+        doScan();
+        interval = setInterval(doScan,300);
+      }
+    }
+    return () => clearInterval(interval)
+  },[currentAction, isFound])
+
+
+  // Scan Document Back
+  const { scanBackDocument, scannedCodeData } = useScanBackDocument()
+  const handleScanDocumentBack = async () => {
+    setCurrentAction("useScanDocumentBack");
+  }
+ // useEffect To scan front of the DL every 0.3 sec
+   useEffect(()=>{
+    const doScan = async () => {
+      console.log("scanning back:")
+      await scanBackDocument();
+    }
+    let interval;
+    if (currentAction === "useScanDocumentBack") {
+      if(!scannedCodeData){
+        doScan();
+        interval = setInterval(doScan,300)
+      }
+    }
+    return () => clearInterval(interval)
+  },[currentAction,scannedCodeData])
 
   return (
     <div id="canvasInput" className='container'>
@@ -183,6 +229,36 @@ const Ready = () => {
             </div>
           }
 
+
+          {currentAction === "useScanDocumentFront" &&
+            <div>
+              <div>
+                {`Scan Document Result: ${resultStatus === 0? "success" : "not found" }`}
+              </div>
+              <div>
+                {`Has found valid document: ${isFound}`}
+              </div>
+              {/* <div>
+                {`Valid document UUID: ${scannedIdData ? scannedIdData.PI.uuid : ""}`}
+              </div> */}
+            </div>
+          }
+
+          {currentAction === "useScanDocumentBack" &&
+            <div>
+              <div>
+                {`Scanned code data: ${scannedCodeData? JSON.stringify(scannedCodeData): ""}`}
+              </div>
+              {/* {scannedCodeData&& 
+                <ul>
+                  {Object.entries(scannedCodeData).map((data)=>{
+                    return <li> {`${data[0]}: ${JSON.stringify(data[1])}`}</li>
+                  })}
+
+                </ul>
+              } */}
+            </div>
+          }
         </div>
 
         <div id="module_functions" className='buttonContainer' >
@@ -190,6 +266,8 @@ const Ready = () => {
           <button className='button' onClick={handleEnroll}> Enroll </button>
           <button className='button' onClick={handleContinuousPredict}> Continuous Predict </button>
           <button className='button' onClick={handleDelete}> Delete </button>
+          <button className='button' onClick={handleScanDLFront}> Scan Front Document</button>
+          <button className='button' onClick={handleScanDocumentBack}> Scan Back Document</button>
         </div>
       </div>
 
