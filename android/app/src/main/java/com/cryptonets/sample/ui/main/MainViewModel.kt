@@ -74,14 +74,14 @@ class MainViewModel @Inject constructor(
         enrollImageByteArray.clear()
     }
 
-    private fun isValid(imageDetails: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
+    private fun isValid(imageRawDataInfo: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
         viewModelScope.launch {
             cameraHandler.isProcessingImage = true
             val responseIsValid = withContext(Dispatchers.IO) {
                 prividFheFace.isValid(
-                    imageDetails.imageData,
-                    imageDetails.width,
-                    imageDetails.height,
+                    imageRawDataInfo.imageData,
+                    imageRawDataInfo.width,
+                    imageRawDataInfo.height,
                     0
                 )
             }
@@ -97,7 +97,7 @@ class MainViewModel @Inject constructor(
     private fun predictContinuously(imageDetails: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
         viewModelScope.launch {
             cameraHandler.isProcessingImage = true
-            predictUser(imageDetails, cameraHandler)?.let {
+            predictUser(imageDetails)?.let {
                 val status1 = resourceProvider.getString(R.string.face_valid_message)
                 val status2 = resourceProvider.getString(R.string.predict_uuid_, it.piModel.uuid)
                 val status3 = resourceProvider.getString(R.string.predict_guid_, it.piModel.guid)
@@ -109,34 +109,19 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private suspend fun predictUser(imageDetails: ImageRawDataInfo, cameraHandler: MyCameraHandler): ResponseModel? {
+    private suspend fun predictUser(imageRawDataInfo: ImageRawDataInfo): ResponseModel? {
         return withContext(Dispatchers.IO) {
-            val responseIsValid = withContext(Dispatchers.IO) {
-                prividFheFace.isValid(
-                    imageDetails.imageData,
-                    imageDetails.width,
-                    imageDetails.height,
-                    0
-                )
+            val responsePredict = withContext(Dispatchers.IO) {
+                prividFheFace.predict(imageRawDataInfo.imageData, imageRawDataInfo.width, imageRawDataInfo.height)
             }
-            if (responseIsValid.status == 0) {
-                val responsePredict = withContext(Dispatchers.IO) {
-                    prividFheFace.predict(
-                        imageDetails.imageData,
-                        imageDetails.width,
-                        imageDetails.height
-                    )
-                }
-                return@withContext responsePredict
-            }
-            return@withContext null
+            return@withContext responsePredict
         }
     }
 
-    private fun deleteContinuously(imageDetails: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
+    private fun deleteContinuously(imageRawDataInfo: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
         viewModelScope.launch {
             cameraHandler.isProcessingImage = true
-            predictUser(imageDetails, cameraHandler)?.let {
+            predictUser(imageRawDataInfo)?.let {
                 if (it.status == 0) {
                     val status1 = resourceProvider.getString(R.string.deletion_status_deleting)
                     val status2 = resourceProvider.getString(R.string.predict_uuid_, it.piModel.uuid)
@@ -166,20 +151,15 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun enroll(imageDetails: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
+    private fun enroll(imageRawDataInfo: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
         if (isEnrolled) return
         viewModelScope.launch {
             cameraHandler.isProcessingImage = true
             val responseIsValid = withContext(Dispatchers.IO) {
-                prividFheFace.isValid(
-                    imageDetails.imageData,
-                    imageDetails.width,
-                    imageDetails.height,
-                    1
-                )
+                prividFheFace.isValid(imageRawDataInfo.imageData, imageRawDataInfo.width, imageRawDataInfo.height, 1)
             }
             if (responseIsValid.status == 0) {
-                enrollImageByteArray.add(imageDetails.imageData)
+                enrollImageByteArray.add(imageRawDataInfo.imageData)
                 val status1 = resourceProvider.getString(R.string.face_valid_message)
                 val percent =
                     resourceProvider.getString(
@@ -190,10 +170,8 @@ class MainViewModel @Inject constructor(
                     isEnrolled = true
                     val enrollResult = withContext(Dispatchers.IO) {
                         prividFheFace.enroll(
-                            enrollImageByteArray,
-                            imageDetails.height,
-                            imageDetails.width,
-                            imageDetails.byteCount
+                            enrollImageByteArray, imageRawDataInfo.height, imageRawDataInfo.width,
+                            imageRawDataInfo.byteCount
                         )
                     }
                     if (enrollResult.status == 0) {
