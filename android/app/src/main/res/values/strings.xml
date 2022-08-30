@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">cryptonets-android-sample</string>
+    <string name="face_valid_message">Face valid: valid face detected</string>
+    <string name="face_invalid_message">No face detected</string>
+    <string name="is_valid">Is Valid</string>
+    <string name="enroll">Enroll</string>
+    <string name="continuous_predict">Continuous Predict</string>
+    <string name="delete">Delete</string>
+    <string name="predict_uuid_">Predicted UUID: %1$s</string>
+    <string name="predict_guid_">Predicted GUID: %1$s</string>
+    <string name="deletion_status_deleting">Deletion status: deleting</string>
+    <string name="deletion_status_success">Deletion status: success</string>
+    <string name="deletion_status_failed">Deletion status: failed</string>
+
+    <string name="enroll_please_look_at_the_camera">Please look at the camera</string>
+    <string name="enroll_progress_">Progress: %1$s %%</string>
+    <string name="enrolled_uuid_">Enrolled UUID: %1$s</string>
+    <string name="enrolled_guid_">Enrolled GUID: %1$s</string>
+    <string name="enroll_success">Enroll success</string>
+    <string name="enroll_failed">Enroll success</string>
+</resources>
