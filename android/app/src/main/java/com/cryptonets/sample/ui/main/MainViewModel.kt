@@ -4,10 +4,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cryptonets.sample.R
-import com.cryptonets.sample.data.local.ImageDetails
 import com.cryptonets.sample.utils.MyCameraHandler
 import com.cryptonets.sample.utils.ResourceProvider
 import com.cryptonets.sample.utils.toLiveData
+import com.privateidentity.prividlib.ImageRawDataInfo
 import com.privateidentity.prividlib.PrividFheFace
 import com.privateidentity.prividlib.ResponseModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,7 +30,7 @@ class MainViewModel @Inject constructor(
     private var isEnrolled = false
     private val enrollImageByteArray = arrayListOf<ByteArray>()
 
-    fun onImageAvailable(imageDetails: ImageDetails, cameraHandler: MyCameraHandler) {
+    fun onImageAvailable(imageDetails: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
         when (_sampleTypeLiveData.value) {
             SampleType.Validity          -> {
                 isValid(imageDetails, cameraHandler)
@@ -74,12 +74,12 @@ class MainViewModel @Inject constructor(
         enrollImageByteArray.clear()
     }
 
-    private fun isValid(imageDetails: ImageDetails, cameraHandler: MyCameraHandler) {
+    private fun isValid(imageDetails: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
         viewModelScope.launch {
             cameraHandler.isProcessingImage = true
             val responseIsValid = withContext(Dispatchers.IO) {
                 prividFheFace.isValid(
-                    imageDetails.byteArray,
+                    imageDetails.imageData,
                     imageDetails.width,
                     imageDetails.height,
                     0
@@ -94,7 +94,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun predictContinuously(imageDetails: ImageDetails, cameraHandler: MyCameraHandler) {
+    private fun predictContinuously(imageDetails: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
         viewModelScope.launch {
             cameraHandler.isProcessingImage = true
             predictUser(imageDetails, cameraHandler)?.let {
@@ -109,11 +109,11 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private suspend fun predictUser(imageDetails: ImageDetails, cameraHandler: MyCameraHandler): ResponseModel? {
+    private suspend fun predictUser(imageDetails: ImageRawDataInfo, cameraHandler: MyCameraHandler): ResponseModel? {
         return withContext(Dispatchers.IO) {
             val responseIsValid = withContext(Dispatchers.IO) {
                 prividFheFace.isValid(
-                    imageDetails.byteArray,
+                    imageDetails.imageData,
                     imageDetails.width,
                     imageDetails.height,
                     0
@@ -122,7 +122,7 @@ class MainViewModel @Inject constructor(
             if (responseIsValid.status == 0) {
                 val responsePredict = withContext(Dispatchers.IO) {
                     prividFheFace.predict(
-                        imageDetails.byteArray,
+                        imageDetails.imageData,
                         imageDetails.width,
                         imageDetails.height
                     )
@@ -133,7 +133,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun deleteContinuously(imageDetails: ImageDetails, cameraHandler: MyCameraHandler) {
+    private fun deleteContinuously(imageDetails: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
         viewModelScope.launch {
             cameraHandler.isProcessingImage = true
             predictUser(imageDetails, cameraHandler)?.let {
@@ -166,20 +166,20 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun enroll(imageDetails: ImageDetails, cameraHandler: MyCameraHandler) {
+    private fun enroll(imageDetails: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
         if (isEnrolled) return
         viewModelScope.launch {
             cameraHandler.isProcessingImage = true
             val responseIsValid = withContext(Dispatchers.IO) {
                 prividFheFace.isValid(
-                    imageDetails.byteArray,
+                    imageDetails.imageData,
                     imageDetails.width,
                     imageDetails.height,
                     1
                 )
             }
             if (responseIsValid.status == 0) {
-                enrollImageByteArray.add(imageDetails.byteArray)
+                enrollImageByteArray.add(imageDetails.imageData)
                 val status1 = resourceProvider.getString(R.string.face_valid_message)
                 val percent =
                     resourceProvider.getString(
@@ -193,7 +193,7 @@ class MainViewModel @Inject constructor(
                             enrollImageByteArray,
                             imageDetails.height,
                             imageDetails.width,
-                            imageDetails.count
+                            imageDetails.byteCount
                         )
                     }
                     if (enrollResult.status == 0) {

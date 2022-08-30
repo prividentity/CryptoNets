@@ -12,13 +12,11 @@ import android.util.Size
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
-import com.cryptonets.sample.data.local.ImageDetails
 import timber.log.Timber
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
-import java.nio.ByteBuffer
 
 
 object Utils {
@@ -163,22 +161,6 @@ object Utils {
         } catch (e: java.lang.Exception) {
             showLog(TAG, "exception  saveImage " + e.message)
             return "0"
-        }
-    }
-
-    fun convertImageDetailsToBitmap(imageDetails: ImageDetails): Bitmap? {
-        return try {
-            val bmp = Bitmap.createBitmap(
-                imageDetails.width,
-                imageDetails.height,
-                Bitmap.Config.ARGB_8888
-            )
-            val buffer: ByteBuffer = ByteBuffer.wrap(imageDetails.byteArray)
-            bmp.copyPixelsFromBuffer(buffer)
-            bmp
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
         }
     }
 }

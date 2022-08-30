@@ -1,7 +1,6 @@
 package com.cryptonets.sample.utils
 
 import android.graphics.Bitmap
-import android.util.Size
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
@@ -9,9 +8,9 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
-import com.cryptonets.sample.data.local.ImageDetails
 import com.google.common.util.concurrent.ListenableFuture
 import com.privateidentity.prividlib.CommonMethods
+import com.privateidentity.prividlib.ImageRawDataInfo
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
@@ -107,14 +106,7 @@ class MyCameraHandler(private val activity: FragmentActivity, private val previe
             }
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                imageListener?.invoke(
-                    ImageDetails(
-                        it.height,
-                        it.width,
-                        it.byteCount,
-                        it.imageData
-                    )
-                )
+                imageListener?.invoke(it)
             }, {
                 Timber.e(it)
             })
@@ -122,4 +114,4 @@ class MyCameraHandler(private val activity: FragmentActivity, private val previe
     }
 }
 
-typealias ImageListener = (ImageDetails) -> Unit
+typealias ImageListener = (ImageRawDataInfo) -> Unit
