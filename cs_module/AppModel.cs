@@ -82,7 +82,7 @@ internal sealed class AppModel : INotifyPropertyChanged
         }
 
         LocalStorage.TryConfigureLocalStorage("privid_local_storage1");
-        _faceModule = Factory.GetFaceModule(new Settings(new Uri(ServerUrl), ApiKey));
+        _faceModule = Factory.GetFaceModule(new ModuleSettings(new Uri(ServerUrl), ApiKey));
 
         _writableBitmap = new WriteableBitmap(
             640, 480, 96, 96, PixelFormats.Bgr24, null);
@@ -203,7 +203,7 @@ internal sealed class AppModel : INotifyPropertyChanged
 
             if (PredictRunning)
             {
-                var result = await _faceModule.Predict(new ImageData(
+                var result = await _faceModule.PredictAsync(new ImageData(
                     image.MIplImage.ImageData, image.Width, image.Height, image.MIplImage.ImageSize));
                 _uuid = result.Uuid;
                 if (String.IsNullOrEmpty(_uuid))
@@ -221,7 +221,7 @@ internal sealed class AppModel : INotifyPropertyChanged
 
             if (EnrollRunning)
             {
-                var result = await _faceModule.Enroll(new ImageData(
+                var result = await _faceModule.EnrollAsync(new ImageData(
                     image.MIplImage.ImageData, image.Width, image.Height, image.MIplImage.ImageSize));
                 _uuid = result.Uuid;
                 if (String.IsNullOrEmpty(_uuid))
