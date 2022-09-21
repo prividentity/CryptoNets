@@ -18,8 +18,6 @@ namespace PrivId.Demo;
 
 internal sealed class AppModel : INotifyPropertyChanged
 {
-    private const String ServerUrl = "";
-
     private const String ApiKey = "";
 
     private sealed class CommandHandler : ICommand
@@ -82,7 +80,7 @@ internal sealed class AppModel : INotifyPropertyChanged
         }
 
         LocalStorage.TryConfigureLocalStorage("privid_local_storage1");
-        _faceModule = Factory.GetFaceModule(new ModuleSettings(new Uri(ServerUrl), ApiKey));
+        _faceModule = Factory.GetFaceModule(new ModuleSettings(ApiKey));
 
         _writableBitmap = new WriteableBitmap(
             640, 480, 96, 96, PixelFormats.Bgr24, null);
@@ -247,10 +245,11 @@ internal sealed class AppModel : INotifyPropertyChanged
 
     private void CleanupDiagnosticMessage() => DiagnosticMessage = String.Empty;
 
-    private void DeleteEnrolledFace()
+    private async void DeleteEnrolledFace()
     {
         IsValidRunning = EnrollRunning = PredictRunning = false;
-        //DiagnosticMessage = _privIdFace.delete(_uuid);
+        var result = await _faceModule.DeleteAsync(_uuid);
+        DiagnosticMessage = result.Message;
         _uuid = null;
     }
 
