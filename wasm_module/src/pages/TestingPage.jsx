@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { useCallback, useEffect, useState } from 'react';
-import { isValid, switchCamera } from '@privateid/privid-fhe-modules';
+import { isValid, switchCamera } from '@privateid/cryptonets-web-sdk';
 import './styles.css'
 import useCamera from '../hooks/useCamera';
 import useWasm from '../hooks/useWasm';

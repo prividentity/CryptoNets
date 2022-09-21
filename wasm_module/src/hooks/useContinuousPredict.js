@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { continuousEnrollPredict } from '@privateid/privid-fhe-modules';
+import { continuousEnrollPredict } from '@privateid/cryptonets-web-sdk';
 
 const useContinuousPredict = (element, onSuccess, onFailure, onNotFound, retryTimes = 1) => {
   const [faceDetected, setFaceDetected] = useState(false);

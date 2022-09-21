@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { enrollPredict } from '@privateid/privid-fhe-modules';
+import { enrollPredict } from '@privateid/cryptonets-web-sdk';
 
 const useEnroll = (element = 'userVideo', onSuccess, retryTimes = 4 , deviceId = null) => {
   const [faceDetected, setFaceDetected] = useState(false);

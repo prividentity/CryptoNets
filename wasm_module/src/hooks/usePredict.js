@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { enrollPredict } from '@privateid/privid-fhe-modules';
+import { enrollPredict } from '@privateid/cryptonets-web-sdk';
 
 const usePredict = (element, onSuccess, onFailure, onNotFound, retryTimes = 1) => {
   const [faceDetected, setFaceDetected] = useState(false);

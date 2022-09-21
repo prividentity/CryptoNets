@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { isValidPhotoID } from "@privateid/privid-fhe-modules";
+import { isValidPhotoID } from "@privateid/cryptonets-web-sdk";
 
 const useScanBackDocument = () => {
   const [scanResult, setScanResult] = useState(null);

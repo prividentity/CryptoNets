@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { useState } from 'react';
-import { openCamera } from '@privateid/privid-fhe-modules';
+import { openCamera } from '@privateid/cryptonets-web-sdk';
 
 const useCamera = (element = 'userVideo') => {
   // Initialize the state

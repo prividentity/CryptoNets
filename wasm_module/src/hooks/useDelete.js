@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { deleteUser } from "@privateid/privid-fhe-modules";
+import { deleteUser } from "@privateid/cryptonets-web-sdk";
 
 // useDelete
 const useDelete = (onDeleteEnd, ready) => {
