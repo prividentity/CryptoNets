@@ -1,65 +1,103 @@
 import { useState } from 'react';
 import { predictOneFA } from '@privateid/cryptonets-web-sdk';
 
-const usePredict = (element, onSuccess, onFailure, onNotFound, retryTimes = 1) => {
-  const [faceDetected, setFaceDetected] = useState(false);
-  const [predictResultData, setPredictResultData] = useState(null);
-  let successCallback = null;
-  let tries = 0;
-  let failureTries = 0;
+const usePredictOneFa = (element = 'userVideo', onSuccess, retryTimes = 4 , deviceId = null) => {
+  const [predictOneFaaceDetected, setFaceDetected] = useState(false);
+  const [predictOneFaStatus, setEnrollStatus] = useState(null);
+  const [predictOneFaprogress, setProgress] = useState(0);
+  const [predictOneFaData, setEnrollData] = useState(null)
 
-  const predictUser = async (onSuccessCallback) => {
-      if (onSuccessCallback) {
-        successCallback = onSuccessCallback;
-      }
-      await predictOneFA(callback, element);
+  let tries = 0;
+
+  const predictUserOneFa = async () => {
+      // eslint-disable-next-line no-unused-vars
+      await predictOneFA(callback, element, deviceId);
   };
 
-  // const stopTracks = () => {
-  //   const { srcObject } = document.getElementById(element || 'userVideo');
-  //   srcObject.getTracks().forEach((track) => track.stop());
-  // };
+
+  function wait(milliseconds) {
+    const date = Date.now();
+    let currentDate = null;
+    do {
+      currentDate = Date.now();
+    } while (currentDate - date < milliseconds);
+  }
+
+  const getDisplayedMessage = (result) => {
+    switch (result) {
+      case -1:
+        return 'Please look at the camera';
+      case 0:
+        return 'Face detected';
+      case 1:
+        return 'Image Spoof';
+      case 2:
+        return 'Video Spoof';
+      case 3:
+        return 'Video Spoof';
+      case 4:
+        return 'Too far away';
+      case 5:
+        return 'Too far to right';
+      case 6:
+        return 'Too far to left';
+      case 7:
+        return 'Too far up';
+      case 8:
+        return 'Too far down';
+      case 9:
+        return 'Too blurry';
+      case 10:
+        return 'PLEASE REMOVE EYEGLASSES';
+      case 11:
+        return 'PLEASE REMOVE FACEMASK';
+      default:
+        return '';
+    }
+  };
 
   const callback = async (result) => {
+    console.log("callback hook result:", result)
     switch (result.status) {
       case 'VALID_FACE':
         setFaceDetected(true);
+        setEnrollStatus(null);
+        setProgress(result.progress);
         break;
       case 'INVALID_FACE':
-        if (failureTries === retryTimes) {
-          onNotFound();
+        if (predictOneFaStatus && predictOneFaStatus?.length > 0) {
+          wait(1500);
+          setEnrollStatus(getDisplayedMessage(result.result));
         } else {
-          failureTries += 1;
+          setEnrollStatus(getDisplayedMessage(result.result));
         }
+
+        setFaceDetected(false);
+        break;
+      case 'ENROLLING':
+        setEnrollStatus('ENROLLING');
+        setFaceDetected(true);
         break;
       case 'WASM_RESPONSE':
-      case -1:
-        if (result.returnValue.status === 0) {
-          // stopTracks();
-          setPredictResultData(result.returnValue.PI.guid, result.returnValue.PI.uuid)
-          if (successCallback) {
-            successCallback(result.returnValue.PI.guid, result.returnValue.PI.uuid);
-          } else {
-            onSuccess(result.returnValue.PI.guid, result.returnValue.PI.uuid);
-          }
-          successCallback = null;
+        if (result.returnValue?.status === 0) {
+          setEnrollStatus('ENROLL SUCCESS');
+          setEnrollData(result.returnValue);
+          onSuccess();
         }
-        if (result.returnValue.status === -1) {
+        if (result.returnValue?.status === -1) {
           if (tries === retryTimes) {
-            // stopTracks();
-            onFailure();
+            // onFailure();
           } else {
             tries += 1;
-            await predictUser();
+            // enrollUserOneFa();
           }
         }
         break;
       default:
-        break;
     }
   };
 
-  return { faceDetected, predictUser, predictResultData};
+  return { predictOneFaaceDetected, predictOneFaStatus, predictOneFaData, predictUserOneFa, predictOneFaprogress };
 };
 
-export default usePredict;
+export default usePredictOneFa;

@@ -719,8 +719,6 @@ const isValidInternal = (data, width, height, simd, action, debug_type = 0, cb) 
       resultLenPtr,
     );
 
-    console.log("nik", result);
-
     // await new Promise(resolve => setTimeout(resolve, 100));
     // const [resultLength] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultLenPtr, 1);
     // const [resultSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultFirstPtr, 1);

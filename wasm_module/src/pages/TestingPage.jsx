@@ -12,6 +12,7 @@ import usePredict from "../hooks/usePredict";
 import useScanFrontDocument from "../hooks/useScanFrontDocument";
 import useScanBackDocument from "../hooks/useScanBackDocument";
 import useEnrollOneFa from "../hooks/useEnrollOneFa";
+import usePredictOneFa from "../hooks/usePredictOneFa";
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
@@ -106,6 +107,19 @@ const Ready = () => {
   const handleEnrollOneFa = async () => {
     setCurrentAction("useEnrollOneFa");
     enrollUserOneFa();
+  };
+
+  const {
+    predictOneFaData,
+    predictOneFaStatus,
+    predictOneFaaceDetected,
+    predictOneFaprogress,
+    predictUserOneFa,
+  } = usePredictOneFa("userVideo", useEnrollSuccess);
+  // Predict OneFa
+  const handlePredictOneFa = async () => {
+    setCurrentAction("usePredictOneFa");
+    predictUserOneFa();
   };
 
   const handleContinuousPredict = async () => {
@@ -263,14 +277,14 @@ const Ready = () => {
                 {enrollOneFaFaceDetected ? "Face Detected" : "No Face Detected"}
               </div>
               <div> Enroll Status: {enrollOneFaStatus} </div>
-              <div> Progress: {`${enrollOneFaStatus} %`}</div>
+              <div> Progress: {`${enrollOneFaProgress} %`}</div>
               <div>
-                {" "}
-                Enroll UUID: {`${enrollOneFaData ? enrollOneFaData.PI.uuid : ""}`}
+                Enroll UUID:{" "}
+                {`${enrollOneFaData ? enrollOneFaData.PI.uuid : ""}`}
               </div>
               <div>
-                {" "}
-                Enroll GUID: {`${enrollOneFaData ? enrollOneFaData.PI.guid : ""}`}
+                Enroll GUID:{" "}
+                {`${enrollOneFaData ? enrollOneFaData.PI.guid : ""}`}
               </div>
             </div>
           )}
@@ -298,6 +312,28 @@ const Ready = () => {
               <div>
                 {`Predicted UUID: ${
                   continuousPredictUUID ? continuousPredictUUID : ""
+                }`}
+              </div>
+            </div>
+          )}
+
+          {currentAction === "usePredictOneFa" && (
+            <div>
+              <div>
+                {`Face Valid: ${
+                  predictOneFaaceDetected
+                    ? "Face Detected"
+                    : "Face not detected"
+                }`}
+              </div>
+              <div>
+                {`Predicted GUID: ${
+                  predictOneFaData ? predictOneFaData.PI.guid : ""
+                }`}
+              </div>
+              <div>
+                {`Predicted UUID: ${
+                  predictOneFaData ? predictOneFaData.PI.uuid : ""
                 }`}
               </div>
             </div>
@@ -344,10 +380,10 @@ const Ready = () => {
         </div>
 
         <div id="module_functions" className="buttonContainer">
-        <button className="button" onClick={handleEnrollOneFa}>
+          <button className="button" onClick={handleEnrollOneFa}>
             Enroll ONEFA
           </button>
-          <button className="button" onClick={handleEnrollOneFa}>
+          <button className="button" onClick={handlePredictOneFa}>
             Predict ONEFA
           </button>
           <button className="button" onClick={handleIsValid}>
