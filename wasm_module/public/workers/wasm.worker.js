@@ -54,8 +54,8 @@ const isLoad = (simd, url, key, module, debug_type = '0') =>
           const urlInputSize = url_bytes.length * url_bytes.BYTES_PER_ELEMENT;
           const urlInputtPtr = wasmPrivModule._malloc(urlInputSize);
           wasmPrivModule.HEAP8.set(url_bytes, urlInputtPtr / url_bytes.BYTES_PER_ELEMENT);
-          console.log("------->Before Wasm PrivModule ccall", url)
-          wasmPrivModule.ccall('FHE_configure_url', 'int', [], [42, urlInputtPtr, url? url.length:0]);
+          console.log('------->Before Wasm PrivModule ccall', url);
+          wasmPrivModule.ccall('FHE_configure_url', 'int', [], [42, urlInputtPtr, url ? url.length : 0]);
           wasmPrivModule._free(urlInputtPtr);
         }
         {
@@ -94,7 +94,7 @@ const isLoad = (simd, url, key, module, debug_type = '0') =>
         const urlInputtPtr = wasmPrivModule._malloc(urlInputSize);
         wasmPrivModule.HEAP8.set(url_bytes, urlInputtPtr / url_bytes.BYTES_PER_ELEMENT);
 
-        wasmPrivModule.ccall('FHE_configure_url', 'int', [], [42, urlInputtPtr, url? url.length: 0]);
+        wasmPrivModule.ccall('FHE_configure_url', 'int', [], [42, urlInputtPtr, url ? url.length : 0]);
         wasmPrivModule._free(urlInputtPtr);
         resolve('Loaded');
       }
@@ -266,7 +266,7 @@ const scanDocument = async (imageInput, simd, cb, debug_type = 0) =>
     if (!inputPtr) {
       inputPtr = wasmPrivModule._malloc(imageInputSize);
     }
-    
+
     wasmPrivModule.HEAP8.set(imageData, inputPtr / imageData.BYTES_PER_ELEMENT);
 
     const outputBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
@@ -481,6 +481,212 @@ const FHE_enroll = (originalImages, simd, action, debug_type = 0, cb, config = {
     resolve({ result, href });
   });
 
+const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb) =>
+  new Promise(async (resolve) => {
+    privid_wasm_result = cb;
+    if (!wasmPrivModule) {
+      console.log('loaded for first wsm wrkr', simd, action);
+      await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
+    }
+    // console.log('-------WASM----WORKER------', simd, action);
+    const numImages = originalImages.length;
+    const imageInput = flatten(
+      originalImages.map((x) => x.data),
+      Uint8Array,
+    );
+    const version = wasmPrivModule._get_version();
+    console.log('Version = ', version);
+
+    // const encoder = new TextEncoder();
+    // const config_bytes = encoder.encode(`${config}\0`);
+
+    // const configInputSize = config.length;
+    // const configInputPtr = wasmPrivModule._malloc(configInputSize);
+    // wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
+
+    const imageInputSize = imageInput.length * imageInput.BYTES_PER_ELEMENT;
+    const imageInputPtr = wasmPrivModule._malloc(imageInputSize);
+
+    wasmPrivModule.HEAP8.set(imageInput, imageInputPtr / imageInput.BYTES_PER_ELEMENT);
+
+    const BufferSize = wasmPrivModule._spl_image_embedding_length();
+
+    // outupt  ptr
+    const outputBufferSize = BufferSize * 4 * 80;
+    const outputBufferPtr = wasmPrivModule._malloc(outputBufferSize);
+
+    const augmBufferSize = 224 * 224 * 4 * 100;
+    const augmBufferPtr = wasmPrivModule._malloc(augmBufferSize);
+
+    const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // create a pointer to interger to hold the length of the output buffer
+    const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    let result = null;
+    console.log('wasmPrivModule', wasmPrivModule);
+
+    // console.log('[FAR_DEBUG] : Calling session preparation')
+    const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
+    if (s_result) {
+      console.log('[FAR_DEBUG] : session initialized successfully');
+    } else {
+      console.log('[FAR_DEBUG] : session initialized failed');
+    }
+    // console.log('[FAR_DEBUG] : Getting session second pointer')
+    const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
+    // console.log(`[FAR_DEBUG] : Session second pointer = [${  sessionSecPtr  }]`)
+
+    // console.log('[FAR_DEBUG] : Calling enroll_onefa')
+    try {
+      result = await wasmPrivModule._privid_enroll_onefa(
+        sessionSecPtr /* session pointer */,
+        null /* user configuration */,
+        0 /* user configuration length */,
+        imageInputPtr /* input images */,
+        numImages /* number of input images */,
+        originalImages[0].data.length /* size of one image */,
+        originalImages[0].width /* width of one image */,
+        originalImages[0].height /* height of one image */,
+        null /* embeddings output */,
+        null /* length of embeddings out */,
+        true /* remove bad embeddings flag */,
+        null /* augmentations out buffer */,
+        null /* length of augmentations out buffer */,
+        resultFirstPtr /* operation result output buffer */,
+        resultLenPtr /* operation result buffer length */,
+      );
+    } catch (e) {
+      console.error('---------__E__-------', e);
+    }
+    // console.log('[FAR_DEBUG] : enroll_onefa done')
+
+    const href = [];
+    if (['900', '901', '902', '903'].includes(debug_type)) {
+      const num = action ? 80 : 1;
+      const AugmputArray = new Uint8Array(wasmPrivModule.HEAPU8.buffer, augmBufferPtr, 224 * 224 * 4 * num);
+
+      const img_width = 224;
+      const img_height = 224;
+      const dataLength = 200704;
+
+      const numImages = AugmputArray.length / dataLength;
+
+      for (let i = 0; i < numImages; i++) {
+        const img = AugmputArray.slice(i * dataLength, (i + 1) * dataLength);
+        const img_data = Uint8ClampedArray.from(img);
+
+        const image = new ImageData(img_data, img_width, img_height);
+
+        href.push(image);
+      }
+    }
+
+    wasmPrivModule._free(imageInputPtr);
+    wasmPrivModule._free(outputBufferPtr);
+    wasmPrivModule._free(augmBufferPtr);
+    wasmPrivModule._free(resultFirstPtr);
+
+    resolve({ result, href });
+  });
+
+const FHE_predictOnefa = (originalImages, simd, debug_type = 0, cb) =>
+  new Promise(async (resolve) => {
+    privid_wasm_result = cb;
+    if (!wasmPrivModule) {
+      console.log('loaded for first wsm wrkr', simd, action);
+      await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
+    }
+
+    const numImages = originalImages.length;
+    const imageInput = flatten(
+      originalImages.map((x) => x.data),
+      Uint8Array,
+    );
+    const version = wasmPrivModule._get_version();
+    console.log('Version = ', version);
+
+    const imageInputSize = imageInput.length * imageInput.BYTES_PER_ELEMENT;
+    const imageInputPtr = wasmPrivModule._malloc(imageInputSize);
+
+    wasmPrivModule.HEAP8.set(imageInput, imageInputPtr / imageInput.BYTES_PER_ELEMENT);
+
+    const BufferSize = wasmPrivModule._spl_image_embedding_length();
+
+    // outupt  ptr
+    const outputBufferSize = BufferSize * 4 * 80;
+    const outputBufferPtr = wasmPrivModule._malloc(outputBufferSize);
+
+    const augmBufferSize = 224 * 224 * 4 * 100;
+    const augmBufferPtr = wasmPrivModule._malloc(augmBufferSize);
+
+    const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // create a pointer to interger to hold the length of the output buffer
+    const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    let result = null;
+    console.log('wasmPrivModule', wasmPrivModule);
+
+
+    const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
+    if (s_result) {
+      console.log('[FAR_DEBUG] : session initialized successfully');
+    } else {
+      console.log('[FAR_DEBUG] : session initialized failed');
+    }
+
+    const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
+
+    try {
+      result = await wasmPrivModule._privid_predict_onefa(
+        sessionSecPtr /* session pointer */,
+        null /* user configuration */,
+        0 /* user configuration length */,
+        imageInputPtr /* input images */,
+        numImages /* number of input images */,
+        originalImages[0].data.length /* size of one image */,
+        originalImages[0].width /* width of one image */,
+        originalImages[0].height /* height of one image */,
+        null /* embeddings output */,
+        null /* length of embeddings out */,
+        true /* remove bad embeddings flag */,
+        null /* augmentations out buffer */,
+        null /* length of augmentations out buffer */,
+        resultFirstPtr /* operation result output buffer */,
+        resultLenPtr /* operation result buffer length */,
+      );
+    } catch (e) {
+      console.error('---------__E__-------', e);
+    }
+
+    const href = [];
+    if (['900', '901', '902', '903'].includes(debug_type)) {
+      const num = action ? 80 : 1;
+      const AugmputArray = new Uint8Array(wasmPrivModule.HEAPU8.buffer, augmBufferPtr, 224 * 224 * 4 * num);
+
+      const img_width = 224;
+      const img_height = 224;
+      const dataLength = 200704;
+
+      const numImages = AugmputArray.length / dataLength;
+
+      for (let i = 0; i < numImages; i++) {
+        const img = AugmputArray.slice(i * dataLength, (i + 1) * dataLength);
+        const img_data = Uint8ClampedArray.from(img);
+
+        const image = new ImageData(img_data, img_width, img_height);
+
+        href.push(image);
+      }
+    }
+
+    wasmPrivModule._free(imageInputPtr);
+    wasmPrivModule._free(outputBufferPtr);
+    wasmPrivModule._free(augmBufferPtr);
+    wasmPrivModule._free(resultFirstPtr);
+
+    resolve({ result, href });
+  });
+
 const isValidInternal = (data, width, height, simd, action, debug_type = 0, cb) =>
   new Promise(async (resolve) => {
     privid_wasm_result = cb;
@@ -502,7 +708,7 @@ const isValidInternal = (data, width, height, simd, action, debug_type = 0, cb) 
     // create a pointer to interger to hold the length of the output buffer
     const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
-    wasmPrivModule._is_valid(
+    const result = await wasmPrivModule._is_valid(
       action,
       isValidPtr,
       width,
@@ -513,13 +719,16 @@ const isValidInternal = (data, width, height, simd, action, debug_type = 0, cb) 
       resultLenPtr,
     );
 
-    const [resultLength] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultLenPtr, 1);
-    const [resultSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultFirstPtr, 1);
+    console.log("nik", result);
 
-    const resultDataArray = new Uint8Array(wasmPrivModule.HEAPU8.buffer, resultSecPtr, resultLength);
-    const resultString = String.fromCharCode.apply(null, resultDataArray);
+    // await new Promise(resolve => setTimeout(resolve, 100));
+    // const [resultLength] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultLenPtr, 1);
+    // const [resultSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultFirstPtr, 1);
 
-    const resultData = JSON.parse(resultString);
+    // const resultDataArray = new Uint8Array(wasmPrivModule.HEAPU8.buffer, resultSecPtr, resultLength);
+    // const resultString = String.fromCharCode.apply(null, resultDataArray);
+
+    // const resultData = JSON.parse(resultString);
 
     wasmPrivModule._free(outputBufferFirstPtr);
     wasmPrivModule._free(outputBufferLenPtr);
@@ -527,7 +736,7 @@ const isValidInternal = (data, width, height, simd, action, debug_type = 0, cb) 
     wasmPrivModule._free(resultLenPtr);
     wasmPrivModule._free(isValidPtr);
 
-    resolve(resultData);
+    resolve({result});
   });
 
 const isValidFrontDocument = (imagePtr, width, height, simd, action, debug_type = 0, cb) =>
@@ -663,6 +872,8 @@ function putKey(key, cachedWasm, cachedScript, version) {
 
 Comlink.expose({
   FHE_enroll,
+  FHE_enrollOnefa,
+  FHE_predictOnefa,
   isValidInternal,
   isLoad,
   voicePredict,

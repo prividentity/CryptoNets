@@ -1,21 +1,22 @@
 /* eslint-disable */
-import { useCallback, useEffect, useState } from 'react';
-import { isValid, switchCamera } from '@privateid/cryptonets-web-sdk';
-import './styles.css'
-import useCamera from '../hooks/useCamera';
-import useWasm from '../hooks/useWasm';
-import { isAndroid, isIOS, osVersion } from '../utils';
-import useEnroll from '../hooks/useEnroll';
-import useContinuousPredict from '../hooks/useContinuousPredict';
-import useDelete from '../hooks/useDelete';
-import usePredict from '../hooks/usePredict';
-import useScanFrontDocument from '../hooks/useScanFrontDocument';
-import useScanBackDocument from '../hooks/useScanBackDocument';
-
+import { useCallback, useEffect, useState } from "react";
+import { isValid, switchCamera } from "@privateid/cryptonets-web-sdk";
+import "./styles.css";
+import useCamera from "../hooks/useCamera";
+import useWasm from "../hooks/useWasm";
+import { isAndroid, isIOS, osVersion } from "../utils";
+import useEnroll from "../hooks/useEnroll";
+import useContinuousPredict from "../hooks/useContinuousPredict";
+import useDelete from "../hooks/useDelete";
+import usePredict from "../hooks/usePredict";
+import useScanFrontDocument from "../hooks/useScanFrontDocument";
+import useScanBackDocument from "../hooks/useScanBackDocument";
+import useEnrollOneFa from "../hooks/useEnrollOneFa";
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
-  const { ready, init, device, devices, faceMode, setDevice } = useCamera('userVideo');
+  const { ready, init, device, devices, faceMode, setDevice } =
+    useCamera("userVideo");
   const [deviceId, setDeviceId] = useState("");
 
   const [isValidCallData, setIsValidCallData] = useState(null);
@@ -27,18 +28,33 @@ const Ready = () => {
   const continuousPredictSuccess = (UUID, GUID) => {
     setContinuousPredictUUID(UUID);
     setContinuousPredictGUID(GUID);
-  }
+  };
   const continuousOnNotFoundAndFailure = () => {
     setContinuousPredictUUID(null);
     setContinuousPredictGUID(null);
-  }
-  const { faceDetected: continuousFaceDetected, predictUser: continuousPredictUser } = useContinuousPredict('userVideo', continuousPredictSuccess, continuousOnNotFoundAndFailure, continuousOnNotFoundAndFailure, predictRetryTimes)
+  };
+  const {
+    faceDetected: continuousFaceDetected,
+    predictUser: continuousPredictUser,
+  } = useContinuousPredict(
+    "userVideo",
+    continuousPredictSuccess,
+    continuousOnNotFoundAndFailure,
+    continuousOnNotFoundAndFailure,
+    predictRetryTimes
+  );
 
   // Use Enroll
   const useEnrollSuccess = () => console.log("=======ENROLL SUCCESS=======");
-  const { faceDetected: enrollFaceDetected, enrollStatus, enrollData, enrollUser, progress } = useEnroll('userVideo', useEnrollSuccess, null, deviceId);
+  const {
+    faceDetected: enrollFaceDetected,
+    enrollStatus,
+    enrollData,
+    enrollUser,
+    progress,
+  } = useEnroll("userVideo", useEnrollSuccess, null, deviceId);
 
-  const [currentAction, setCurrentAction] = useState(null)
+  const [currentAction, setCurrentAction] = useState(null);
 
   useEffect(() => {
     if (!wasmReady) return;
@@ -46,54 +62,70 @@ const Ready = () => {
     if (isIOS && osVersion < 15) {
       console.log("Does not support old version of iOS os version 15 below.");
     } else if (isAndroid && osVersion < 11) {
-      console.log("Does not support old version of Android os version 11 below.");
+      console.log(
+        "Does not support old version of Android os version 11 below."
+      );
     }
-    console.log("--- wasm status ", wasmReady, ready)
+    console.log("--- wasm status ", wasmReady, ready);
   }, [wasmReady, ready]);
 
   // isValid
   const handleIsValid = async () => {
-    setCurrentAction("isValid")
+    setCurrentAction("isValid");
   };
   // do isValid call every 2 sec
   useEffect(() => {
     const doIsValid = async () => {
       const result = await isValid();
-      console.log("result react: ", result)
-      setIsValidCallData(result.result === 0 ? "Valid Face Detected" : "No Face Detected");
-    }
+      console.log("result react: ", result);
+      setIsValidCallData(
+        result.result === 0 ? "Valid Face Detected" : "No Face Detected"
+      );
+    };
     let interval;
     if (currentAction === "isValid") {
       doIsValid();
-      interval = setInterval(doIsValid, 2000)
+      interval = setInterval(doIsValid, 2000);
     }
-    return () => clearInterval(interval)
-  }, [currentAction])
-
+    return () => clearInterval(interval);
+  }, [currentAction]);
 
   const handleEnroll = async () => {
     setCurrentAction("useEnroll");
     enrollUser();
-  }
+  };
+
+  // Enroll ONEFA
+  const {
+    faceDetected: enrollOneFaFaceDetected,
+    enrollStatus: enrollOneFaStatus,
+    enrollData: enrollOneFaData,
+    enrollUserOneFa,
+    progress: enrollOneFaProgress,
+  } = useEnrollOneFa("userVideo", useEnrollSuccess, null, deviceId);
+  const handleEnrollOneFa = async () => {
+    setCurrentAction("useEnrollOneFa");
+    enrollUserOneFa();
+  };
 
   const handleContinuousPredict = async () => {
-    setCurrentAction("useContinuousPredict")
+    setCurrentAction("useContinuousPredict");
     await continuousPredictUser();
-  }
-
+  };
 
   const handleSwitchCamera = (e) => {
     setDeviceId(e.target.value);
     switchCamera(null, e.target.value);
-  }
-
+  };
 
   // Use Delete
   // for useDelete, first we need to get the UUID of the user by doing a predict
   const [deletionStatus, setDeletionStatus] = useState(null);
-  const useDeleteCallback = (deleteStatus) => { setDeletionStatus(deleteStatus) }
-  const { loading, onDeleteUser } = useDelete(useDeleteCallback, ready)
-  const [predictData, setPredictData] = useState(null)
+  const useDeleteCallback = (deleteStatus) => {
+    setDeletionStatus(deleteStatus);
+  };
+  const { loading, onDeleteUser } = useDelete(useDeleteCallback, ready);
+  const [predictData, setPredictData] = useState(null);
   const callbackPredict = (guid, uuid) => {
     setPredictData({ guid, uuid });
   };
@@ -108,77 +140,96 @@ const Ready = () => {
   );
 
   const handleDelete = useCallback(async () => {
-    setCurrentAction("useDelete")
+    setCurrentAction("useDelete");
     predictUser();
-  }, [predictResultData])
+  }, [predictResultData]);
 
   // deleting
   useEffect(() => {
     if (currentAction === "useDelete") {
       if (predictData) {
-        onDeleteUser(predictData.uuid)
+        onDeleteUser(predictData.uuid);
       }
     }
-  }, [currentAction, predictData])
-
+  }, [currentAction, predictData]);
 
   // Scan Document Front
-  const { scanResult, scanFrontDocument, isFound, scannedIdData, resultStatus } = useScanFrontDocument();
+  const {
+    scanResult,
+    scanFrontDocument,
+    isFound,
+    scannedIdData,
+    resultStatus,
+  } = useScanFrontDocument();
   const handleScanDLFront = async () => {
-    setCurrentAction("useScanDocumentFront")
-  }
+    setCurrentAction("useScanDocumentFront");
+  };
 
   // useEffect To scan front of the DL every 0.3 sec
-  useEffect(()=>{
+  useEffect(() => {
     const doScan = async () => {
-      console.log("scanning front:")
+      console.log("scanning front:");
       await scanFrontDocument();
-    }
+    };
     let interval;
     if (currentAction === "useScanDocumentFront") {
       if (!isFound) {
         doScan();
-        interval = setInterval(doScan,300);
+        interval = setInterval(doScan, 300);
       }
     }
-    return () => clearInterval(interval)
-  },[currentAction, isFound])
-
+    return () => clearInterval(interval);
+  }, [currentAction, isFound]);
 
   // Scan Document Back
-  const { scanBackDocument, scannedCodeData } = useScanBackDocument()
+  const { scanBackDocument, scannedCodeData } = useScanBackDocument();
   const handleScanDocumentBack = async () => {
     setCurrentAction("useScanDocumentBack");
-  }
- // useEffect To scan front of the DL every 0.3 sec
-   useEffect(()=>{
+  };
+  // useEffect To scan front of the DL every 0.3 sec
+  useEffect(() => {
     const doScan = async () => {
-      console.log("scanning back:")
+      console.log("scanning back:");
       await scanBackDocument();
-    }
+    };
     let interval;
     if (currentAction === "useScanDocumentBack") {
-      if(!scannedCodeData){
+      if (!scannedCodeData) {
         doScan();
-        interval = setInterval(doScan,300)
+        interval = setInterval(doScan, 300);
       }
     }
-    return () => clearInterval(interval)
-  },[currentAction,scannedCodeData])
+    return () => clearInterval(interval);
+  }, [currentAction, scannedCodeData]);
 
   return (
-    <div id="canvasInput" className='container'>
-      <div style={{ height: "100%", display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column", flexWrap: "wrap", gap: "10px" }}>
+    <div id="canvasInput" className="container">
+      <div
+        style={{
+          height: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "column",
+          flexWrap: "wrap",
+          gap: "10px",
+        }}
+      >
         <label> Select Camera: </label>
         <select onChange={(e) => handleSwitchCamera(e)}>
           {devices.map((e, index) => {
-            return <option id={e.value} value={e.value} key={index} > {e.label} </option>
+            return (
+              <option id={e.value} value={e.value} key={index}>
+                {" "}
+                {e.label}{" "}
+              </option>
+            );
           })}
         </select>
-        <div className='cameraContainer'>
+        <div className="cameraContainer">
           <video
             id="userVideo"
-            className='cameraDisplay'
+            className="cameraDisplay"
             muted
             autoPlay
             playsInline
@@ -186,68 +237,99 @@ const Ready = () => {
         </div>
 
         <div>
-          {currentAction === "useEnroll" &&
+          {currentAction === "useEnroll" && (
             <div>
-              <div> Enroll Face Detected: {enrollFaceDetected ? "Face Detected" : "No Face Detected"}</div>
+              <div>
+                Enroll Face Detected:
+                {enrollFaceDetected ? "Face Detected" : "No Face Detected"}
+              </div>
               <div> Enroll Status: {enrollStatus} </div>
               <div> Progress: {`${progress} %`}</div>
-              <div> Enroll UUID: {`${enrollData ? enrollData.PI.uuid : ""}`}</div>
-              <div> Enroll GUID: {`${enrollData ? enrollData.PI.guid : ""}`}</div>
+              <div>
+                {" "}
+                Enroll UUID: {`${enrollData ? enrollData.PI.uuid : ""}`}
+              </div>
+              <div>
+                {" "}
+                Enroll GUID: {`${enrollData ? enrollData.PI.guid : ""}`}
+              </div>
             </div>
-          }
+          )}
 
-          {currentAction === "isValid" &&
+          {currentAction === "useEnrollOneFa" && (
+            <div>
+              <div>
+                Enroll Face Detected:
+                {enrollOneFaFaceDetected ? "Face Detected" : "No Face Detected"}
+              </div>
+              <div> Enroll Status: {enrollOneFaStatus} </div>
+              <div> Progress: {`${enrollOneFaStatus} %`}</div>
+              <div>
+                {" "}
+                Enroll UUID: {`${enrollOneFaData ? enrollOneFaData.PI.uuid : ""}`}
+              </div>
+              <div>
+                {" "}
+                Enroll GUID: {`${enrollOneFaData ? enrollOneFaData.PI.guid : ""}`}
+              </div>
+            </div>
+          )}
+
+          {currentAction === "isValid" && (
             <div>
               <div>
                 {`Face Valid: ${isValidCallData ? isValidCallData : null}`}
               </div>
             </div>
-          }
+          )}
 
-          {currentAction === "useContinuousPredict" &&
+          {currentAction === "useContinuousPredict" && (
             <div>
               <div>
-                {`Face Valid: ${continuousFaceDetected ? "Face Detected" : "Face not detected"}`}
+                {`Face Valid: ${
+                  continuousFaceDetected ? "Face Detected" : "Face not detected"
+                }`}
               </div>
               <div>
-                {`Predicted GUID: ${continuousPredictGUID ? continuousPredictGUID : ""}`}
+                {`Predicted GUID: ${
+                  continuousPredictGUID ? continuousPredictGUID : ""
+                }`}
               </div>
               <div>
-                {`Predicted UUID: ${continuousPredictUUID ? continuousPredictUUID : ""}`}
+                {`Predicted UUID: ${
+                  continuousPredictUUID ? continuousPredictUUID : ""
+                }`}
               </div>
             </div>
-          }
+          )}
 
-          {currentAction === "useDelete" &&
+          {currentAction === "useDelete" && (
             <div>
-              <div>
-                {`Deletion Status: ${deletionStatus}`}
-              </div>
-              <div>
-                {`User UUID: ${predictData ? predictData.uuid : ""}`}
-              </div>
+              <div>{`Deletion Status: ${deletionStatus}`}</div>
+              <div>{`User UUID: ${predictData ? predictData.uuid : ""}`}</div>
             </div>
-          }
+          )}
 
-
-          {currentAction === "useScanDocumentFront" &&
+          {currentAction === "useScanDocumentFront" && (
             <div>
               <div>
-                {`Scan Document Result: ${resultStatus === 0? "success" : "not found" }`}
+                {`Scan Document Result: ${
+                  resultStatus === 0 ? "success" : "not found"
+                }`}
               </div>
-              <div>
-                {`Has found valid document: ${isFound}`}
-              </div>
+              <div>{`Has found valid document: ${isFound}`}</div>
               {/* <div>
                 {`Valid document UUID: ${scannedIdData ? scannedIdData.PI.uuid : ""}`}
               </div> */}
             </div>
-          }
+          )}
 
-          {currentAction === "useScanDocumentBack" &&
+          {currentAction === "useScanDocumentBack" && (
             <div>
               <div>
-                {`Scanned code data: ${scannedCodeData? JSON.stringify(scannedCodeData): ""}`}
+                {`Scanned code data: ${
+                  scannedCodeData ? JSON.stringify(scannedCodeData) : ""
+                }`}
               </div>
               {/* {scannedCodeData&& 
                 <ul>
@@ -258,22 +340,38 @@ const Ready = () => {
                 </ul>
               } */}
             </div>
-          }
+          )}
         </div>
 
-        <div id="module_functions" className='buttonContainer' >
-          <button className='button' onClick={handleIsValid}> Is Valid </button>
-          <button className='button' onClick={handleEnroll}> Enroll </button>
-          <button className='button' onClick={handleContinuousPredict}> Continuous Predict </button>
-          <button className='button' onClick={handleDelete}> Delete </button>
-          <button className='button' onClick={handleScanDLFront}> Scan Front Document</button>
-          <button className='button' onClick={handleScanDocumentBack}> Scan Back Document</button>
+        <div id="module_functions" className="buttonContainer">
+        <button className="button" onClick={handleEnrollOneFa}>
+            Enroll ONEFA
+          </button>
+          <button className="button" onClick={handleEnrollOneFa}>
+            Predict ONEFA
+          </button>
+          <button className="button" onClick={handleIsValid}>
+            Is Valid
+          </button>
+          <button className="button" onClick={handleEnroll}>
+            Enroll
+          </button>
+          <button className="button" onClick={handleContinuousPredict}>
+            Continuous Predict
+          </button>
+          <button className="button" onClick={handleDelete}>
+            Delete
+          </button>
+          <button className="button" onClick={handleScanDLFront}>
+            Scan Front Document
+          </button>
+          <button className="button" onClick={handleScanDocumentBack}>
+            Scan Back Document
+          </button>
         </div>
       </div>
-
     </div>
   );
 };
-
 
 export default Ready;

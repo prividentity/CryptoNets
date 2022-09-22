@@ -12,8 +12,9 @@ const useCamera = (element = 'userVideo') => {
   const init = async () => {
     if (ready) return;
     try {
-      const { devices, faceMode } = await openCamera(element,null,"front");
+      const { devices=[], faceMode, settings, status,stream,errorMessage } = await openCamera(element,false, null,"front");
       setFaceMode(faceMode);
+      console.log("hasError??", {status, errorMessage});
       if (devices.length > 0) {
         const options = devices.map((d) => ({ label: d.label, value: d.deviceId }));
         setDevices(options);

@@ -23,7 +23,8 @@ const useScanBackDocument = () => {
       setScanResult({ error: "Something went wrong." });
     } else {
       if(!scannedCodeData && resultData.result === 0){
-        setScannedCodeData(JSON.stringify(resultData.userData));
+        const { firstName, lastName, dateOfBirth, streetAddress1, state, city, postalCode, country } = resultData.userData;
+        setScannedCodeData(JSON.stringify({firstName, lastName, dateOfBirth, streetAddress1, state, city, postalCode, country}));
       }
     }
   };

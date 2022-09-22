@@ -57,6 +57,7 @@ const useEnroll = (element = 'userVideo', onSuccess, retryTimes = 4 , deviceId =
   };
 
   const callback = async (result) => {
+    console.log("callback hook result:", result)
     switch (result.status) {
       case 'VALID_FACE':
         setFaceDetected(true);
@@ -78,12 +79,12 @@ const useEnroll = (element = 'userVideo', onSuccess, retryTimes = 4 , deviceId =
         setFaceDetected(true);
         break;
       case 'WASM_RESPONSE':
-        if (result.returnValue.status === 0) {
+        if (result.returnValue?.status === 0) {
           setEnrollStatus('ENROLL SUCCESS');
           setEnrollData(result.returnValue);
           onSuccess();
         }
-        if (result.returnValue.status === -1) {
+        if (result.returnValue?.status === -1) {
           if (tries === retryTimes) {
             // onFailure();
           } else {
