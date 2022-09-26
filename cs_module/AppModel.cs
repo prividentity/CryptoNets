@@ -193,16 +193,16 @@ internal sealed class AppModel : INotifyPropertyChanged
         {
             if (IsValidRunning)
             {
-                var result = _faceModule.Validate(new ImageData(
-                    image.MIplImage.ImageData, image.Width, image.Height, image.MIplImage.ImageSize));
+                var result = _faceModule.Validate(new ImageData(ImageFormat.Rgb,
+                    image.MIplImage.ImageData, image.Width, image.Height));
                 DiagnosticMessage = result.Result.ToString();
                 return;
             }
 
             if (PredictRunning)
             {
-                var result = await _faceModule.PredictAsync(new ImageData(
-                    image.MIplImage.ImageData, image.Width, image.Height, image.MIplImage.ImageSize));
+                var result = await _faceModule.PredictAsync(new ImageData(ImageFormat.Rgb,
+                    image.MIplImage.ImageData, image.Width, image.Height));
                 _uuid = result.Uuid;
                 if (String.IsNullOrEmpty(_uuid))
                 {
@@ -219,8 +219,8 @@ internal sealed class AppModel : INotifyPropertyChanged
 
             if (EnrollRunning)
             {
-                var result = await _faceModule.EnrollAsync(new ImageData(
-                    image.MIplImage.ImageData, image.Width, image.Height, image.MIplImage.ImageSize));
+                var result = await _faceModule.EnrollAsync(new ImageData(ImageFormat.Rgb,
+                    image.MIplImage.ImageData, image.Width, image.Height));
                 _uuid = result.Uuid;
                 if (String.IsNullOrEmpty(_uuid))
                 {

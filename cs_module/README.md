@@ -2,12 +2,15 @@
 
 Powered by Private Identity® - https://private.id
 
+## Prerequisite
+
+Sign up on the waitlist on https://private.id to obtain your apiKey.
+
 ## Provide configuration
 
-You have to specify valid server URL and API key in the `AppModel.cs` file:
+You have to specify valid API key in the `AppModel.cs` file:
 
 ```cs
-    private const String ServerUrl = "";
     private const String ApiKey = "";
 ```
 
@@ -15,7 +18,7 @@ Without this step you'll be able to compile code but it will not work properly.
 
 ## How to run using .NET SDK
 
-- Install (.NET 6.0 SDK)[https://dotnet.microsoft.com/en-us/download/dotnet/6.0]
+- Install [.NET 6.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
 - Run the next command: `dotnet run` in this directory and wait build completion
 
 ## How to run using Visual Studio
