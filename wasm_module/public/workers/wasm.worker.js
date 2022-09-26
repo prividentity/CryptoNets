@@ -625,7 +625,6 @@ const FHE_predictOnefa = (originalImages, simd, debug_type = 0, cb) =>
     let result = null;
     console.log('wasmPrivModule', wasmPrivModule);
 
-
     const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
     if (s_result) {
@@ -701,40 +700,66 @@ const isValidInternal = (data, width, height, simd, action, debug_type = 0, cb) 
     const isValidPtr = wasmPrivModule._malloc(imageSize);
     wasmPrivModule.HEAP8.set(data, isValidPtr / data.BYTES_PER_ELEMENT);
 
-    const outputBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    const outputBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // const outputBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // const outputBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
-    const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     // create a pointer to interger to hold the length of the output buffer
-    const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
+    console.log('[FAR_DEBUG] : Calling is_valid');
     const result = await wasmPrivModule._is_valid(
       action,
       isValidPtr,
       width,
       height,
-      outputBufferFirstPtr,
-      outputBufferLenPtr,
-      resultFirstPtr,
-      resultLenPtr,
+      null,
+      0,
+      null, /* resultFirstPtr, */
+      0, /* resultLenPtr, */
     );
+    console.log('[FAR_DEBUG] : is_valid result = ', result);
+    if ( result === 0 ) {
+        console.log('[FAR_DEBUG] : Operation executed successfully. Result shall be returned in the JS callback synchronously or asynchronously');
+    } else {
+        console.log('[FAR_DEBUG] : Operation failed to execute');
+    }
 
-    // await new Promise(resolve => setTimeout(resolve, 100));
-    // const [resultLength] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultLenPtr, 1);
-    // const [resultSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultFirstPtr, 1);
-
-    // const resultDataArray = new Uint8Array(wasmPrivModule.HEAPU8.buffer, resultSecPtr, resultLength);
-    // const resultString = String.fromCharCode.apply(null, resultDataArray);
-
-    // const resultData = JSON.parse(resultString);
-
-    wasmPrivModule._free(outputBufferFirstPtr);
-    wasmPrivModule._free(outputBufferLenPtr);
-    wasmPrivModule._free(resultFirstPtr);
-    wasmPrivModule._free(resultLenPtr);
+    /*
+    console.log('[FAR_DEBUG] : is_valid result = ', result);
+    if ( result === 0 ) {
+        // The callback shall be called synchronously so after reading the result we can 
+        // immediately free the buffer
+        const [resultLength] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultLenPtr, 1);
+        console.log('[FAR_DEBUG] : Result Length = ', resultLength);
+        if (resultLength > 0) {
+            const [resultSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultFirstPtr, 1);
+            const resultDataArray = new Uint8Array(wasmPrivModule.HEAPU8.buffer, resultSecPtr, resultLength);
+            const resultString = String.fromCharCode.apply(null, resultDataArray);
+            console.log('[FAR_DEBUG] : Result String = ', resultString);
+            console.log('[FAR_DEBUG] : Freeing the internally allocated memory at ', resultFirstPtr);
+            wasmPrivModule._FHE_free_api_memory(resultFirstPtr);
+        }
+        // Free the local pointers
+        wasmPrivModule._free(resultFirstPtr);
+        wasmPrivModule._free(resultLenPtr);
+    } else if ( result < 0 ) {
+        // Some error occurred, so callback shall not be called and there is no memory assigned
+        // to provided buffer
+        wasmPrivModule._free(resultFirstPtr);
+        wasmPrivModule._free(resultLenPtr);
+    } else if ( result > 0 ) {
+        // The callback shall be called asynchronously and input buffers shall not be used as 
+        // the results shall be returned in locally allocated buffer
+        wasmPrivModule._free(resultFirstPtr);
+        wasmPrivModule._free(resultLenPtr);
+    }
+    */
+    console.log('[FAR_DEBUG] : Now freeing the locally allocated buffers');
     wasmPrivModule._free(isValidPtr);
+    console.log('[FAR_DEBUG] : Done with is_valid');
 
-    resolve({result});
+    resolve({ result });
   });
 
 const isValidFrontDocument = (imagePtr, width, height, simd, action, debug_type = 0, cb) =>

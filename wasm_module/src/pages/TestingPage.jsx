@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { useCallback, useEffect, useState } from "react";
-import { isValid, switchCamera } from "@privateid/cryptonets-web-sdk";
+import { switchCamera } from "@privateid/cryptonets-web-sdk";
 import "./styles.css";
 import useCamera from "../hooks/useCamera";
 import useWasm from "../hooks/useWasm";
@@ -13,14 +13,13 @@ import useScanFrontDocument from "../hooks/useScanFrontDocument";
 import useScanBackDocument from "../hooks/useScanBackDocument";
 import useEnrollOneFa from "../hooks/useEnrollOneFa";
 import usePredictOneFa from "../hooks/usePredictOneFa";
+import useIsValid from "../hooks/useIsValid";
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
   const { ready, init, device, devices, faceMode, setDevice } =
     useCamera("userVideo");
   const [deviceId, setDeviceId] = useState("");
-
-  const [isValidCallData, setIsValidCallData] = useState(null);
 
   // Use Continuous Predict
   const predictRetryTimes = 1;
@@ -70,26 +69,13 @@ const Ready = () => {
     console.log("--- wasm status ", wasmReady, ready);
   }, [wasmReady, ready]);
 
+
+  const { faceDetected: isValidFaceDetected, isValidCall } = useIsValid('userVideo');
   // isValid
   const handleIsValid = async () => {
     setCurrentAction("isValid");
+    await isValidCall();
   };
-  // do isValid call every 2 sec
-  useEffect(() => {
-    const doIsValid = async () => {
-      const result = await isValid();
-      console.log("result react: ", result);
-      setIsValidCallData(
-        result.result === 0 ? "Valid Face Detected" : "No Face Detected"
-      );
-    };
-    let interval;
-    if (currentAction === "isValid") {
-      doIsValid();
-      interval = setInterval(doIsValid, 2000);
-    }
-    return () => clearInterval(interval);
-  }, [currentAction]);
 
   const handleEnroll = async () => {
     setCurrentAction("useEnroll");
@@ -234,8 +220,7 @@ const Ready = () => {
           {devices.map((e, index) => {
             return (
               <option id={e.value} value={e.value} key={index}>
-                {" "}
-                {e.label}{" "}
+                {e.label}
               </option>
             );
           })}
@@ -260,11 +245,9 @@ const Ready = () => {
               <div> Enroll Status: {enrollStatus} </div>
               <div> Progress: {`${progress} %`}</div>
               <div>
-                {" "}
                 Enroll UUID: {`${enrollData ? enrollData.PI.uuid : ""}`}
               </div>
               <div>
-                {" "}
                 Enroll GUID: {`${enrollData ? enrollData.PI.guid : ""}`}
               </div>
             </div>
@@ -292,7 +275,7 @@ const Ready = () => {
           {currentAction === "isValid" && (
             <div>
               <div>
-                {`Face Valid: ${isValidCallData ? isValidCallData : null}`}
+                {`Face Valid: ${isValidFaceDetected}`}
               </div>
             </div>
           )}
