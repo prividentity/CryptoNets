@@ -636,7 +636,7 @@ const FHE_predictOnefa = (originalImages, simd, debug_type = 0, cb) =>
     const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
 
     try {
-      result = await wasmPrivModule._privid_predict_onefa(
+      result = await wasmPrivModule._privid_face_predict_onefa(
         sessionSecPtr /* session pointer */,
         null /* user configuration */,
         0 /* user configuration length */,
@@ -725,36 +725,6 @@ const isValidInternal = (data, width, height, simd, action, debug_type = 0, cb) 
         console.log('[FAR_DEBUG] : Operation failed to execute');
     }
 
-    /*
-    console.log('[FAR_DEBUG] : is_valid result = ', result);
-    if ( result === 0 ) {
-        // The callback shall be called synchronously so after reading the result we can 
-        // immediately free the buffer
-        const [resultLength] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultLenPtr, 1);
-        console.log('[FAR_DEBUG] : Result Length = ', resultLength);
-        if (resultLength > 0) {
-            const [resultSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultFirstPtr, 1);
-            const resultDataArray = new Uint8Array(wasmPrivModule.HEAPU8.buffer, resultSecPtr, resultLength);
-            const resultString = String.fromCharCode.apply(null, resultDataArray);
-            console.log('[FAR_DEBUG] : Result String = ', resultString);
-            console.log('[FAR_DEBUG] : Freeing the internally allocated memory at ', resultFirstPtr);
-            wasmPrivModule._FHE_free_api_memory(resultFirstPtr);
-        }
-        // Free the local pointers
-        wasmPrivModule._free(resultFirstPtr);
-        wasmPrivModule._free(resultLenPtr);
-    } else if ( result < 0 ) {
-        // Some error occurred, so callback shall not be called and there is no memory assigned
-        // to provided buffer
-        wasmPrivModule._free(resultFirstPtr);
-        wasmPrivModule._free(resultLenPtr);
-    } else if ( result > 0 ) {
-        // The callback shall be called asynchronously and input buffers shall not be used as 
-        // the results shall be returned in locally allocated buffer
-        wasmPrivModule._free(resultFirstPtr);
-        wasmPrivModule._free(resultLenPtr);
-    }
-    */
     console.log('[FAR_DEBUG] : Now freeing the locally allocated buffers');
     wasmPrivModule._free(isValidPtr);
     console.log('[FAR_DEBUG] : Done with is_valid');
