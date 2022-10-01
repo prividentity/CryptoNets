@@ -118,11 +118,23 @@ function deleteUUID(uuid, cb) {
   const encoder = new TextEncoder();
   const uuid_bytes = encoder.encode(`${uuid}\0`);
 
+  // console.log('[FAR_DEBUG] : Calling session preparation')
+  const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+  const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
+  if (s_result) {
+    console.log('[FAR_DEBUG] : session initialized successfully');
+  } else {
+    console.log('[FAR_DEBUG] : session initialized failed');
+  }
+  // console.log('[FAR_DEBUG] : Getting session second pointer')
+  const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
+  // console.log(`[FAR_DEBUG] : Session second pointer = [${  sessionSecPtr  }]`)
+
   const uuidInputSize = uuid.length;
   const uuidInputPtr = wasmPrivModule._malloc(uuidInputSize);
   wasmPrivModule.HEAP8.set(uuid_bytes, uuidInputPtr / uuid_bytes.BYTES_PER_ELEMENT);
 
-  wasmPrivModule._FHE_delete(uuidInputPtr, uuidInputSize, 0, 0);
+  wasmPrivModule._privid_user_delete(sessionSecPtr, null, 0, uuidInputPtr, uuidInputSize, 0, 0);
   wasmPrivModule._free(uuidInputPtr);
 }
 

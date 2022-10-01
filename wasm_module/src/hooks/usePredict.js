@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { enrollPredict } from '@privateid/cryptonets-web-sdk';
+import { enrollPredict, predictOneFA } from '@privateid/cryptonets-web-sdk';
 
 const usePredict = (element, onSuccess, onFailure, onNotFound, retryTimes = 1) => {
   const [faceDetected, setFaceDetected] = useState(false);
@@ -12,7 +12,9 @@ const usePredict = (element, onSuccess, onFailure, onNotFound, retryTimes = 1) =
       if (onSuccessCallback) {
         successCallback = onSuccessCallback;
       }
-      await enrollPredict(false, callback, {}, element);
+      await predictOneFA(callback, {
+        input_image_format: 'rgba',
+      }, element);
   };
 
   // const stopTracks = () => {
