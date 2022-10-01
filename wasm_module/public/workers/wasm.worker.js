@@ -32,7 +32,7 @@ const isLoad = (simd, url, key, module, debug_type = '0') =>
       const verison = await wasmPrivModule._privid_module_get_version();
       resolve(`loaded wasm privid verison ${verison}`);
     } else if (['face', 'face_mask'].includes(module)) {
-      const moduleName = module === 'face' ? 'tflite_new' : 'tflite_new_mask';
+      const moduleName = 'privid_fhe';
       const modulePath = simd ? 'simd' : 'noSimd';
 
       const cachedModule = await readKey(module);
@@ -481,7 +481,7 @@ const FHE_enroll = (originalImages, simd, action, debug_type = 0, cb, config = {
     resolve({ result, href });
   });
 
-const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb) =>
+const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) =>
   new Promise(async (resolve) => {
     privid_wasm_result = cb;
     if (!wasmPrivModule) {
@@ -497,12 +497,12 @@ const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb) =>
     const version = wasmPrivModule._get_version();
     console.log('Version = ', version);
 
-    // const encoder = new TextEncoder();
-    // const config_bytes = encoder.encode(`${config}\0`);
+    const encoder = new TextEncoder();
+    const config_bytes = encoder.encode(`${config}\0`);
 
-    // const configInputSize = config.length;
-    // const configInputPtr = wasmPrivModule._malloc(configInputSize);
-    // wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
+    const configInputSize = config.length;
+    const configInputPtr = wasmPrivModule._malloc(configInputSize);
+    wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
 
     const imageInputSize = imageInput.length * imageInput.BYTES_PER_ELEMENT;
     const imageInputPtr = wasmPrivModule._malloc(imageInputSize);
@@ -540,8 +540,8 @@ const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb) =>
     try {
       result = await wasmPrivModule._privid_enroll_onefa(
         sessionSecPtr /* session pointer */,
-        null /* user configuration */,
-        0 /* user configuration length */,
+        configInputPtr,
+        configInputSize,
         imageInputPtr /* input images */,
         numImages /* number of input images */,
         originalImages[0].data.length /* size of one image */,
@@ -589,7 +589,7 @@ const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb) =>
     resolve({ result, href });
   });
 
-const FHE_predictOnefa = (originalImages, simd, debug_type = 0, cb) =>
+const FHE_predictOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) =>
   new Promise(async (resolve) => {
     privid_wasm_result = cb;
     if (!wasmPrivModule) {
@@ -604,6 +604,13 @@ const FHE_predictOnefa = (originalImages, simd, debug_type = 0, cb) =>
     );
     const version = wasmPrivModule._get_version();
     console.log('Version = ', version);
+
+    const encoder = new TextEncoder();
+    const config_bytes = encoder.encode(`${config}\0`);
+
+    const configInputSize = config.length;
+    const configInputPtr = wasmPrivModule._malloc(configInputSize);
+    wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
 
     const imageInputSize = imageInput.length * imageInput.BYTES_PER_ELEMENT;
     const imageInputPtr = wasmPrivModule._malloc(imageInputSize);
@@ -638,8 +645,8 @@ const FHE_predictOnefa = (originalImages, simd, debug_type = 0, cb) =>
     try {
       result = await wasmPrivModule._privid_face_predict_onefa(
         sessionSecPtr /* session pointer */,
-        null /* user configuration */,
-        0 /* user configuration length */,
+        configInputPtr,
+        configInputSize,
         imageInputPtr /* input images */,
         numImages /* number of input images */,
         originalImages[0].data.length /* size of one image */,
@@ -719,7 +726,7 @@ const isValidInternal = (data, width, height, simd, action, debug_type = 0, cb) 
       0, /* resultLenPtr, */
     );
     console.log('[FAR_DEBUG] : is_valid result = ', result);
-    if ( result === 0 ) {
+    if ( result >= 0 ) {
         console.log('[FAR_DEBUG] : Operation executed successfully. Result shall be returned in the JS callback synchronously or asynchronously');
     } else {
         console.log('[FAR_DEBUG] : Operation failed to execute');
@@ -757,7 +764,7 @@ const isValidVoice = (data, action, params, recordDuration, simd, debug_type = 0
     const channels = params.channelCount;
     const stride = 1;
     const data_BYTES_PER_ELEMENT = 2;
-    const voiceSizeMax = fs * channels * recordDuration * data_BYTES_PER_ELEMENT;
+    const voiceSizeMax = fs * channels * recordDuration * data_BYTEPER_ELEMENT;
     const voiceSize = data.byteLength;
 
     console.log('data.byteLength', data.byteLength, data_BYTES_PER_ELEMENT, voiceSizeMax);

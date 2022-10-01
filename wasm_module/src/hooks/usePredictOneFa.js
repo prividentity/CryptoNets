@@ -11,7 +11,9 @@ const usePredictOneFa = (element = 'userVideo', onSuccess, retryTimes = 4 , devi
 
   const predictUserOneFa = async () => {
       // eslint-disable-next-line no-unused-vars
-      await predictOneFA(callback, element, deviceId);
+      await predictOneFA(callback, {
+        input_image_format: 'rgba',
+      }, element, deviceId);
   };
 
 

@@ -11,7 +11,9 @@ const useEnrollOneFa = (element = 'userVideo', onSuccess, retryTimes = 4 , devic
 
   const enrollUserOneFa = async () => {
       // eslint-disable-next-line no-unused-vars
-      const portrait = await enrollOneFA(callback, element, deviceId);
+      const portrait = await enrollOneFA(callback, {
+        input_image_format: 'rgba',
+      }, element, deviceId);
   };
 
 
