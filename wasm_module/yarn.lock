@@ -1580,10 +1580,10 @@
     schema-utils "^3.0.0"
     source-map "^0.7.3"
 
-"@privateid/cryptonets-web-sdk@2.0.15-alpha":
-  version "2.0.15-alpha"
-  resolved "https://registry.yarnpkg.com/@privateid/cryptonets-web-sdk/-/cryptonets-web-sdk-2.0.15-alpha.tgz#2c3196404770294d3c7dab9bb80e2e139ace5845"
-  integrity sha512-8+6L5pJePXa4QcDBvTDGKsklIvGcZaO6CK+H4SJPOCkcj0gylfwfRz0KywNngF1s0ldwE5yVD2Ih62nKuPeQiw==
+"@privateid/cryptonets-web-sdk@2.0.16-alpha":
+  version "2.0.16-alpha"
+  resolved "https://registry.yarnpkg.com/@privateid/cryptonets-web-sdk/-/cryptonets-web-sdk-2.0.16-alpha.tgz#193f2cede76ad746caedf8443030450809879ae5"
+  integrity sha512-TnYBjIciROVz25EwgTH/ntXP1F7Jsng8uXlyDfaygKETmDBW0ID3obFw52+9oaFye1rrHgzutt5wb0affIg1Lw==
   dependencies:
     comlink "^4.3.1"
     detect-browser "^5.3.0"

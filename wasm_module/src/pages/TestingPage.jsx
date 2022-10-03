@@ -372,9 +372,6 @@ const Ready = () => {
           <button className="button" onClick={handleIsValid}>
             Is Valid
           </button>
-          <button className="button" onClick={handleEnroll}>
-            Enroll
-          </button>
           <button className="button" onClick={handleContinuousPredict}>
             Continuous Predict
           </button>
