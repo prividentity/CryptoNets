@@ -11,7 +11,9 @@ const useContinuousPredict = (element, onSuccess, onFailure, onNotFound, retryTi
       if (onSuccessCallback) {
         successCallback = onSuccessCallback;
       }
-      await continuousEnrollPredict(false, callback, {}, element);
+      await continuousEnrollPredict(false, callback, {
+        input_image_format: 'rgba',
+      }, element);
   };
 
   // const stopTracks = () => {
@@ -22,9 +24,11 @@ const useContinuousPredict = (element, onSuccess, onFailure, onNotFound, retryTi
   const callback = async (result) => {
     switch (result.status) {
       case 'VALID_FACE':
+        console.log('HOOK RESULT VALID FACE')
         setFaceDetected(true);
         break;
       case 'INVALID_FACE':
+        console.log('HOOK RESULT INVALID FACE')
         setFaceDetected(false);
         if (failureTries === retryTimes) {
           onNotFound();
@@ -34,6 +38,7 @@ const useContinuousPredict = (element, onSuccess, onFailure, onNotFound, retryTi
         break;
       case 'WASM_RESPONSE':
       case -1:
+        console.log('HOOK RESULT : ', result)
         if (result.returnValue.status === 0) {
           // stopTracks();
           if (successCallback) {
