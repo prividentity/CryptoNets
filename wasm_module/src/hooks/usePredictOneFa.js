@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { predictOneFA } from '@privateid/cryptonets-web-sdk';
+import { predict1FA } from '@privateid/cryptonets-web-sdk';
 
 const usePredictOneFa = (element = 'userVideo', onSuccess, retryTimes = 4 , deviceId = null) => {
   const [predictOneFaaceDetected, setFaceDetected] = useState(false);
@@ -11,7 +11,7 @@ const usePredictOneFa = (element = 'userVideo', onSuccess, retryTimes = 4 , devi
 
   const predictUserOneFa = async () => {
       // eslint-disable-next-line no-unused-vars
-      await predictOneFA(callback, {
+      await predict1FA(callback, {
         input_image_format: 'rgba',
       }, element, deviceId);
   };
@@ -59,7 +59,7 @@ const usePredictOneFa = (element = 'userVideo', onSuccess, retryTimes = 4 , devi
   };
 
   const callback = async (result) => {
-    console.log("callback hook result:", result)
+    console.log("predict callback hook result:", result)
     switch (result.status) {
       case 'VALID_FACE':
         setFaceDetected(true);

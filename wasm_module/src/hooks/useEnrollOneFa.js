@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { enrollOneFA } from '@privateid/cryptonets-web-sdk';
+import { enroll1FA } from '@privateid/cryptonets-web-sdk';
 
 const useEnrollOneFa = (element = 'userVideo', onSuccess, retryTimes = 4 , deviceId = null) => {
   const [faceDetected, setFaceDetected] = useState(false);
@@ -11,7 +11,7 @@ const useEnrollOneFa = (element = 'userVideo', onSuccess, retryTimes = 4 , devic
 
   const enrollUserOneFa = async () => {
       // eslint-disable-next-line no-unused-vars
-      const portrait = await enrollOneFA(callback, {
+      const portrait = await enroll1FA(callback, {
         input_image_format: 'rgba',
       }, element, deviceId);
   };
@@ -59,7 +59,7 @@ const useEnrollOneFa = (element = 'userVideo', onSuccess, retryTimes = 4 , devic
   };
 
   const callback = async (result) => {
-    console.log("callback hook result:", result)
+    console.log("enroll callback hook result:", result)
     switch (result.status) {
       case 'VALID_FACE':
         setFaceDetected(true);
