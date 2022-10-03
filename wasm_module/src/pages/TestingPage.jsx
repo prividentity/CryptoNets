@@ -363,14 +363,14 @@ const Ready = () => {
         </div>
 
         <div id="module_functions" className="buttonContainer">
-          <button className="button" onClick={handleEnrollOneFa}>
-            Enroll ONEFA
-          </button>
-          <button className="button" onClick={handlePredictOneFa}>
-            Predict ONEFA
-          </button>
           <button className="button" onClick={handleIsValid}>
             Is Valid
+          </button>
+          <button className="button" onClick={handleEnrollOneFa}>
+            Enroll
+          </button>
+          <button className="button" onClick={handlePredictOneFa}>
+            Predict
           </button>
           <button className="button" onClick={handleContinuousPredict}>
             Continuous Predict
