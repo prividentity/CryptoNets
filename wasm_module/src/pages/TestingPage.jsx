@@ -372,9 +372,6 @@ const Ready = () => {
           <button className="button" onClick={handlePredictOneFa}>
             Predict
           </button>
-          <button className="button" onClick={handleContinuousPredict}>
-            Continuous Predict
-          </button>
           <button className="button" onClick={handleDelete}>
             Delete
           </button>

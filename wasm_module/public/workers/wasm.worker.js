@@ -48,7 +48,7 @@ const isLoad = (simd, url, key, module, debug_type = '0') =>
 
         {
           const encoder = new TextEncoder();
-          const url_bytes = encoder.encode(`${url}/0`);
+          const url_bytes = encoder.encode(`${url}0`);
           url_bytes[url_bytes.length - 1] = 0;
 
           const urlInputSize = url_bytes.length * url_bytes.BYTES_PER_ELEMENT;
@@ -87,7 +87,7 @@ const isLoad = (simd, url, key, module, debug_type = '0') =>
         await putKey(module, buffer, scriptBuffer, version);
 
         const encoder = new TextEncoder();
-        const url_bytes = encoder.encode(`${url}/0`);
+        const url_bytes = encoder.encode(`${url}0`);
         url_bytes[url_bytes.length - 1] = 0;
 
         const urlInputSize = url_bytes.length * url_bytes.BYTES_PER_ELEMENT;
