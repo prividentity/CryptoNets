@@ -82,10 +82,8 @@ const Ready = () => {
     enrollUserOneFa();
   };
 
-  const [predictResult, setPredictResult] = useState(null);
   const handlePreidctSuccess = (result) => {
     console.log('======PREDICT SUCCESS========');
-    setPredictResult(result)
   }
   const {
     predictOneFaData,
@@ -118,19 +116,19 @@ const Ready = () => {
   const { loading, onDeleteUser } = useDelete(useDeleteCallback, ready);
 
   const handleDelete = async () => {
+    setDeletionStatus(null);
     setCurrentAction("useDelete");
-    setPredictResult(null);
     predictUserOneFa();
   };
 
   // deleting
   useEffect(() => {
     if (currentAction === "useDelete") {
-      if (predictResult) {
-        onDeleteUser(predictResult.PI.uuid);
+      if (predictOneFaData) {
+        onDeleteUser(predictOneFaData.PI.uuid);
       }
     }
-  }, [currentAction, predictResult]);
+  }, [currentAction, predictOneFaData]);
 
   // Scan Document Front
   const {

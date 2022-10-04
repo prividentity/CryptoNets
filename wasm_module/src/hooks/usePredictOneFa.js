@@ -1,21 +1,32 @@
-import { useState } from 'react';
-import { predict1FA } from '@privateid/cryptonets-web-sdk';
+import { useState } from "react";
+import { predict1FA } from "@privateid/cryptonets-web-sdk";
 
-const usePredictOneFa = (element = 'userVideo', onSuccess, retryTimes = 4 , deviceId = null) => {
+const usePredictOneFa = (
+  element = "userVideo",
+  onSuccess,
+  retryTimes = 4,
+  deviceId = null
+) => {
   const [predictOneFaaceDetected, setFaceDetected] = useState(false);
-  const [predictOneFaStatus, setEnrollStatus] = useState(null);
+  const [predictOneFaStatus, setPredictStatus] = useState(null);
   const [predictOneFaprogress, setProgress] = useState(0);
-  const [predictOneFaData, setPredictData] = useState(null)
+  const [predictOneFaData, setPredictData] = useState(null);
 
   let tries = 0;
 
   const predictUserOneFa = async () => {
-      // eslint-disable-next-line no-unused-vars
-      await predict1FA(callback, {
-        input_image_format: 'rgba',
-      }, element, deviceId);
+    setFaceDetected(false);
+    setPredictData(null);
+    // eslint-disable-next-line no-unused-vars
+    await predict1FA(
+      callback,
+      {
+        input_image_format: "rgba",
+      },
+      element,
+      deviceId
+    );
   };
-
 
   function wait(milliseconds) {
     const date = Date.now();
@@ -28,61 +39,61 @@ const usePredictOneFa = (element = 'userVideo', onSuccess, retryTimes = 4 , devi
   const getDisplayedMessage = (result) => {
     switch (result) {
       case -1:
-        return 'Please look at the camera';
+        return "Please look at the camera";
       case 0:
-        return 'Face detected';
+        return "Face detected";
       case 1:
-        return 'Image Spoof';
+        return "Image Spoof";
       case 2:
-        return 'Video Spoof';
+        return "Video Spoof";
       case 3:
-        return 'Video Spoof';
+        return "Video Spoof";
       case 4:
-        return 'Too far away';
+        return "Too far away";
       case 5:
-        return 'Too far to right';
+        return "Too far to right";
       case 6:
-        return 'Too far to left';
+        return "Too far to left";
       case 7:
-        return 'Too far up';
+        return "Too far up";
       case 8:
-        return 'Too far down';
+        return "Too far down";
       case 9:
-        return 'Too blurry';
+        return "Too blurry";
       case 10:
-        return 'PLEASE REMOVE EYEGLASSES';
+        return "PLEASE REMOVE EYEGLASSES";
       case 11:
-        return 'PLEASE REMOVE FACEMASK';
+        return "PLEASE REMOVE FACEMASK";
       default:
-        return '';
+        return "";
     }
   };
 
   const callback = async (result) => {
-    console.log("predict callback hook result:", result)
+    console.log("predict callback hook result:", result);
     switch (result.status) {
-      case 'VALID_FACE':
+      case "VALID_FACE":
         setFaceDetected(true);
-        setEnrollStatus(null);
+        setPredictStatus(null);
         setProgress(result.progress);
         break;
-      case 'INVALID_FACE':
+      case "INVALID_FACE":
         if (predictOneFaStatus && predictOneFaStatus?.length > 0) {
           wait(1500);
-          setEnrollStatus(getDisplayedMessage(result.result));
+          setPredictStatus(getDisplayedMessage(result.result));
         } else {
-          setEnrollStatus(getDisplayedMessage(result.result));
+          setPredictStatus(getDisplayedMessage(result.result));
         }
 
         setFaceDetected(false);
         break;
-      case 'ENROLLING':
-        setEnrollStatus('ENROLLING');
+      case "ENROLLING":
+        setPredictStatus("ENROLLING");
         setFaceDetected(true);
         break;
-      case 'WASM_RESPONSE':
+      case "WASM_RESPONSE":
         if (result.returnValue?.status === 0) {
-          setEnrollStatus('ENROLL SUCCESS');
+          setPredictStatus("ENROLL SUCCESS");
           setPredictData(result.returnValue);
           onSuccess(result.returnValue);
         }
@@ -99,7 +110,13 @@ const usePredictOneFa = (element = 'userVideo', onSuccess, retryTimes = 4 , devi
     }
   };
 
-  return { predictOneFaaceDetected, predictOneFaStatus, predictOneFaData, predictUserOneFa, predictOneFaprogress };
+  return {
+    predictOneFaaceDetected,
+    predictOneFaStatus,
+    predictOneFaData,
+    predictUserOneFa,
+    predictOneFaprogress,
+  };
 };
 
 export default usePredictOneFa;
