@@ -5,7 +5,7 @@ const usePredictOneFa = (element = 'userVideo', onSuccess, retryTimes = 4 , devi
   const [predictOneFaaceDetected, setFaceDetected] = useState(false);
   const [predictOneFaStatus, setEnrollStatus] = useState(null);
   const [predictOneFaprogress, setProgress] = useState(0);
-  const [predictOneFaData, setEnrollData] = useState(null)
+  const [predictOneFaData, setPredictData] = useState(null)
 
   let tries = 0;
 
@@ -83,8 +83,8 @@ const usePredictOneFa = (element = 'userVideo', onSuccess, retryTimes = 4 , devi
       case 'WASM_RESPONSE':
         if (result.returnValue?.status === 0) {
           setEnrollStatus('ENROLL SUCCESS');
-          setEnrollData(result.returnValue);
-          onSuccess();
+          setPredictData(result.returnValue);
+          onSuccess(result.returnValue);
         }
         if (result.returnValue?.status === -1) {
           if (tries === retryTimes) {

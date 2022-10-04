@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { switchCamera } from "@privateid/cryptonets-web-sdk";
 
 import {
@@ -19,8 +19,7 @@ import "./styles.css";
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
-  const { ready, init, device, devices, faceMode, setDevice } =
-    useCamera("userVideo");
+  const { ready, init, device, devices, faceMode, setDevice } = useCamera("userVideo");
   const [deviceId, setDeviceId] = useState("");
 
   // Use Continuous Predict
@@ -83,13 +82,18 @@ const Ready = () => {
     enrollUserOneFa();
   };
 
+  const [predictResult, setPredictResult] = useState(null);
+  const handlePreidctSuccess = (result) => {
+    console.log('======PREDICT SUCCESS========');
+    setPredictResult(result)
+  }
   const {
     predictOneFaData,
     predictOneFaStatus,
     predictOneFaaceDetected,
     predictOneFaprogress,
     predictUserOneFa,
-  } = usePredictOneFa("userVideo", useEnrollSuccess);
+  } = usePredictOneFa("userVideo", handlePreidctSuccess);
   const handlePredictOneFa = async () => {
     setCurrentAction("usePredictOneFa");
     predictUserOneFa();
@@ -112,21 +116,21 @@ const Ready = () => {
     setDeletionStatus(deleteStatus);
   };
   const { loading, onDeleteUser } = useDelete(useDeleteCallback, ready);
-  const [predictData, setPredictData] = useState(null);
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = async () => {
     setCurrentAction("useDelete");
+    setPredictResult(null);
     predictUserOneFa();
-  }, []);
+  };
 
   // deleting
   useEffect(() => {
     if (currentAction === "useDelete") {
-      if (predictOneFaData) {
-        onDeleteUser(predictOneFaData.PI.uuid);
+      if (predictResult) {
+        onDeleteUser(predictResult.PI.uuid);
       }
     }
-  }, [currentAction, predictOneFaData]);
+  }, [currentAction, predictResult]);
 
   // Scan Document Front
   const {
