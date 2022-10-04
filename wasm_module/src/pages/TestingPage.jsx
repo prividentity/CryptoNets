@@ -1,19 +1,21 @@
 /* eslint-disable */
 import { useCallback, useEffect, useState } from "react";
 import { switchCamera } from "@privateid/cryptonets-web-sdk";
-import "./styles.css";
-import useCamera from "../hooks/useCamera";
-import useWasm from "../hooks/useWasm";
+
+import {
+  useCamera,
+  useWasm,
+  useDelete,
+  useIsValid,
+  useEnrollOneFa,
+  usePredictOneFa,
+  useContinuousPredict,
+  useScanFrontDocument,
+  useScanBackDocument,
+} from "../hooks";
 import { isAndroid, isIOS, osVersion } from "../utils";
-import useEnroll from "../hooks/useEnroll";
-import useContinuousPredict from "../hooks/useContinuousPredict";
-import useDelete from "../hooks/useDelete";
-import usePredict from "../hooks/usePredict";
-import useScanFrontDocument from "../hooks/useScanFrontDocument";
-import useScanBackDocument from "../hooks/useScanBackDocument";
-import useEnrollOneFa from "../hooks/useEnrollOneFa";
-import usePredictOneFa from "../hooks/usePredictOneFa";
-import useIsValid from "../hooks/useIsValid";
+
+import "./styles.css";
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
@@ -44,16 +46,6 @@ const Ready = () => {
     predictRetryTimes
   );
 
-  // Use Enroll
-  const useEnrollSuccess = () => console.log("=======ENROLL SUCCESS=======");
-  const {
-    faceDetected: enrollFaceDetected,
-    enrollStatus,
-    enrollData,
-    enrollUser,
-    progress,
-  } = useEnroll("userVideo", useEnrollSuccess, null, deviceId);
-
   const [currentAction, setCurrentAction] = useState(null);
 
   useEffect(() => {
@@ -69,20 +61,16 @@ const Ready = () => {
     console.log("--- wasm status ", wasmReady, ready);
   }, [wasmReady, ready]);
 
-
-  const { faceDetected: isValidFaceDetected, isValidCall } = useIsValid('userVideo');
+  const { faceDetected: isValidFaceDetected, isValidCall } =
+    useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
     setCurrentAction("isValid");
     await isValidCall();
   };
 
-  const handleEnroll = async () => {
-    setCurrentAction("useEnroll");
-    enrollUser();
-  };
-
   // Enroll ONEFA
+  const useEnrollSuccess = () => console.log("=======ENROLL SUCCESS=======");
   const {
     faceDetected: enrollOneFaFaceDetected,
     enrollStatus: enrollOneFaStatus,
@@ -102,7 +90,6 @@ const Ready = () => {
     predictOneFaprogress,
     predictUserOneFa,
   } = usePredictOneFa("userVideo", useEnrollSuccess);
-  // Predict OneFa
   const handlePredictOneFa = async () => {
     setCurrentAction("usePredictOneFa");
     predictUserOneFa();
@@ -126,32 +113,20 @@ const Ready = () => {
   };
   const { loading, onDeleteUser } = useDelete(useDeleteCallback, ready);
   const [predictData, setPredictData] = useState(null);
-  const callbackPredict = (guid, uuid) => {
-    setPredictData({ guid, uuid });
-  };
-  const predictFailureCallback = () => {
-    console.log("Face not detected.");
-  };
-  const { faceDetected, predictUser, predictResultData } = usePredict(
-    "userVideo",
-    callbackPredict,
-    predictFailureCallback,
-    predictFailureCallback
-  );
 
   const handleDelete = useCallback(async () => {
     setCurrentAction("useDelete");
-    predictUser();
-  }, [predictResultData]);
+    predictUserOneFa();
+  }, []);
 
   // deleting
   useEffect(() => {
     if (currentAction === "useDelete") {
-      if (predictData) {
-        onDeleteUser(predictData.uuid);
+      if (predictOneFaData) {
+        onDeleteUser(predictOneFaData.PI.uuid);
       }
     }
-  }, [currentAction, predictData]);
+  }, [currentAction, predictOneFaData]);
 
   // Scan Document Front
   const {
@@ -236,23 +211,6 @@ const Ready = () => {
         </div>
 
         <div>
-          {currentAction === "useEnroll" && (
-            <div>
-              <div>
-                Enroll Face Detected:
-                {enrollFaceDetected ? "Face Detected" : "No Face Detected"}
-              </div>
-              <div> Enroll Status: {enrollStatus} </div>
-              <div> Progress: {`${progress} %`}</div>
-              <div>
-                Enroll UUID: {`${enrollData ? enrollData.PI.uuid : ""}`}
-              </div>
-              <div>
-                Enroll GUID: {`${enrollData ? enrollData.PI.guid : ""}`}
-              </div>
-            </div>
-          )}
-
           {currentAction === "useEnrollOneFa" && (
             <div>
               <div>
@@ -274,9 +232,7 @@ const Ready = () => {
 
           {currentAction === "isValid" && (
             <div>
-              <div>
-                {`Face Valid: ${isValidFaceDetected}`}
-              </div>
+              <div>{`Face Valid: ${isValidFaceDetected}`}</div>
             </div>
           )}
 
@@ -325,7 +281,7 @@ const Ready = () => {
           {currentAction === "useDelete" && (
             <div>
               <div>{`Deletion Status: ${deletionStatus}`}</div>
-              <div>{`User UUID: ${predictData ? predictData.uuid : ""}`}</div>
+              <div>{`User UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
             </div>
           )}
 
