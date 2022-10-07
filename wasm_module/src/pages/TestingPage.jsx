@@ -295,9 +295,6 @@ const Ready = () => {
                 }`}
               </div>
               <div>{`Has found valid document: ${isFound}`}</div>
-              {/* <div>
-                {`Valid document UUID: ${scannedIdData ? scannedIdData.PI.uuid : ""}`}
-              </div> */}
             </div>
           )}
 
@@ -308,14 +305,6 @@ const Ready = () => {
                   scannedCodeData ? JSON.stringify(scannedCodeData) : ""
                 }`}
               </div>
-              {/* {scannedCodeData&& 
-                <ul>
-                  {Object.entries(scannedCodeData).map((data)=>{
-                    return <li> {`${data[0]}: ${JSON.stringify(data[1])}`}</li>
-                  })}
-
-                </ul>
-              } */}
             </div>
           )}
         </div>

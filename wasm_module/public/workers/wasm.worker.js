@@ -164,8 +164,19 @@ const isValidBarCode = (imageInput, simd, action, cb, debug_type = 0) =>
     const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
     let result = null;
+
+    // error here!!!  ._is_valid
+    // default is_valid,
+    // action,
+    // isValidPtr,
+    // width,
+    // height,
+    // null,
+    // 0,
+    // null, /* resultFirstPtr, */
+    // 0, /* resultLenPtr, */
     try {
-      result = wasmPrivModule._is_valid(
+      result = await wasmPrivModule._is_valid(
         1100,
         barCodePtr,
         imageInput.width,
@@ -521,14 +532,14 @@ const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) 
 
     wasmPrivModule.HEAP8.set(imageInput, imageInputPtr / imageInput.BYTES_PER_ELEMENT);
 
-    const BufferSize = wasmPrivModule._spl_image_embedding_length();
+    // const BufferSize = wasmPrivModule._spl_image_embedding_length();
 
     // outupt  ptr
-    const outputBufferSize = BufferSize * 4 * 80;
-    const outputBufferPtr = wasmPrivModule._malloc(outputBufferSize);
+    // const outputBufferSize = BufferSize * 4 * 80;
+    // const outputBufferPtr = wasmPrivModule._malloc(outputBufferSize);
 
-    const augmBufferSize = 224 * 224 * 4 * 100;
-    const augmBufferPtr = wasmPrivModule._malloc(augmBufferSize);
+    // const augmBufferSize = 224 * 224 * 4 * 100;
+    // const augmBufferPtr = wasmPrivModule._malloc(augmBufferSize);
 
     const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     // create a pointer to interger to hold the length of the output buffer
@@ -572,6 +583,7 @@ const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) 
     }
     // console.log('[FAR_DEBUG] : enroll_onefa done')
 
+    /*
     const href = [];
     if (['900', '901', '902', '903'].includes(debug_type)) {
       const num = action ? 80 : 1;
@@ -592,13 +604,13 @@ const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) 
         href.push(image);
       }
     }
-
+    */
     wasmPrivModule._free(imageInputPtr);
-    wasmPrivModule._free(outputBufferPtr);
-    wasmPrivModule._free(augmBufferPtr);
+    // wasmPrivModule._free(outputBufferPtr);
+    // wasmPrivModule._free(augmBufferPtr);
     wasmPrivModule._free(resultFirstPtr);
 
-    resolve({ result, href });
+    resolve({ result });
   });
 
 const FHE_predictOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) =>
@@ -629,14 +641,14 @@ const FHE_predictOnefa = (originalImages, simd, debug_type = 0, cb, config = {})
 
     wasmPrivModule.HEAP8.set(imageInput, imageInputPtr / imageInput.BYTES_PER_ELEMENT);
 
-    const BufferSize = wasmPrivModule._spl_image_embedding_length();
+    // const BufferSize = wasmPrivModule._spl_image_embedding_length();
 
-    // outupt  ptr
-    const outputBufferSize = BufferSize * 4 * 80;
-    const outputBufferPtr = wasmPrivModule._malloc(outputBufferSize);
+    // // outupt  ptr
+    // const outputBufferSize = BufferSize * 4 * 80;
+    // const outputBufferPtr = wasmPrivModule._malloc(outputBufferSize);
 
-    const augmBufferSize = 224 * 224 * 4 * 100;
-    const augmBufferPtr = wasmPrivModule._malloc(augmBufferSize);
+    // const augmBufferSize = 224 * 224 * 4 * 100;
+    // const augmBufferPtr = wasmPrivModule._malloc(augmBufferSize);
 
     const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     // create a pointer to interger to hold the length of the output buffer
@@ -676,33 +688,33 @@ const FHE_predictOnefa = (originalImages, simd, debug_type = 0, cb, config = {})
       console.error('---------__E__-------', e);
     }
 
-    const href = [];
-    if (['900', '901', '902', '903'].includes(debug_type)) {
-      const num = action ? 80 : 1;
-      const AugmputArray = new Uint8Array(wasmPrivModule.HEAPU8.buffer, augmBufferPtr, 224 * 224 * 4 * num);
+    // const href = [];
+    // if (['900', '901', '902', '903'].includes(debug_type)) {
+    //   const num = action ? 80 : 1;
+    //   const AugmputArray = new Uint8Array(wasmPrivModule.HEAPU8.buffer, augmBufferPtr, 224 * 224 * 4 * num);
 
-      const img_width = 224;
-      const img_height = 224;
-      const dataLength = 200704;
+    //   const img_width = 224;
+    //   const img_height = 224;
+    //   const dataLength = 200704;
 
-      const numImages = AugmputArray.length / dataLength;
+    //   const numImages = AugmputArray.length / dataLength;
 
-      for (let i = 0; i < numImages; i++) {
-        const img = AugmputArray.slice(i * dataLength, (i + 1) * dataLength);
-        const img_data = Uint8ClampedArray.from(img);
+    //   for (let i = 0; i < numImages; i++) {
+    //     const img = AugmputArray.slice(i * dataLength, (i + 1) * dataLength);
+    //     const img_data = Uint8ClampedArray.from(img);
 
-        const image = new ImageData(img_data, img_width, img_height);
+    //     const image = new ImageData(img_data, img_width, img_height);
 
-        href.push(image);
-      }
-    }
+    //     href.push(image);
+    //   }
+    // }
 
     wasmPrivModule._free(imageInputPtr);
-    wasmPrivModule._free(outputBufferPtr);
-    wasmPrivModule._free(augmBufferPtr);
+    // wasmPrivModule._free(outputBufferPtr);
+    // wasmPrivModule._free(augmBufferPtr);
     wasmPrivModule._free(resultFirstPtr);
 
-    resolve({ result, href });
+    resolve({ result });
   });
 
 const isValidInternal = (data, width, height, simd, action, debug_type = 0, cb) =>
