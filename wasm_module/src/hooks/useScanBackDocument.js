@@ -7,10 +7,45 @@ const useScanBackDocument = () => {
   const [isFound, setIsFound] = useState(false);
 
   const documentCallback = (result) => {
-    console.log("Back scan callback result:", result)
-    if (result.result === 0) {
-      setIsFound(true);
-      setScannedCodeData(result.userData);
+    console.log("--------- Back scan callback result:", result);
+    console.log("--------- returnedValue:",result.returnValue)
+    if (result.status === "WASM_RESPONSE") {
+      // setIsFound(true);
+      // setScannedCodeData(JSON.stringify(result.returnValue));
+      const {
+        firstName,
+        lastName,
+        dateOfBirth,
+        streetAddress1,
+        state,
+        city,
+        postalCode,
+        issuingCountry,
+      } = result.returnValue;
+      if (
+        firstName &&
+        lastName &&
+        dateOfBirth &&
+        streetAddress1 &&
+        state &&
+        city &&
+        postalCode &&
+        issuingCountry
+      ) {
+        setIsFound(true);
+        setScannedCodeData(
+          JSON.stringify({
+            firstName,
+            lastName,
+            dateOfBirth,
+            streetAddress1,
+            state,
+            city,
+            postalCode,
+            issuingCountry,
+          })
+        );
+      }
     }
   };
 
@@ -21,15 +56,16 @@ const useScanBackDocument = () => {
     );
     if (resultData === "error") {
       setScanResult({ error: "Something went wrong." });
-    } else {
-      if(!scannedCodeData && resultData.result === 0){
-        const { firstName, lastName, dateOfBirth, streetAddress1, state, city, postalCode, country } = resultData.userData;
-        setScannedCodeData(JSON.stringify({firstName, lastName, dateOfBirth, streetAddress1, state, city, postalCode, country}));
-      }
     }
+    // } else {
+    //   if(!scannedCodeData && resultData.result === 0){
+    //     const { firstName, lastName, dateOfBirth, streetAddress1, state, city, postalCode, country } = resultData.userData;
+    //     setScannedCodeData(JSON.stringify({firstName, lastName, dateOfBirth, streetAddress1, state, city, postalCode, country}));
+    //   }
+    // }
   };
 
-  return { scanBackDocument, scannedCodeData, scanResult , isFound };
+  return { scanBackDocument, scannedCodeData, scanResult, isFound };
 };
 
 export default useScanBackDocument;

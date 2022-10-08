@@ -20,13 +20,17 @@ const useScanFrontDocument = () => {
       "PHOTO_ID_FRONT",
       documentCallback
     );
+    console.log("resultDATA?",resultData)
     if (resultData === "error") {
       setScanResult({ error: "Something went wrong." });
     } else {
-      const { result, confScore, href, userData } = resultData;
-      console.log(result, userData, confScore ,href)
-      setResultStatus(result)
-      setScanResult(userData);
+      if(resultData.result===0){
+        const { result, confScore, href, userData } = resultData;
+        console.log("data?", result, userData, confScore ,href)
+        setResultStatus(result)
+        setScanResult(userData);
+        setIsFound(true);
+      }
     }
   };
 

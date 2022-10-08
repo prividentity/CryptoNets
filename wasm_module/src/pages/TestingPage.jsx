@@ -300,7 +300,7 @@ const Ready = () => {
 
           {currentAction === "useScanDocumentBack" && (
             <div>
-              <div>
+              <div style={{backgroundColor:"black"}}>
                 {`Scanned code data: ${
                   scannedCodeData ? JSON.stringify(scannedCodeData) : ""
                 }`}
