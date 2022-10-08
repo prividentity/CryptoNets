@@ -276,7 +276,7 @@ const configureBlur = async (paramID, param) => {
   return wasmPrivModule._FHE_configure(paramID, param);
 };
 
-const scanDocument = async (imageInput, simd, cb, debug_type = 0) =>
+const scanDocument = async (imageInput, simd, cb, config = {}, debug_type = 0) =>
   new Promise(async (resolve, reject) => {
     privid_wasm_result = cb;
     if (!wasmPrivModule) {
@@ -286,6 +286,13 @@ const scanDocument = async (imageInput, simd, cb, debug_type = 0) =>
 
     const version = wasmPrivModule._get_version();
     console.log('Version = ', version);
+
+    const encoder = new TextEncoder();
+    const config_bytes = encoder.encode(`${config}\0`);
+
+    const configInputSize = config.length;
+    const configInputPtr = wasmPrivModule._malloc(configInputSize);
+    wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
 
     const { data: imageData } = imageInput;
     const imageInputSize = imageData.length * imageData.BYTES_PER_ELEMENT;
@@ -317,6 +324,8 @@ const scanDocument = async (imageInput, simd, cb, debug_type = 0) =>
         outputBufferLenPtr,
         resultFirstPtr,
         resultLenPtr,
+        configInputPtr,
+        configInputSize
       );
     } catch (err) {
       console.error('-----------------ERROR---------------', err);
