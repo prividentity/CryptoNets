@@ -138,7 +138,7 @@ function deleteUUID(uuid, cb) {
   wasmPrivModule._free(uuidInputPtr);
 }
 
-const isValidBarCode = (imageInput, simd, cb, debug_type = 0) =>
+const isValidBarCode = (imageInput, simd, cb, config, debug_type = 0) =>
   new Promise(async (resolve, reject) => {
     privid_wasm_result = cb;
     if (!wasmPrivModule) {
@@ -159,10 +159,17 @@ const isValidBarCode = (imageInput, simd, cb, debug_type = 0) =>
 
     // const outputBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     // const outputBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+   
     // create a pointer to interger to hold the length of the output buffer
-    const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
+    const encoder = new TextEncoder();
+    const config_bytes = encoder.encode(`${config}\0`);
+
+    const configInputSize = config.length;
+    const configInputPtr = wasmPrivModule._malloc(configInputSize);
+    wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
     let result = null;
     try {
       result = await wasmPrivModule._is_valid(
@@ -174,8 +181,12 @@ const isValidBarCode = (imageInput, simd, cb, debug_type = 0) =>
         0,
         // outputBufferFirstPtr,
         // outputBufferLenPtr,
-        resultFirstPtr,
-        resultLenPtr,
+        // resultFirstPtr,
+        // resultLenPtr,
+        null,
+        0,
+        configInputPtr,
+        configInputSize
       );
     } catch (err) {
       console.error('-----------_E_-----------', err);
@@ -184,53 +195,52 @@ const isValidBarCode = (imageInput, simd, cb, debug_type = 0) =>
     // console.log("===================WASM=WORKER==BEFORE STATUS CHECK============")
     // const href = [];
     // let conf_score = null;
-    const userData = {};
-    try {
-      const [resultLength] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultLenPtr, 1);
-      console.log("===> ResultLength", resultLength);
-      if (resultLength > 0) {
-        const [resultSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultFirstPtr, 1);
-        const resultDataArray = new Uint8Array(wasmPrivModule.HEAPU8.buffer, resultSecPtr, resultLength);
-        const resultString = String.fromCharCode.apply(null, resultDataArray);
-        console.log('resultString=====>', resultString);
-        const res = JSON.parse(resultString);
-        const userAttributes = [
-          'firstName',
-          'lastName',
-          'dateOfBirth',
-          'streetAddress1',
-          'streetAddress2',
-          'state',
-          'city',
-          'postalCode',
-          'country',
-          'barcode_string',
-          'ResStreetAddress1',
-          'ResStreetAddress2',
-          'barcodeHash128_string',
-          'documentId',
-          'expirationDate',
-          'gender',
-          'height',
-          'issueDate',
-          'issuingCountry',
-          'middleName',
-          'placeOfBirth',
-        ];
+    // const userData = {};
+    // try {
+    //   const [resultLength] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultLenPtr, 1);
+    //   console.log("===> ResultLength", resultLength);
+    //   if (resultLength > 0) {
+    //     const [resultSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultFirstPtr, 1);
+    //     const resultDataArray = new Uint8Array(wasmPrivModule.HEAPU8.buffer, resultSecPtr, resultLength);
+    //     const resultString = String.fromCharCode.apply(null, resultDataArray);
+    //     console.log('resultString=====>', resultString);
+    //     const res = JSON.parse(resultString);
+    //     const userAttributes = [
+    //       'firstName',
+    //       'lastName',
+    //       'dateOfBirth',
+    //       'streetAddress1',
+    //       'streetAddress2',
+    //       'state',
+    //       'city',
+    //       'postalCode',
+    //       'country',
+    //       'barcode_string',
+    //       'ResStreetAddress1',
+    //       'ResStreetAddress2',
+    //       'barcodeHash128_string',
+    //       'documentId',
+    //       'expirationDate',
+    //       'gender',
+    //       'height',
+    //       'issueDate',
+    //       'issuingCountry',
+    //       'middleName',
+    //       'placeOfBirth',
+    //     ];
 
-        userAttributes.forEach((attr) => (userData[attr] = res[attr]));
+    //     userAttributes.forEach((attr) => (userData[attr] = res[attr]));
 
-        console.log("USER DATA AFTER LOOP", userData);
+    //     console.log("USER DATA AFTER LOOP", userData);
 
-        wasmPrivModule._free(resultSecPtr);
-      }
-      wasmPrivModule._free(resultLength);
-    } catch (e) {
-      console.log('==parsing block==', e);
-    }
-    wasmPrivModule._free(resultFirstPtr);
-    wasmPrivModule._free(resultLenPtr);
-
+    //     wasmPrivModule._free(resultSecPtr);
+    //   }
+    //   wasmPrivModule._free(resultLength);
+    // } catch (e) {
+    //   console.log('==parsing block==', e);
+    // }
+    // wasmPrivModule._free(resultFirstPtr);
+    // wasmPrivModule._free(resultLenPtr);
     //   // const [outputBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferLenPtr, 1);
     //   // const [outputBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferFirstPtr, 1);
     //   // const outputBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, outputBufferSecPtr, outputBufferSize);
@@ -259,14 +269,15 @@ const isValidBarCode = (imageInput, simd, cb, debug_type = 0) =>
     //   wasmPrivModule._free(resultLenPtr);
     // }
 
-    if (result === 0 || result === 10) {
+    if (result === 0 || result === -10) {
       wasmPrivModule._free(barCodePtr);
       barCodePtr = null;
     }
+    wasmPrivModule._free(configInputPtr);
     // console.log(conf_score, '-----------------conf_score---------------');
 
     // resolve({ result, href, conf_score, userData });
-    resolve({ result, userData });
+    resolve({ result });
   });
 
 const configureBlur = async (paramID, param) => {
