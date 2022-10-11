@@ -149,6 +149,7 @@ const isValidBarCode = (imageInput, simd, cb, config, debug_type = 0) =>
     console.log('Version = ', version);
     console.log('BARCODE SCAN =========== IMAGE INPUT ', imageInput);
     const { data: imageData } = imageInput;
+
     const imageInputSize = imageData.length * imageData.BYTES_PER_ELEMENT;
     if (!barCodePtr) {
       barCodePtr = wasmPrivModule._malloc(imageInputSize);
@@ -170,6 +171,7 @@ const isValidBarCode = (imageInput, simd, cb, config, debug_type = 0) =>
     const configInputSize = config.length;
     const configInputPtr = wasmPrivModule._malloc(configInputSize);
     wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
+    console.log("=====> config bytes", config_bytes);
     let result = null;
     try {
       result = await wasmPrivModule._is_valid(
@@ -567,7 +569,7 @@ const FHE_predictOnefa = (originalImages, simd, debug_type = 0, cb, config = {})
     const configInputSize = config.length;
     const configInputPtr = wasmPrivModule._malloc(configInputSize);
     wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
-
+    console.log("=====> config bytes PREDICT", config_bytes);
     const imageInputSize = imageInput.length * imageInput.BYTES_PER_ELEMENT;
     const imageInputPtr = wasmPrivModule._malloc(imageInputSize);
 

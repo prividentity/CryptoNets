@@ -1445,8 +1445,8 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  10495924: function() {FS.mkdir('/privid'); FS.mount(IDBFS, {}, '/privid'); FS.syncfs(true, function (err) { assert(!err); });},  
- 10496028: function() {FS.syncfs(function (err) { });}
+  10492388: function() {FS.mkdir('/privid'); FS.mount(IDBFS, {}, '/privid'); FS.syncfs(true, function (err) { assert(!err); });},  
+ 10492492: function() {FS.syncfs(function (err) { });}
 };
 function copy_data_to_user_buffer_helper_wasm(operation,op_len,id,response,response_len,buffer_out,buffer_out_len){ privid_wasm_result(UTF8ToString(operation, op_len), id, UTF8ToString(response, response_len)); }
 
@@ -4374,16 +4374,6 @@ function copy_data_to_user_buffer_helper_wasm(operation,op_len,id,response,respo
   }
   }
 
-  function ___syscall_stat64(path, buf) {try {
-  
-      path = SYSCALLS.getStr(path);
-      return SYSCALLS.doStat(FS.stat, path, buf);
-    } catch (e) {
-    if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
-    return -e.errno;
-  }
-  }
-
   function __dlopen_js(filename, flag) {
       abort("To use dlopen, you need to use Emscripten's linking support, see https://github.com/emscripten-core/emscripten/wiki/Linking");
     }
@@ -5620,7 +5610,6 @@ var asmLibraryArg = {
   "__syscall_fcntl64": ___syscall_fcntl64,
   "__syscall_ioctl": ___syscall_ioctl,
   "__syscall_open": ___syscall_open,
-  "__syscall_stat64": ___syscall_stat64,
   "_dlopen_js": __dlopen_js,
   "_dlsym_js": __dlsym_js,
   "_emscripten_fetch_free": __emscripten_fetch_free,
@@ -5789,13 +5778,13 @@ var _privid_user_delete = Module["_privid_user_delete"] = function() {
 };
 
 /** @type {function(...*):?} */
-var _privid_local_store_write = Module["_privid_local_store_write"] = function() {
-  return (_privid_local_store_write = Module["_privid_local_store_write"] = Module["asm"]["privid_local_store_write"]).apply(null, arguments);
+var __ZN6privid13local_storage5writeERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_S9_ = Module["__ZN6privid13local_storage5writeERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_S9_"] = function() {
+  return (__ZN6privid13local_storage5writeERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_S9_ = Module["__ZN6privid13local_storage5writeERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_S9_"] = Module["asm"]["_ZN6privid13local_storage5writeERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_S9_"]).apply(null, arguments);
 };
 
 /** @type {function(...*):?} */
-var _privid_local_store_read = Module["_privid_local_store_read"] = function() {
-  return (_privid_local_store_read = Module["_privid_local_store_read"] = Module["asm"]["privid_local_store_read"]).apply(null, arguments);
+var __ZN6privid13local_storage4readERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_ = Module["__ZN6privid13local_storage4readERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_"] = function() {
+  return (__ZN6privid13local_storage4readERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_ = Module["__ZN6privid13local_storage4readERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_"] = Module["asm"]["_ZN6privid13local_storage4readERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_"]).apply(null, arguments);
 };
 
 /** @type {function(...*):?} */
@@ -5829,8 +5818,8 @@ var _FHE_init = Module["_FHE_init"] = function() {
 };
 
 /** @type {function(...*):?} */
-var _privid_local_store_init = Module["_privid_local_store_init"] = function() {
-  return (_privid_local_store_init = Module["_privid_local_store_init"] = Module["asm"]["privid_local_store_init"]).apply(null, arguments);
+var __ZN6privid13local_storage4initERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE = Module["__ZN6privid13local_storage4initERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE"] = function() {
+  return (__ZN6privid13local_storage4initERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE = Module["__ZN6privid13local_storage4initERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE"] = Module["asm"]["_ZN6privid13local_storage4initERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE"]).apply(null, arguments);
 };
 
 /** @type {function(...*):?} */
@@ -5839,8 +5828,8 @@ var _init = Module["_init"] = function() {
 };
 
 /** @type {function(...*):?} */
-var _privid_local_store_flush = Module["_privid_local_store_flush"] = function() {
-  return (_privid_local_store_flush = Module["_privid_local_store_flush"] = Module["asm"]["privid_local_store_flush"]).apply(null, arguments);
+var __ZN6privid13local_storage5flushERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_ = Module["__ZN6privid13local_storage5flushERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_"] = function() {
+  return (__ZN6privid13local_storage5flushERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_ = Module["__ZN6privid13local_storage5flushERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_"] = Module["asm"]["_ZN6privid13local_storage5flushERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_"]).apply(null, arguments);
 };
 
 /** @type {function(...*):?} */
