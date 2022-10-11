@@ -10,6 +10,8 @@ let apiKey;
 let wasmModule;
 let debugType;
 let inputPtr;
+let imageInputSize;
+let configGlobal;
 let barCodePtr;
 let privid_wasm_result = null;
 
@@ -160,8 +162,8 @@ const isValidBarCode = (imageInput, simd, cb, config, debug_type = 0) =>
 
     // const outputBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     // const outputBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-   
-    // create a pointer to interger to hold the length of the output buffer
+
+    // // create a pointer to interger to hold the length of the output buffer
     // const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     // const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
@@ -171,7 +173,7 @@ const isValidBarCode = (imageInput, simd, cb, config, debug_type = 0) =>
     const configInputSize = config.length;
     const configInputPtr = wasmPrivModule._malloc(configInputSize);
     wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
-    console.log("=====> config bytes", config_bytes);
+    console.log('=====> config bytes', config_bytes);
     let result = null;
     try {
       result = await wasmPrivModule._is_valid(
@@ -188,7 +190,7 @@ const isValidBarCode = (imageInput, simd, cb, config, debug_type = 0) =>
         null,
         0,
         configInputPtr,
-        configInputSize
+        configInputSize,
       );
     } catch (err) {
       console.error('-----------_E_-----------', err);
@@ -196,7 +198,7 @@ const isValidBarCode = (imageInput, simd, cb, config, debug_type = 0) =>
     }
     // console.log("===================WASM=WORKER==BEFORE STATUS CHECK============")
     // const href = [];
-    // let conf_score = null;
+    // // let conf_score = null;
     // const userData = {};
     // try {
     //   const [resultLength] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultLenPtr, 1);
@@ -205,8 +207,8 @@ const isValidBarCode = (imageInput, simd, cb, config, debug_type = 0) =>
     //     const [resultSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultFirstPtr, 1);
     //     const resultDataArray = new Uint8Array(wasmPrivModule.HEAPU8.buffer, resultSecPtr, resultLength);
     //     const resultString = String.fromCharCode.apply(null, resultDataArray);
-    //     console.log('resultString=====>', resultString);
-    //     const res = JSON.parse(resultString);
+    //     console.log('resultString =====>', JSON.parse(resultString));
+    //    const res = JSON.parse(resultString);
     //     const userAttributes = [
     //       'firstName',
     //       'lastName',
@@ -243,25 +245,25 @@ const isValidBarCode = (imageInput, simd, cb, config, debug_type = 0) =>
     // }
     // wasmPrivModule._free(resultFirstPtr);
     // wasmPrivModule._free(resultLenPtr);
-    //   // const [outputBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferLenPtr, 1);
-    //   // const [outputBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferFirstPtr, 1);
-    //   // const outputBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, outputBufferSecPtr, outputBufferSize);
+    // const [outputBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferLenPtr, 1);
+    // const [outputBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferFirstPtr, 1);
+    // const outputBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, outputBufferSecPtr, outputBufferSize);
 
-    //   // const imgData = Uint8ClampedArray.from(outputBufferPtr);
+    // const imgData = Uint8ClampedArray.from(outputBufferPtr);
 
-    //   const image = new ImageData(imgData, res.crop_doc_width, res.crop_doc_height);
-    //   conf_score = res.barcode_conf_score;
-    //   console.log('---------resultString--back-------', res);
+    // const image = new ImageData(imgData, res.crop_doc_width, res.crop_doc_height);
+    // //   conf_score = res.barcode_conf_score;
+    // //   console.log('---------resultString--back-------', res);
+    // // const href = [];
+    // href.push(image);
 
-    //   href.push(image);
-
-    //   wasmPrivModule._free(inputPtr);
-    //   wasmPrivModule._free(outputBufferSecPtr);
-    //   // wasmPrivModule._free(outputBufferSize)
-    //   wasmPrivModule._free(outputBufferFirstPtr);
-    //   wasmPrivModule._free(outputBufferLenPtr);
-    //   wasmPrivModule._free(resultFirstPtr);
-    //   wasmPrivModule._free(resultLenPtr);
+    // //   wasmPrivModule._free(inputPtr);
+    // //   wasmPrivModule._free(outputBufferSecPtr);
+    // //   // wasmPrivModule._free(outputBufferSize)
+    // wasmPrivModule._free(outputBufferFirstPtr);
+    // wasmPrivModule._free(outputBufferLenPtr);
+    // wasmPrivModule._free(resultFirstPtr);
+    // wasmPrivModule._free(resultLenPtr);
 
     //   inputPtr = undefined;
     // } else {
@@ -289,14 +291,85 @@ const configureBlur = async (paramID, param) => {
   return wasmPrivModule._FHE_configure(paramID, param);
 };
 
+// Callback
+const createResultFuncDocument = (callback) => async (operation, id, response_str) => {
+  const isResponse = response_str.length > 0;
+  console.log('================[JS RESPONSE]: response_str', isResponse ? JSON.parse(response_str) : '');
+  console.log('[JS RESPONSE]: operation', operation || 'null');
+  console.log('[JS RESPONSE]: id', id || 'null');
+  if (isResponse) {
+    const returnValue = JSON.parse(response_str);
+    // if (operation === 'scan') {
+    //   callback({ status: FaceStatuses.WASM_RESPONSE, returnValue });
+    // }
+    if (operation === 'document_model') {
+      if (returnValue.status === 0 && returnValue.conf_score >= 0.5) {
+        // const [outputBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferLenPtr, 1);
+        // const [outputBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferFirstPtr, 1);
+
+        // if (outputBufferSecPtr !== 0) {
+        //   const outputBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, outputBufferSecPtr, outputBufferSize);
+        //   const imgData = Uint8ClampedArray.from(outputBufferPtr);
+        //   const image = new ImageData(
+        //     imgData,
+        //     JSON.parse(resultString).int_doc_width,
+        //     JSON.parse(resultString).int_doc_height,
+        //   );
+
+        // href.push(image);
+
+        // const outputBufferFirstPtr2 = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+        // const outputBufferLenPtr2 = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+        // const resultFirstPtr2 = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+        // // create a pointer to intechromger to hold the length of the output buffer
+        // const resultLenPtr2 = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+        const encoder = new TextEncoder();
+        const config_bytes = encoder.encode(`${configGlobal}\0`);
+        const configInputSize = configGlobal.length;
+        const configInputPtr = wasmPrivModule._malloc(configInputSize);
+        wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
+        await wasmPrivModule._privid_doc_scan_face(
+          100000,
+          inputPtr,
+          imageInput.width,
+          imageInput.height,
+          null,
+          0,
+          null,
+          0,
+          configInputPtr,
+          configInputSize,
+          // outputBufferFirstPtr2,
+          // outputBufferLenPtr2,
+          // resultFirstPtr2,
+          // resultLenPtr2,
+        );
+
+        // wasmPrivModule._free(outputBufferFirstPtr2);
+        // wasmPrivModule._free(outputBufferLenPtr2);
+        // wasmPrivModule._free(resultFirstPtr2);
+        // wasmPrivModule._free(resultLenPtr2);
+
+        // wasmPrivModule._free(outputBufferSecPtr);
+        // // wasmPrivModule._free(outputBufferSize)
+        // // wasmPrivModule._free(resultLength)
+        // wasmPrivModule._free(outputBufferFirstPtr);
+        // wasmPrivModule._free(outputBufferLenPtr);
+        wasmPrivModule._free(inputPtr);
+        inputPtr = undefined;
+      } 
+    } 
+  }
+};
+
 const scanDocument = async (imageInput, simd, cb, config = {}, debug_type = 0) =>
   new Promise(async (resolve, reject) => {
-    privid_wasm_result = cb;
+    privid_wasm_result = createResultFuncDocument(cb);
     if (!wasmPrivModule) {
       console.log('loaded for first wsm wrkr', simd);
       await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
     }
-
+    configGlobal = config;
     const version = wasmPrivModule._get_version();
     console.log('Version = ', version);
 
@@ -316,12 +389,12 @@ const scanDocument = async (imageInput, simd, cb, config = {}, debug_type = 0) =
 
     wasmPrivModule.HEAP8.set(imageData, inputPtr / imageData.BYTES_PER_ELEMENT);
 
-    const outputBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    const outputBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // const outputBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // const outputBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
-    const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    // create a pointer to intechromger to hold the length of the output buffer
-    const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // // create a pointer to intechromger to hold the length of the output buffer
+    // const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
     console.log('-----------------GOING TO WASM---------------');
 
@@ -333,12 +406,16 @@ const scanDocument = async (imageInput, simd, cb, config = {}, debug_type = 0) =
         inputPtr,
         imageInput.width,
         imageInput.height,
-        outputBufferFirstPtr,
-        outputBufferLenPtr,
-        resultFirstPtr,
-        resultLenPtr,
+        null,
+        0,
+        null,
+        0,
+        // outputBufferFirstPtr,
+        // outputBufferLenPtr,
+        // resultFirstPtr,
+        // resultLenPtr,
         configInputPtr,
-        configInputSize
+        configInputSize,
       );
     } catch (err) {
       console.error('-----------------ERROR---------------', err);
@@ -348,94 +425,94 @@ const scanDocument = async (imageInput, simd, cb, config = {}, debug_type = 0) =
 
     console.log(result, '-----------------OUT OF WASM---------------');
 
-    const href = [];
+    // const href = [];
 
-    let conf_score = null;
-    let resultString = null;
+    // let conf_score = null;
+    // let resultString = null;
 
-    if (result >= 0) {
-      try {
-        // de-reference & copy the data from pointer to integer in integer array of one element
-        const [resultLength] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultLenPtr, 1);
-        const [resultSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultFirstPtr, 1);
-        if (resultSecPtr !== 0) {
-          const resultDataArray = new Uint8Array(wasmPrivModule.HEAPU8.buffer, resultSecPtr, resultLength);
-          resultString = String.fromCharCode.apply(null, resultDataArray);
+    // if (result >= 0) {
+    //   try {
+    //     // de-reference & copy the data from pointer to integer in integer array of one element
+    //     const [resultLength] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultLenPtr, 1);
+    //     const [resultSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultFirstPtr, 1);
+    //     if (resultSecPtr !== 0) {
+    //       const resultDataArray = new Uint8Array(wasmPrivModule.HEAPU8.buffer, resultSecPtr, resultLength);
+    //       resultString = String.fromCharCode.apply(null, resultDataArray);
 
-          conf_score = JSON.parse(resultString).conf_level;
-          wasmPrivModule._free(resultSecPtr);
-        } else {
-          reject();
-        }
-      } catch (err) {
-        console.error('-----------------ERROR---------------', err);
-        reject(new Error(err));
-      } finally {
-        wasmPrivModule._free(resultFirstPtr);
-        wasmPrivModule._free(resultLenPtr);
-      }
-    }
+    //       conf_score = JSON.parse(resultString).conf_level;
+    //       wasmPrivModule._free(resultSecPtr);
+    //     } else {
+    //       reject();
+    //     }
+    //   } catch (err) {
+    //     console.error('-----------------ERROR---------------', err);
+    //     reject(new Error(err));
+    //   } finally {
+    //     wasmPrivModule._free(resultFirstPtr);
+    //     wasmPrivModule._free(resultLenPtr);
+    //   }
+    // }
 
-    if (result === 0 && conf_score >= 0.5) {
-      const [outputBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferLenPtr, 1);
-      const [outputBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferFirstPtr, 1);
+    // if (result === 0 && conf_score >= 0.5) {
+    //   const [outputBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferLenPtr, 1);
+    //   const [outputBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferFirstPtr, 1);
 
-      if (outputBufferSecPtr !== 0) {
-        const outputBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, outputBufferSecPtr, outputBufferSize);
-        const imgData = Uint8ClampedArray.from(outputBufferPtr);
-        const image = new ImageData(
-          imgData,
-          JSON.parse(resultString).int_doc_width,
-          JSON.parse(resultString).int_doc_height,
-        );
+    //   if (outputBufferSecPtr !== 0) {
+    //     const outputBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, outputBufferSecPtr, outputBufferSize);
+    //     const imgData = Uint8ClampedArray.from(outputBufferPtr);
+    //     const image = new ImageData(
+    //       imgData,
+    //       JSON.parse(resultString).int_doc_width,
+    //       JSON.parse(resultString).int_doc_height,
+    //     );
 
-        href.push(image);
+    //     href.push(image);
 
-        // const outputBufferFirstPtr2 = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-        // const outputBufferLenPtr2 = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-        // const resultFirstPtr2 = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-        // // create a pointer to intechromger to hold the length of the output buffer
-        // const resultLenPtr2 = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    //     // const outputBufferFirstPtr2 = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    //     // const outputBufferLenPtr2 = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    //     // const resultFirstPtr2 = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    //     // // create a pointer to intechromger to hold the length of the output buffer
+    //     // const resultLenPtr2 = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
-        await wasmPrivModule._privid_doc_scan_face(
-          100000,
-          inputPtr,
-          imageInput.width,
-          imageInput.height,
-          null,
-          0,
-          null,
-          0,
-          // outputBufferFirstPtr2,
-          // outputBufferLenPtr2,
-          // resultFirstPtr2,
-          // resultLenPtr2,
-        );
+    //     await wasmPrivModule._privid_doc_scan_face(
+    //       100000,
+    //       inputPtr,
+    //       imageInput.width,
+    //       imageInput.height,
+    //       null,
+    //       0,
+    //       null,
+    //       0,
+    //       // outputBufferFirstPtr2,
+    //       // outputBufferLenPtr2,
+    //       // resultFirstPtr2,
+    //       // resultLenPtr2,
+    //     );
 
-        // wasmPrivModule._free(outputBufferFirstPtr2);
-        // wasmPrivModule._free(outputBufferLenPtr2);
-        // wasmPrivModule._free(resultFirstPtr2);
-        // wasmPrivModule._free(resultLenPtr2);
-        wasmPrivModule._free(inputPtr);
+    //     // wasmPrivModule._free(outputBufferFirstPtr2);
+    //     // wasmPrivModule._free(outputBufferLenPtr2);
+    //     // wasmPrivModule._free(resultFirstPtr2);
+    //     // wasmPrivModule._free(resultLenPtr2);
+    //     wasmPrivModule._free(inputPtr);
 
-        wasmPrivModule._free(outputBufferSecPtr);
-        // wasmPrivModule._free(outputBufferSize)
-        // wasmPrivModule._free(resultLength)
-        wasmPrivModule._free(outputBufferFirstPtr);
-        wasmPrivModule._free(outputBufferLenPtr);
-        inputPtr = undefined;
-      } else {
-        reject();
-      }
-    } else {
-      result = -1;
-      wasmPrivModule._free(outputBufferFirstPtr);
-      wasmPrivModule._free(outputBufferLenPtr);
-    }
+    //     wasmPrivModule._free(outputBufferSecPtr);
+    //     // wasmPrivModule._free(outputBufferSize)
+    //     // wasmPrivModule._free(resultLength)
+    //     wasmPrivModule._free(outputBufferFirstPtr);
+    //     wasmPrivModule._free(outputBufferLenPtr);
+    //     inputPtr = undefined;
+    //   } else {
+    //     reject();
+    //   }
+    // } else {
+    //   result = -1;
+    //   wasmPrivModule._free(outputBufferFirstPtr);
+    //   wasmPrivModule._free(outputBufferLenPtr);
+    // }
 
-    console.log(conf_score, '-----------------conf_score---------------');
+    // console.log(conf_score, '-----------------conf_score---------------');
 
-    resolve({ result, href, conf_score });
+    resolve({ result });
   });
 
 const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) =>
@@ -569,7 +646,7 @@ const FHE_predictOnefa = (originalImages, simd, debug_type = 0, cb, config = {})
     const configInputSize = config.length;
     const configInputPtr = wasmPrivModule._malloc(configInputSize);
     wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
-    console.log("=====> config bytes PREDICT", config_bytes);
+    console.log('=====> config bytes PREDICT', config_bytes);
     const imageInputSize = imageInput.length * imageInput.BYTES_PER_ELEMENT;
     const imageInputPtr = wasmPrivModule._malloc(imageInputSize);
 

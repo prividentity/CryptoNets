@@ -159,7 +159,7 @@
 158:rapidjson::internal::Stack<rapidjson::CrtAllocator>::~Stack\28\29
 159:std::__2::pair<std::__2::basic_string<char\2c\20std::__2::char_traits<char>\2c\20std::__2::allocator<char>\20>\20const\2c\20std::__2::basic_string<char\2c\20std::__2::char_traits<char>\2c\20std::__2::allocator<char>\20>\20>::pair<char\20const\20\28&\29\20\5b9\5d\2c\20char\20const\20\28&\29\20\5b4\5d\2c\20false>\28char\20const\20\28&\29\20\5b9\5d\2c\20char\20const\20\28&\29\20\5b4\5d\29
 160:__cxx_global_array_dtor.2
-161:__cxx_global_array_dtor.270
+161:__cxx_global_array_dtor.268
 162:privid_barcode_extract_pdf417field\28char*\2c\20int\2c\20char*\2c\20int\2c\20char**\2c\20int*\29
 163:privid_json_extract_PI_str\28char*\2c\20int\2c\20char*\2c\20int\2c\20char**\2c\20int*\29
 164:std::__2::__split_buffer<ZXing::Result\2c\20std::__2::allocator<ZXing::Result>&>::__destruct_at_end\28ZXing::Result*\29

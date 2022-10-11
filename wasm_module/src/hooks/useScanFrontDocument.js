@@ -9,10 +9,10 @@ const useScanFrontDocument = () => {
 
   const documentCallback = (result) => {
     console.log("Front scan callback result:", result)
-    if (result.result === 0) {
-      setIsFound(true);
-      setScannedIdData(result.returnValue);
-    } 
+    // if (result.result === 0) {
+    //   setIsFound(true);
+    //   setScannedIdData(result.returnValue);
+    // } 
   };
 
   const scanFrontDocument = async () => {
