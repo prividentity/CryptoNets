@@ -309,7 +309,7 @@ const createResultFuncDocument = (callback) => async (operation, id, response_st
          
         }
 
-        privid_wasm_result = createSecondCallback(callback);
+        privid_wasm_result = proxy(createSecondCallback(callback));
         const encoder = new TextEncoder();
         const config_bytes = encoder.encode(`${configGlobal}\0`);
         const configInputSize = configGlobal.length;
