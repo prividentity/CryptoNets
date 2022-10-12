@@ -160,8 +160,8 @@ const isValidBarCode = (imageInput, simd, cb, config, debug_type = 0) =>
 
     console.log('-----------------GOING TO WASM---------------');
 
-    // const outputBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    // const outputBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    const outputBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    const outputBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
     // // create a pointer to interger to hold the length of the output buffer
     // const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
@@ -181,10 +181,10 @@ const isValidBarCode = (imageInput, simd, cb, config, debug_type = 0) =>
         barCodePtr,
         imageInput.width,
         imageInput.height,
-        null,
-        0,
-        // outputBufferFirstPtr,
-        // outputBufferLenPtr,
+        // null,
+        // 0,
+        outputBufferFirstPtr,
+        outputBufferLenPtr,
         // resultFirstPtr,
         // resultLenPtr,
         null,
@@ -260,8 +260,8 @@ const isValidBarCode = (imageInput, simd, cb, config, debug_type = 0) =>
     // //   wasmPrivModule._free(inputPtr);
     // //   wasmPrivModule._free(outputBufferSecPtr);
     // //   // wasmPrivModule._free(outputBufferSize)
-    // wasmPrivModule._free(outputBufferFirstPtr);
-    // wasmPrivModule._free(outputBufferLenPtr);
+    wasmPrivModule._free(outputBufferFirstPtr);
+    wasmPrivModule._free(outputBufferLenPtr);
     // wasmPrivModule._free(resultFirstPtr);
     // wasmPrivModule._free(resultLenPtr);
 
@@ -299,30 +299,17 @@ const createResultFuncDocument = (callback) => async (operation, id, response_st
   console.log('[JS RESPONSE]: id', id || 'null');
   if (isResponse) {
     const returnValue = JSON.parse(response_str);
-    // if (operation === 'scan') {
-    //   callback({ status: FaceStatuses.WASM_RESPONSE, returnValue });
-    // }
     if (operation === 'document_model') {
-      if (returnValue.status === 0 && returnValue.conf_score >= 0.5) {
-        // const [outputBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferLenPtr, 1);
-        // const [outputBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferFirstPtr, 1);
+      if (returnValue.status === 0 ) { // && returnValue.conf_score >= 0.5) {
+        console.log("=================SECOND CALLBACK=======================")
+        const createSecondCallback = (callback) => async (operation, id, response_str)=>{
+          console.log('================[JS RESPONSE Second CB]: response_str', isResponse ? JSON.parse(response_str) : '');
+          console.log('[JS RESPONSE Second CB]: operation', operation || 'null');
+          console.log('[JS RESPONSE Second CB]: id', id || 'null');
+         
+        }
 
-        // if (outputBufferSecPtr !== 0) {
-        //   const outputBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, outputBufferSecPtr, outputBufferSize);
-        //   const imgData = Uint8ClampedArray.from(outputBufferPtr);
-        //   const image = new ImageData(
-        //     imgData,
-        //     JSON.parse(resultString).int_doc_width,
-        //     JSON.parse(resultString).int_doc_height,
-        //   );
-
-        // href.push(image);
-
-        // const outputBufferFirstPtr2 = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-        // const outputBufferLenPtr2 = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-        // const resultFirstPtr2 = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-        // // create a pointer to intechromger to hold the length of the output buffer
-        // const resultLenPtr2 = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+        privid_wasm_result = createSecondCallback(callback);
         const encoder = new TextEncoder();
         const config_bytes = encoder.encode(`${configGlobal}\0`);
         const configInputSize = configGlobal.length;
@@ -339,22 +326,7 @@ const createResultFuncDocument = (callback) => async (operation, id, response_st
           0,
           configInputPtr,
           configInputSize,
-          // outputBufferFirstPtr2,
-          // outputBufferLenPtr2,
-          // resultFirstPtr2,
-          // resultLenPtr2,
         );
-
-        // wasmPrivModule._free(outputBufferFirstPtr2);
-        // wasmPrivModule._free(outputBufferLenPtr2);
-        // wasmPrivModule._free(resultFirstPtr2);
-        // wasmPrivModule._free(resultLenPtr2);
-
-        // wasmPrivModule._free(outputBufferSecPtr);
-        // // wasmPrivModule._free(outputBufferSize)
-        // // wasmPrivModule._free(resultLength)
-        // wasmPrivModule._free(outputBufferFirstPtr);
-        // wasmPrivModule._free(outputBufferLenPtr);
         wasmPrivModule._free(inputPtr);
         inputPtr = undefined;
       } 

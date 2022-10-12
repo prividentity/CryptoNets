@@ -152,7 +152,7 @@ const Ready = () => {
     if (currentAction === "useScanDocumentFront") {
       if (!isFound) {
         doScan();
-        interval = setInterval(doScan, 300);
+        interval = setInterval(doScan, 700);
       }
     }
     return () => clearInterval(interval);
