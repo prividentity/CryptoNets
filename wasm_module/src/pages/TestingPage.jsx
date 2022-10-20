@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { useEffect, useState } from "react";
-import { switchCamera } from "@privateid/cryptonets-web-sdk";
+import { isValid, switchCamera } from "@privateid/cryptonets-web-sdk";
 
 import {
   useCamera,
@@ -60,13 +60,24 @@ const Ready = () => {
     console.log("--- wasm status ", wasmReady, ready);
   }, [wasmReady, ready]);
 
-  const { faceDetected: isValidFaceDetected, isValidCall } =
+  const { faceDetected: isValidFaceDetected, isValidCall  } =
     useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
     setCurrentAction("isValid");
     await isValidCall();
   };
+  // isValidStopper When Action changed
+  useEffect(()=>{
+    const doScan = async () => {
+      await isValidCall();
+    };
+    let interval; 
+    if(currentAction === "isValid"){
+      interval = setInterval(doScan, 300);
+    }
+    return () => clearInterval(interval);
+  },[currentAction])
 
   // Enroll ONEFA
   const useEnrollSuccess = () => console.log("=======ENROLL SUCCESS=======");
