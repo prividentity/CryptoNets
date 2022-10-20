@@ -1445,8 +1445,8 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  10492244: function() {FS.mkdir('/privid'); FS.mount(IDBFS, {}, '/privid'); FS.syncfs(true, function (err) { assert(!err); });},  
- 10492348: function() {FS.syncfs(function (err) { });}
+  10491076: function() {FS.mkdir('/privid'); FS.mount(IDBFS, {}, '/privid'); FS.syncfs(true, function (err) { assert(!err); });},  
+ 10491180: function() {FS.syncfs(function (err) { });}
 };
 function copy_data_to_user_buffer_helper_wasm(operation,op_len,id,response,response_len,buffer_out,buffer_out_len){ privid_wasm_result(UTF8ToString(operation, op_len), id, UTF8ToString(response, response_len)); }
 
