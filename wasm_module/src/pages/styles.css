@@ -17,7 +17,7 @@ body{
     height: max-content;
     min-height: 100vh;
     width: 100%;
-    min-width: 600px;
+    max-width: 100vw;
     color: rgb(255, 255, 255);
 }
 
@@ -31,6 +31,7 @@ body{
 .cameraDisplay{
     height: 500px;
     width: 600px;
+    max-width: 100vw;
     transform: rotateY(180);
     border: 2px solid white;
     border-radius: 10px;
@@ -71,7 +72,9 @@ body{
 
 
 .buttonContainer{
+    max-width: 100vw;
     display: flex;
     gap:  10px;
     flex-wrap: wrap;
+    justify-content: center;
 }

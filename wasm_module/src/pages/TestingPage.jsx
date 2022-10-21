@@ -60,24 +60,31 @@ const Ready = () => {
     console.log("--- wasm status ", wasmReady, ready);
   }, [wasmReady, ready]);
 
-  const { faceDetected: isValidFaceDetected, isValidCall  } =
+  const { faceDetected: isValidFaceDetected, isValidCall, hasFinished , setHasFinished } =
     useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
     setCurrentAction("isValid");
     await isValidCall();
   };
-  // isValidStopper When Action changed
+
+  // to start and stop isValid call when on loop
   useEffect(()=>{
-    const doScan = async () => {
+    const doIsValid = async () => {
       await isValidCall();
-    };
-    let interval; 
-    if(currentAction === "isValid"){
-      interval = setInterval(doScan, 300);
     }
-    return () => clearInterval(interval);
-  },[currentAction])
+
+    if(currentAction === 'isValid' && hasFinished){
+      setHasFinished(false);
+    }
+    if(currentAction === 'isValid' && !hasFinished){
+      doIsValid();
+    }
+    if(currentAction !== 'isValid' && hasFinished){
+      setHasFinished(false);
+    }
+  },[currentAction, hasFinished])
+
 
   // Enroll ONEFA
   const useEnrollSuccess = () => console.log("=======ENROLL SUCCESS=======");
