@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { continuousEnrollPredict } from "@privateid/cryptonets-web-sdk";
+import { continuousEnrollPredict } from "@privateid/cryptonets-web-sdk-alpha";
 
 const useContinuousPredict = (
   element,

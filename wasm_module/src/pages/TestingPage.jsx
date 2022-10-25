@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { useEffect, useState } from "react";
-import { isValid, switchCamera } from "@privateid/cryptonets-web-sdk";
+import { isValid, switchCamera } from "@privateid/cryptonets-web-sdk-alpha";
 
 import {
   useCamera,
