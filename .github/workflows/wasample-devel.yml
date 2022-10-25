@@ -25,11 +25,11 @@ jobs:
 
         - name: Install dependencies
           working-directory: ./wasm_module
-          run: yarn install
+          run: npm install
 
         - name: Build
           working-directory: ./wasm_module
-          run: yarn build
+          run: npm run build
 
         - name: Deploy
           uses: lbertenasco/s3-deploy@v1
