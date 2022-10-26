@@ -216,7 +216,7 @@ const Ready = () => {
         }}
       >
         <label> Select Camera: </label>
-        <select onChange={(e) => handleSwitchCamera(e)}>
+        <select value={deviceId || device} onChange={(e) => handleSwitchCamera(e)}>
           {devices.map((e, index) => {
             return (
               <option id={e.value} value={e.value} key={index}>
