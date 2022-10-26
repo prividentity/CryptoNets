@@ -13,14 +13,15 @@ import {
   useScanFrontDocument,
   useScanBackDocument,
 } from "../hooks";
-import { isAndroid, isIOS, osVersion } from "../utils";
+import { isAndroid, isBackCamera, isIOS, osVersion } from '../utils'
 
 import "./styles.css";
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
   const { ready, init, device, devices, faceMode, setDevice } = useCamera("userVideo");
-  const [deviceId, setDeviceId] = useState("");
+  const isBack = isBackCamera(devices, device);
+  const [deviceId, setDeviceId] = useState(device);
 
   // Use Continuous Predict
   const predictRetryTimes = 1;
@@ -197,6 +198,10 @@ const Ready = () => {
     return () => clearInterval(interval);
   }, [currentAction, scannedCodeData]);
 
+  const isDocumentOrBackCamera =
+    ["useScanDocumentBack", "useScanDocumentFront"].includes(currentAction) ||
+    isBack;
+
   return (
     <div id="canvasInput" className="container">
       <div
@@ -223,7 +228,7 @@ const Ready = () => {
         <div className="cameraContainer">
           <video
             id="userVideo"
-            className="cameraDisplay"
+            className={ `cameraDisplay ${isDocumentOrBackCamera ? '' : 'mirrored'}`  }
             muted
             autoPlay
             playsInline
