@@ -48,3 +48,8 @@ export function getQueryParams(queryString) {
   if (tokens && tokens.length > 2) params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
   return params;
 }
+
+export const isBackCamera = (availableDevices, currentDevice) => {
+  const mediaDevice = availableDevices.find((device) => device.value === currentDevice);
+  return mediaDevice?.label?.toLowerCase().includes('back');
+};
