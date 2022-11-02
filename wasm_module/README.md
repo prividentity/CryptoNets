@@ -1,5 +1,7 @@
 # Installment Instructions 
 
+### Public Sandbox
+https://wasmsample.devel.private.id/
 
 ### Setup
 
