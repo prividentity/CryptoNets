@@ -49,6 +49,10 @@ body{
     object-fit: cover;
 }
 
+.mirrored {
+    transform: scaleX(-1);
+}
+
 .button {
   background-color: #4155c4;
   border-radius: 8px;

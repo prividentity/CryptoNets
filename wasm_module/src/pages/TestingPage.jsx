@@ -17,7 +17,7 @@ import {
   useScanFrontDocument,
   useScanBackDocument,
 } from "../hooks";
-import { isAndroid, isIOS, osVersion } from "../utils";
+import { isAndroid, isBackCamera, isIOS, osVersion } from '../utils'
 
 import "./styles.css";
 import usePredictAge from "../hooks/usePredictAge";
@@ -25,9 +25,9 @@ import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocumentWit
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
-  const { ready, init, device, devices, faceMode, setDevice } =
-    useCamera("userVideo");
-  const [deviceId, setDeviceId] = useState("");
+  const { ready, init, device, devices, faceMode, setDevice } = useCamera("userVideo");
+  const isBack = isBackCamera(devices, device);
+  const [deviceId, setDeviceId] = useState(device);
 
   // Use Continuous Predict
   const predictRetryTimes = 1;
@@ -219,6 +219,10 @@ const Ready = () => {
     return () => clearInterval(interval);
   }, [currentAction, scannedCodeData]);
 
+  const isDocumentOrBackCamera =
+    ["useScanDocumentBack", "useScanDocumentFront"].includes(currentAction) ||
+    isBack;
+
   // Predict Age
   const { doPredictAge, age, predictAgeHasFinished, setPredictAgeHasFinished } =
     usePredictAge();
@@ -285,7 +289,7 @@ const Ready = () => {
         }}
       >
         <label> Select Camera: </label>
-        <select onChange={(e) => handleSwitchCamera(e)}>
+        <select value={deviceId || device} onChange={(e) => handleSwitchCamera(e)}>
           {devices.map((e, index) => {
             return (
               <option id={e.value} value={e.value} key={index}>
@@ -297,7 +301,7 @@ const Ready = () => {
         <div className="cameraContainer">
           <video
             id="userVideo"
-            className="cameraDisplay"
+            className={ `cameraDisplay ${isDocumentOrBackCamera ? '' : 'mirrored'}`  }
             muted
             autoPlay
             playsInline
