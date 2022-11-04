@@ -28,6 +28,17 @@ body{
     object-fit: cover;
 }
 
+.age-box {
+  position: absolute;
+  width: 100%;
+  background-color: #0000005e;
+  bottom: 2%;
+  font-size: 72px;
+  text-align: center;
+  color: rgb(244, 192, 66);
+  padding: 1%;
+}
+
 .cameraDisplay{
     height: 500px;
     max-width: 100vw;

@@ -290,72 +290,9 @@ const configureBlur = async (paramID, param) => {
   return wasmPrivModule._FHE_configure(paramID, param);
 };
 
-// Callback
-const createResultFuncDocument = (callback) => async (operation, id, response_str) => {
-  const isResponse = response_str.length > 0;
-  console.log('================[JS RESPONSE]: response_str', isResponse ? JSON.parse(response_str) : '');
-  console.log('[JS RESPONSE]: operation', operation || 'null');
-  console.log('[JS RESPONSE]: id', id || 'null');
-  if (isResponse) {
-    const returnValue = JSON.parse(response_str);
-    if (operation === 'document_model') {
-      if (returnValue.status === 0) {
-        // && returnValue.conf_score >= 0.5) {
-        console.log('=================SECOND CALLBACK=======================');
-        const createSecondCallback = (callback) => async (operation, id, response_str) => {
-          console.log(
-            '================[JS RESPONSE Second CB]: response_str',
-            isResponse ? JSON.parse(response_str) : '',
-          );
-          console.log('[JS RESPONSE Second CB]: operation', operation || 'null');
-          console.log('[JS RESPONSE Second CB]: id', id || 'null');
-        };
-
-        privid_wasm_result = proxy(createSecondCallback(callback));
-        const encoder = new TextEncoder();
-        const config_bytes = encoder.encode(`${configGlobal}\0`);
-        const configInputSize = configGlobal.length;
-        const configInputPtr = wasmPrivModule._malloc(configInputSize);
-        wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
-        await wasmPrivModule._privid_doc_scan_face(
-          100000,
-          inputPtr,
-          imageInput.width,
-          imageInput.height,
-          null,
-          0,
-          null,
-          0,
-          configInputPtr,
-          configInputSize,
-        );
-        wasmPrivModule._free(inputPtr);
-        inputPtr = undefined;
-      }
-    }
-  }
-};
-
-const doPredictCreateResultFuncDocument = (callback) => async (operation, id, response_str) => {
-  const isResponse = response_str.length > 0;
-  console.log('================[JS RESPONSE]: response_str doPREDICT', isResponse ? JSON.parse(response_str) : '');
-  console.log('[JS RESPONSE]: operation', operation || 'null');
-  console.log('[JS RESPONSE]: id', id || 'null');
-  if (isResponse) {
-    const returnValue = JSON.parse(response_str);
-    if (returnValue.status === 0) {
-      const returnValue = JSON.parse(response_str);
-      console.log('DO PREDICT DOCUMENT SCAN', returnValue);
-      if (operation === 'predict') {
-        callback({ status: FaceStatuses.WASM_RESPONSE, returnValue });
-      }
-    }
-  }
-};
-
-const scanDocument = async (imageInput, simd, cb, doPredict, config = {}, debug_type = 0) =>
+const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type = 0) =>
   new Promise(async (resolve, reject) => {
-    privid_wasm_result = doPredict ? doPredictCreateResultFuncDocument(cb) : createResultFuncDocument(cb);
+    privid_wasm_result = cb;
     if (!wasmPrivModule) {
       console.log('loaded for first wsm wrkr', simd);
       await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
