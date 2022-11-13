@@ -14,9 +14,9 @@
 
   <ItemGroup>
     <PackageReference Include="DirectShowLib.Standard" Version="2.1.0" />
-    <PackageReference Include="Emgu.CV" Version="4.5.5.4823" />
-    <PackageReference Include="Emgu.CV.runtime.windows" Version="4.5.5.4823" />
-    <PackageReference Include="PrivateIdentity" Version="0.0.1-rc2" />
+    <PackageReference Include="Emgu.CV" Version="4.6.0.5131" />
+    <PackageReference Include="Emgu.CV.runtime.windows" Version="4.6.0.5131" />
+    <PackageReference Include="PrivateIdentity" Version="0.0.1" />
   </ItemGroup>
 
 </Project>
