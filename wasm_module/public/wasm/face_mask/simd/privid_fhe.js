@@ -1445,8 +1445,8 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  10490756: function() {FS.mkdir('/privid'); FS.mount(IDBFS, {}, '/privid'); FS.syncfs(true, function (err) { assert(!err); });},  
- 10490860: function() {FS.syncfs(function (err) { });}
+  10165692: function() {FS.mkdir('/privid'); FS.mount(IDBFS, {}, '/privid'); FS.syncfs(true, function (err) { assert(!err); });},  
+ 10165796: function() {FS.syncfs(function (err) { });}
 };
 function copy_data_to_user_buffer_helper_wasm(operation,op_len,id,response,response_len,buffer_out,buffer_out_len){ privid_wasm_result(UTF8ToString(operation, op_len), id, UTF8ToString(response, response_len)); }
 
@@ -5678,26 +5678,6 @@ var _get_version = Module["_get_version"] = function() {
 };
 
 /** @type {function(...*):?} */
-var _privid_initialize_session_join = Module["_privid_initialize_session_join"] = function() {
-  return (_privid_initialize_session_join = Module["_privid_initialize_session_join"] = Module["asm"]["privid_initialize_session_join"]).apply(null, arguments);
-};
-
-/** @type {function(...*):?} */
-var _privid_face_predict_onefa = Module["_privid_face_predict_onefa"] = function() {
-  return (_privid_face_predict_onefa = Module["_privid_face_predict_onefa"] = Module["asm"]["privid_face_predict_onefa"]).apply(null, arguments);
-};
-
-/** @type {function(...*):?} */
-var _privid_deinitialize_session = Module["_privid_deinitialize_session"] = function() {
-  return (_privid_deinitialize_session = Module["_privid_deinitialize_session"] = Module["asm"]["privid_deinitialize_session"]).apply(null, arguments);
-};
-
-/** @type {function(...*):?} */
-var _privid_rest_enroll_predict = Module["_privid_rest_enroll_predict"] = function() {
-  return (_privid_rest_enroll_predict = Module["_privid_rest_enroll_predict"] = Module["asm"]["privid_rest_enroll_predict"]).apply(null, arguments);
-};
-
-/** @type {function(...*):?} */
 var _is_valid = Module["_is_valid"] = function() {
   return (_is_valid = Module["_is_valid"] = Module["asm"]["is_valid"]).apply(null, arguments);
 };
@@ -5713,38 +5693,18 @@ var _FHE_configure_url = Module["_FHE_configure_url"] = function() {
 };
 
 /** @type {function(...*):?} */
-var _FHE_enroll_predict = Module["_FHE_enroll_predict"] = function() {
-  return (_FHE_enroll_predict = Module["_FHE_enroll_predict"] = Module["asm"]["FHE_enroll_predict"]).apply(null, arguments);
-};
-
-/** @type {function(...*):?} */
-var __Z22FHE_compare_embeddingsiPfiS_ifRfPKci = Module["__Z22FHE_compare_embeddingsiPfiS_ifRfPKci"] = function() {
-  return (__Z22FHE_compare_embeddingsiPfiS_ifRfPKci = Module["__Z22FHE_compare_embeddingsiPfiS_ifRfPKci"] = Module["asm"]["_Z22FHE_compare_embeddingsiPfiS_ifRfPKci"]).apply(null, arguments);
-};
-
-/** @type {function(...*):?} */
-var _privid_doc_scan_face = Module["_privid_doc_scan_face"] = function() {
-  return (_privid_doc_scan_face = Module["_privid_doc_scan_face"] = Module["asm"]["privid_doc_scan_face"]).apply(null, arguments);
-};
-
-/** @type {function(...*):?} */
-var _privid_doc_scan_barcode = Module["_privid_doc_scan_barcode"] = function() {
-  return (_privid_doc_scan_barcode = Module["_privid_doc_scan_barcode"] = Module["asm"]["privid_doc_scan_barcode"]).apply(null, arguments);
-};
-
-/** @type {function(...*):?} */
-var _FHE_delete = Module["_FHE_delete"] = function() {
-  return (_FHE_delete = Module["_FHE_delete"] = Module["asm"]["FHE_delete"]).apply(null, arguments);
-};
-
-/** @type {function(...*):?} */
-var _compute_confidence = Module["_compute_confidence"] = function() {
-  return (_compute_confidence = Module["_compute_confidence"] = Module["asm"]["compute_confidence"]).apply(null, arguments);
-};
-
-/** @type {function(...*):?} */
 var _privid_initialize_session = Module["_privid_initialize_session"] = function() {
   return (_privid_initialize_session = Module["_privid_initialize_session"] = Module["asm"]["privid_initialize_session"]).apply(null, arguments);
+};
+
+/** @type {function(...*):?} */
+var _privid_initialize_session_join = Module["_privid_initialize_session_join"] = function() {
+  return (_privid_initialize_session_join = Module["_privid_initialize_session_join"] = Module["asm"]["privid_initialize_session_join"]).apply(null, arguments);
+};
+
+/** @type {function(...*):?} */
+var _privid_deinitialize_session = Module["_privid_deinitialize_session"] = function() {
+  return (_privid_deinitialize_session = Module["_privid_deinitialize_session"] = Module["asm"]["privid_deinitialize_session"]).apply(null, arguments);
 };
 
 /** @type {function(...*):?} */
@@ -5768,6 +5728,11 @@ var _privid_enroll_twofa = Module["_privid_enroll_twofa"] = function() {
 };
 
 /** @type {function(...*):?} */
+var _privid_face_predict_onefa = Module["_privid_face_predict_onefa"] = function() {
+  return (_privid_face_predict_onefa = Module["_privid_face_predict_onefa"] = Module["asm"]["privid_face_predict_onefa"]).apply(null, arguments);
+};
+
+/** @type {function(...*):?} */
 var _privid_face_predict_twofa = Module["_privid_face_predict_twofa"] = function() {
   return (_privid_face_predict_twofa = Module["_privid_face_predict_twofa"] = Module["asm"]["privid_face_predict_twofa"]).apply(null, arguments);
 };
@@ -5775,6 +5740,16 @@ var _privid_face_predict_twofa = Module["_privid_face_predict_twofa"] = function
 /** @type {function(...*):?} */
 var _privid_user_delete = Module["_privid_user_delete"] = function() {
   return (_privid_user_delete = Module["_privid_user_delete"] = Module["asm"]["privid_user_delete"]).apply(null, arguments);
+};
+
+/** @type {function(...*):?} */
+var _privid_doc_scan_face = Module["_privid_doc_scan_face"] = function() {
+  return (_privid_doc_scan_face = Module["_privid_doc_scan_face"] = Module["asm"]["privid_doc_scan_face"]).apply(null, arguments);
+};
+
+/** @type {function(...*):?} */
+var _privid_face_compare_files = Module["_privid_face_compare_files"] = function() {
+  return (_privid_face_compare_files = Module["_privid_face_compare_files"] = Module["asm"]["privid_face_compare_files"]).apply(null, arguments);
 };
 
 /** @type {function(...*):?} */
@@ -5830,6 +5805,11 @@ var _init = Module["_init"] = function() {
 /** @type {function(...*):?} */
 var __ZN6privid13local_storage5flushERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_ = Module["__ZN6privid13local_storage5flushERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_"] = function() {
   return (__ZN6privid13local_storage5flushERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_ = Module["__ZN6privid13local_storage5flushERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_"] = Module["asm"]["_ZN6privid13local_storage5flushERKNSt3__212basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_"]).apply(null, arguments);
+};
+
+/** @type {function(...*):?} */
+var _privid_rest_enroll_predict = Module["_privid_rest_enroll_predict"] = function() {
+  return (_privid_rest_enroll_predict = Module["_privid_rest_enroll_predict"] = Module["asm"]["privid_rest_enroll_predict"]).apply(null, arguments);
 };
 
 /** @type {function(...*):?} */

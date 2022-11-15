@@ -1,6 +1,10 @@
 /* eslint-disable */
 import { useEffect, useState } from "react";
-import { isValid, switchCamera } from "@privateid/cryptonets-web-sdk-alpha";
+import {
+  isValid,
+  switchCamera,
+  setStopLoopContinuousEnrollPredict,
+} from "@privateid/cryptonets-web-sdk-alpha";
 
 import {
   useCamera,
@@ -13,14 +17,17 @@ import {
   useScanFrontDocument,
   useScanBackDocument,
 } from "../hooks";
-import { isAndroid, isIOS, osVersion } from "../utils";
+import { isAndroid, isBackCamera, isIOS, osVersion } from '../utils'
 
 import "./styles.css";
+import usePredictAge from "../hooks/usePredictAge";
+import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocumentWithoutPredict";
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
   const { ready, init, device, devices, faceMode, setDevice } = useCamera("userVideo");
-  const [deviceId, setDeviceId] = useState("");
+  const isBack = isBackCamera(devices, device);
+  const [deviceId, setDeviceId] = useState(device);
 
   // Use Continuous Predict
   const predictRetryTimes = 1;
@@ -60,8 +67,12 @@ const Ready = () => {
     console.log("--- wasm status ", wasmReady, ready);
   }, [wasmReady, ready]);
 
-  const { faceDetected: isValidFaceDetected, isValidCall, hasFinished , setHasFinished } =
-    useIsValid("userVideo");
+  const {
+    faceDetected: isValidFaceDetected,
+    isValidCall,
+    hasFinished,
+    setHasFinished,
+  } = useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
     setCurrentAction("isValid");
@@ -69,22 +80,21 @@ const Ready = () => {
   };
 
   // to start and stop isValid call when on loop
-  useEffect(()=>{
+  useEffect(() => {
     const doIsValid = async () => {
       await isValidCall();
-    }
+    };
 
-    if(currentAction === 'isValid' && hasFinished){
+    if (currentAction === "isValid" && hasFinished) {
       setHasFinished(false);
     }
-    if(currentAction === 'isValid' && !hasFinished){
+    if (currentAction === "isValid" && !hasFinished) {
       doIsValid();
     }
-    if(currentAction !== 'isValid' && hasFinished){
+    if (currentAction !== "isValid" && hasFinished) {
       setHasFinished(false);
     }
-  },[currentAction, hasFinished])
-
+  }, [currentAction, hasFinished]);
 
   // Enroll ONEFA
   const useEnrollSuccess = () => console.log("=======ENROLL SUCCESS=======");
@@ -101,8 +111,8 @@ const Ready = () => {
   };
 
   const handlePreidctSuccess = (result) => {
-    console.log('======PREDICT SUCCESS========');
-  }
+    console.log("======PREDICT SUCCESS========");
+  };
   const {
     predictOneFaData,
     predictOneFaStatus,
@@ -117,8 +127,17 @@ const Ready = () => {
 
   const handleContinuousPredict = async () => {
     setCurrentAction("useContinuousPredict");
-    await continuousPredictUser();
+    continuousPredictUser();
   };
+
+  // stop Continuous predict
+  useEffect(() => {
+    if (currentAction !== "useContinuousPredict") {
+      setStopLoopContinuousEnrollPredict(true);
+    } else {
+      setStopLoopContinuousEnrollPredict(false);
+    }
+  }, [currentAction]);
 
   const handleSwitchCamera = (e) => {
     setDeviceId(e.target.value);
@@ -155,9 +174,12 @@ const Ready = () => {
     isFound,
     scannedIdData,
     resultStatus,
+    documentUUID,
+    documentGUID,
   } = useScanFrontDocument();
   const handleScanDLFront = async () => {
     setCurrentAction("useScanDocumentFront");
+    // await scanFrontDocument();
   };
 
   // useEffect To scan front of the DL every 0.3 sec
@@ -197,6 +219,62 @@ const Ready = () => {
     return () => clearInterval(interval);
   }, [currentAction, scannedCodeData]);
 
+  const isDocumentOrBackCamera =
+    ["useScanDocumentBack", "useScanDocumentFront"].includes(currentAction) ||
+    isBack;
+
+  // Predict Age
+  const { doPredictAge, age, predictAgeHasFinished, setPredictAgeHasFinished } =
+    usePredictAge();
+
+  const handlePredictAge = async () => {
+    setCurrentAction("usePredictAge");
+    await doPredictAge();
+  };
+
+  // to start and stop predictAge call when on loop
+  useEffect(() => {
+    const doUsePredictAge = async () => {
+      await doPredictAge();
+    };
+    if (currentAction === "usePredictAge" && predictAgeHasFinished) {
+      setPredictAgeHasFinished(false);
+    }
+    if (currentAction === "usePredictAge" && !predictAgeHasFinished) {
+      doUsePredictAge();
+    }
+    if (currentAction !== "usePredictAge" && predictAgeHasFinished) {
+      setPredictAgeHasFinished(false);
+    }
+  }, [currentAction, predictAgeHasFinished]);
+
+  // Scan Front DL without predict
+
+  const {
+    isFound: isfoundValidity,
+    scanFrontDocument: scanFrontValidity,
+  } = useScanFrontDocumentWithoutPredict();
+
+  const handleFrontDLValidity = () => {
+    setCurrentAction("useScanDocumentFrontValidity");
+  };
+
+  // useEffect To scan front of the DL every 0.3 sec
+  useEffect(() => {
+    const doScan = async () => {
+      console.log("scanning front:");
+      await scanFrontValidity();
+    };
+    let interval;
+    if (currentAction === "useScanDocumentFrontValidity") {
+      if (!isfoundValidity) {
+        doScan();
+        interval = setInterval(doScan, 300);
+      }
+    }
+    return () => clearInterval(interval);
+  }, [currentAction, isfoundValidity]);
+
   return (
     <div id="canvasInput" className="container">
       <div
@@ -211,7 +289,7 @@ const Ready = () => {
         }}
       >
         <label> Select Camera: </label>
-        <select onChange={(e) => handleSwitchCamera(e)}>
+        <select value={deviceId || device} onChange={(e) => handleSwitchCamera(e)}>
           {devices.map((e, index) => {
             return (
               <option id={e.value} value={e.value} key={index}>
@@ -223,11 +301,16 @@ const Ready = () => {
         <div className="cameraContainer">
           <video
             id="userVideo"
-            className="cameraDisplay"
+            className={ `cameraDisplay ${isDocumentOrBackCamera ? '' : 'mirrored'}`  }
             muted
             autoPlay
             playsInline
           />
+          {currentAction === "usePredictAge" && age > 0 && (
+            <div className="age-box">
+              <div>{Math.round(age)}</div>
+            </div>
+          )}
         </div>
 
         <div>
@@ -301,7 +384,9 @@ const Ready = () => {
           {currentAction === "useDelete" && (
             <div>
               <div>{`Deletion Status: ${deletionStatus}`}</div>
-              <div>{`User UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
+              <div>{`User UUID: ${
+                predictOneFaData ? predictOneFaData.PI.uuid : ""
+              }`}</div>
             </div>
           )}
 
@@ -313,14 +398,26 @@ const Ready = () => {
                 }`}
               </div>
               <div>{`Has found valid document: ${isFound}`}</div>
+              <div>{`Document GUID: ${documentGUID}`} </div>
+              <div>{`Document UUID: ${documentUUID}`} </div>
             </div>
           )}
 
           {currentAction === "useScanDocumentBack" && (
             <div>
-              <div style={{backgroundColor:"black"}}>
+              <div style={{ backgroundColor: "black" }}>
                 {`Scanned code data: ${
                   scannedCodeData ? JSON.stringify(scannedCodeData) : ""
+                }`}
+              </div>
+            </div>
+          )}
+
+          {currentAction === "useScanDocumentFrontValidity" && (
+            <div>
+              <div>
+                {`Scan Document Result: ${
+                  isfoundValidity ? "Valid Front Document found" : "not found"
                 }`}
               </div>
             </div>
@@ -330,6 +427,9 @@ const Ready = () => {
         <div id="module_functions" className="buttonContainer">
           <button className="button" onClick={handleIsValid}>
             Is Valid
+          </button>
+          <button className="button" onClick={handlePredictAge}>
+            Predict Age
           </button>
           <button className="button" onClick={handleEnrollOneFa}>
             Enroll
@@ -345,6 +445,9 @@ const Ready = () => {
           </button>
           <button className="button" onClick={handleScanDLFront}>
             Scan Front Document
+          </button>
+          <button className="button" onClick={handleFrontDLValidity}>
+            Scan Front Document Validity (No identity)
           </button>
           <button className="button" onClick={handleScanDocumentBack}>
             Scan Back Document
