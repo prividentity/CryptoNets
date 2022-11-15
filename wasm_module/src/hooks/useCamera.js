@@ -1,12 +1,12 @@
 /* eslint-disable */
 import { useState } from "react";
-import { openCamera } from "@privateid/cryptonets-web-sdk";
+import { openCamera } from "@privateid/cryptonets-web-sdk-alpha";
 
 const useCamera = (element = "userVideo") => {
   // Initialize the state
   const [ready, setReady] = useState(false);
   const [devices, setDevices] = useState([]);
-  const [device, setDevice] = useState(false);
+  const [device, setDevice] = useState('');
   const [faceMode, setFaceMode] = useState(false);
 
   const init = async () => {
@@ -28,7 +28,7 @@ const useCamera = (element = "userVideo") => {
           value: d.deviceId,
         }));
         setDevices(options);
-        setDevice(options[0]);
+        setDevice(settings.deviceId)
       }
       setReady(true);
     } catch (e) {
@@ -49,7 +49,7 @@ const useCamera = (element = "userVideo") => {
               },
             ],
           });
-          
+
         }
       } catch (e) {
         // eslint-disable-next-line no-console

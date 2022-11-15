@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { continuousEnrollPredict } from "@privateid/cryptonets-web-sdk";
+import { continuousEnrollPredict } from "@privateid/cryptonets-web-sdk-alpha";
 
 const useContinuousPredict = (
   element,
@@ -51,11 +51,11 @@ const useContinuousPredict = (
           // stopTracks();
           if (successCallback) {
             successCallback(
-              result.returnValue.PI.guid,
-              result.returnValue.PI.uuid
+              result.returnValue.PI.uuid,
+              result.returnValue.PI.guid
             );
           } else {
-            onSuccess(result.returnValue.PI.guid, result.returnValue.PI.uuid);
+            onSuccess(result.returnValue.PI.uuid,result.returnValue.PI.guid);
           }
           successCallback = null;
         }

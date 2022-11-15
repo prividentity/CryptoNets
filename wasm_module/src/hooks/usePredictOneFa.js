@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { predict1FA } from "@privateid/cryptonets-web-sdk";
+import { predict1FA } from "@privateid/cryptonets-web-sdk-alpha";
 
 const usePredictOneFa = (
   element = "userVideo",
