@@ -1445,10 +1445,11 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  10165692: function() {FS.mkdir('/privid'); FS.mount(IDBFS, {}, '/privid'); FS.syncfs(true, function (err) { assert(!err); });},  
- 10165796: function() {FS.syncfs(function (err) { });}
+  10518256: function() {FS.mkdir('/privid'); FS.mount(IDBFS, {}, '/privid'); FS.syncfs(true, function (err) { assert(!err); });},  
+ 10518360: function() {FS.syncfs(function (err) { });}
 };
 function copy_data_to_user_buffer_helper_wasm(operation,op_len,id,response,response_len,buffer_out,buffer_out_len){ privid_wasm_result(UTF8ToString(operation, op_len), id, UTF8ToString(response, response_len)); }
+function wasm_callback(operation,op_len,id,response,response_len){ privid_wasm_result(UTF8ToString(operation, op_len), id, UTF8ToString(response, response_len)); }
 
 
 
@@ -1658,6 +1659,82 @@ function copy_data_to_user_buffer_helper_wasm(operation,op_len,id,response,respo
   function ___gmtime_r(a0,a1
   ) {
   return _gmtime_r(a0,a1);
+  }
+
+  function _tzset_impl() {
+      var currentYear = new Date().getFullYear();
+      var winter = new Date(currentYear, 0, 1);
+      var summer = new Date(currentYear, 6, 1);
+      var winterOffset = winter.getTimezoneOffset();
+      var summerOffset = summer.getTimezoneOffset();
+  
+      // Local standard timezone offset. Local standard time is not adjusted for daylight savings.
+      // This code uses the fact that getTimezoneOffset returns a greater value during Standard Time versus Daylight Saving Time (DST).
+      // Thus it determines the expected output during Standard Time, and it compares whether the output of the given date the same (Standard) or less (DST).
+      var stdTimezoneOffset = Math.max(winterOffset, summerOffset);
+  
+      // timezone is specified as seconds west of UTC ("The external variable
+      // `timezone` shall be set to the difference, in seconds, between
+      // Coordinated Universal Time (UTC) and local standard time."), the same
+      // as returned by stdTimezoneOffset.
+      // See http://pubs.opengroup.org/onlinepubs/009695399/functions/tzset.html
+      HEAP32[((__get_timezone())>>2)] = stdTimezoneOffset * 60;
+  
+      HEAP32[((__get_daylight())>>2)] = Number(winterOffset != summerOffset);
+  
+      function extractZone(date) {
+        var match = date.toTimeString().match(/\(([A-Za-z ]+)\)$/);
+        return match ? match[1] : "GMT";
+      };
+      var winterName = extractZone(winter);
+      var summerName = extractZone(summer);
+      var winterNamePtr = allocateUTF8(winterName);
+      var summerNamePtr = allocateUTF8(summerName);
+      if (summerOffset < winterOffset) {
+        // Northern hemisphere
+        HEAP32[((__get_tzname())>>2)] = winterNamePtr;
+        HEAP32[(((__get_tzname())+(4))>>2)] = summerNamePtr;
+      } else {
+        HEAP32[((__get_tzname())>>2)] = summerNamePtr;
+        HEAP32[(((__get_tzname())+(4))>>2)] = winterNamePtr;
+      }
+    }
+  function _tzset() {
+      // TODO: Use (malleable) environment variables instead of system settings.
+      if (_tzset.called) return;
+      _tzset.called = true;
+      _tzset_impl();
+    }
+  function _localtime_r(time, tmPtr) {
+      _tzset();
+      var date = new Date(HEAP32[((time)>>2)]*1000);
+      HEAP32[((tmPtr)>>2)] = date.getSeconds();
+      HEAP32[(((tmPtr)+(4))>>2)] = date.getMinutes();
+      HEAP32[(((tmPtr)+(8))>>2)] = date.getHours();
+      HEAP32[(((tmPtr)+(12))>>2)] = date.getDate();
+      HEAP32[(((tmPtr)+(16))>>2)] = date.getMonth();
+      HEAP32[(((tmPtr)+(20))>>2)] = date.getFullYear()-1900;
+      HEAP32[(((tmPtr)+(24))>>2)] = date.getDay();
+  
+      var start = new Date(date.getFullYear(), 0, 1);
+      var yday = ((date.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))|0;
+      HEAP32[(((tmPtr)+(28))>>2)] = yday;
+      HEAP32[(((tmPtr)+(36))>>2)] = -(date.getTimezoneOffset() * 60);
+  
+      // Attention: DST is in December in South, and some regions don't have DST at all.
+      var summerOffset = new Date(date.getFullYear(), 6, 1).getTimezoneOffset();
+      var winterOffset = start.getTimezoneOffset();
+      var dst = (summerOffset != winterOffset && date.getTimezoneOffset() == Math.min(winterOffset, summerOffset))|0;
+      HEAP32[(((tmPtr)+(32))>>2)] = dst;
+  
+      var zonePtr = HEAP32[(((__get_tzname())+(dst ? 4 : 0))>>2)];
+      HEAP32[(((tmPtr)+(40))>>2)] = zonePtr;
+  
+      return tmPtr;
+    }
+  function ___localtime_r(a0,a1
+  ) {
+  return _localtime_r(a0,a1);
   }
 
   function setErrNo(value) {
@@ -5064,50 +5141,6 @@ function copy_data_to_user_buffer_helper_wasm(operation,op_len,id,response,respo
       return 0;
     }
 
-  function _tzset_impl() {
-      var currentYear = new Date().getFullYear();
-      var winter = new Date(currentYear, 0, 1);
-      var summer = new Date(currentYear, 6, 1);
-      var winterOffset = winter.getTimezoneOffset();
-      var summerOffset = summer.getTimezoneOffset();
-  
-      // Local standard timezone offset. Local standard time is not adjusted for daylight savings.
-      // This code uses the fact that getTimezoneOffset returns a greater value during Standard Time versus Daylight Saving Time (DST).
-      // Thus it determines the expected output during Standard Time, and it compares whether the output of the given date the same (Standard) or less (DST).
-      var stdTimezoneOffset = Math.max(winterOffset, summerOffset);
-  
-      // timezone is specified as seconds west of UTC ("The external variable
-      // `timezone` shall be set to the difference, in seconds, between
-      // Coordinated Universal Time (UTC) and local standard time."), the same
-      // as returned by stdTimezoneOffset.
-      // See http://pubs.opengroup.org/onlinepubs/009695399/functions/tzset.html
-      HEAP32[((__get_timezone())>>2)] = stdTimezoneOffset * 60;
-  
-      HEAP32[((__get_daylight())>>2)] = Number(winterOffset != summerOffset);
-  
-      function extractZone(date) {
-        var match = date.toTimeString().match(/\(([A-Za-z ]+)\)$/);
-        return match ? match[1] : "GMT";
-      };
-      var winterName = extractZone(winter);
-      var summerName = extractZone(summer);
-      var winterNamePtr = allocateUTF8(winterName);
-      var summerNamePtr = allocateUTF8(summerName);
-      if (summerOffset < winterOffset) {
-        // Northern hemisphere
-        HEAP32[((__get_tzname())>>2)] = winterNamePtr;
-        HEAP32[(((__get_tzname())+(4))>>2)] = summerNamePtr;
-      } else {
-        HEAP32[((__get_tzname())>>2)] = summerNamePtr;
-        HEAP32[(((__get_tzname())+(4))>>2)] = winterNamePtr;
-      }
-    }
-  function _tzset() {
-      // TODO: Use (malleable) environment variables instead of system settings.
-      if (_tzset.called) return;
-      _tzset.called = true;
-      _tzset_impl();
-    }
   function _mktime(tmPtr) {
       _tzset();
       var date = new Date(HEAP32[(((tmPtr)+(20))>>2)] + 1900,
@@ -5512,6 +5545,7 @@ function copy_data_to_user_buffer_helper_wasm(operation,op_len,id,response,respo
       writeArrayToMemory(bytes, s);
       return bytes.length-1;
     }
+
   function _strftime_l(s, maxsize, format, tm) {
       return _strftime(s, maxsize, format, tm); // no locale support yet
     }
@@ -5607,6 +5641,7 @@ var asmLibraryArg = {
   "__cxa_atexit": ___cxa_atexit,
   "__cxa_throw": ___cxa_throw,
   "__gmtime_r": ___gmtime_r,
+  "__localtime_r": ___localtime_r,
   "__syscall_fcntl64": ___syscall_fcntl64,
   "__syscall_ioctl": ___syscall_ioctl,
   "__syscall_open": ___syscall_open,
@@ -5633,8 +5668,10 @@ var asmLibraryArg = {
   "getentropy": _getentropy,
   "mktime": _mktime,
   "setTempRet0": _setTempRet0,
+  "strftime": _strftime,
   "strftime_l": _strftime_l,
-  "time": _time
+  "time": _time,
+  "wasm_callback": wasm_callback
 };
 var asm = createWasm();
 /** @type {function(...*):?} */
@@ -5650,11 +5687,6 @@ var _malloc = Module["_malloc"] = function() {
 /** @type {function(...*):?} */
 var _free = Module["_free"] = function() {
   return (_free = Module["_free"] = Module["asm"]["free"]).apply(null, arguments);
-};
-
-/** @type {function(...*):?} */
-var __Z18image_estimate_agePhiiiPfPPcPi = Module["__Z18image_estimate_agePhiiiPfPPcPi"] = function() {
-  return (__Z18image_estimate_agePhiiiPfPPcPi = Module["__Z18image_estimate_agePhiiiPfPPcPi"] = Module["asm"]["_Z18image_estimate_agePhiiiPfPPcPi"]).apply(null, arguments);
 };
 
 /** @type {function(...*):?} */
@@ -5750,6 +5782,26 @@ var _privid_doc_scan_face = Module["_privid_doc_scan_face"] = function() {
 /** @type {function(...*):?} */
 var _privid_face_compare_files = Module["_privid_face_compare_files"] = function() {
   return (_privid_face_compare_files = Module["_privid_face_compare_files"] = Module["asm"]["privid_face_compare_files"]).apply(null, arguments);
+};
+
+/** @type {function(...*):?} */
+var _privid_detect_faces = Module["_privid_detect_faces"] = function() {
+  return (_privid_detect_faces = Module["_privid_detect_faces"] = Module["asm"]["privid_detect_faces"]).apply(null, arguments);
+};
+
+/** @type {function(...*):?} */
+var _privid_compare_embeddings = Module["_privid_compare_embeddings"] = function() {
+  return (_privid_compare_embeddings = Module["_privid_compare_embeddings"] = Module["asm"]["privid_compare_embeddings"]).apply(null, arguments);
+};
+
+/** @type {function(...*):?} */
+var _privid_compute_embeddings = Module["_privid_compute_embeddings"] = function() {
+  return (_privid_compute_embeddings = Module["_privid_compute_embeddings"] = Module["asm"]["privid_compute_embeddings"]).apply(null, arguments);
+};
+
+/** @type {function(...*):?} */
+var _privid_compute_embeddings_multi = Module["_privid_compute_embeddings_multi"] = function() {
+  return (_privid_compute_embeddings_multi = Module["_privid_compute_embeddings_multi"] = Module["asm"]["privid_compute_embeddings_multi"]).apply(null, arguments);
 };
 
 /** @type {function(...*):?} */

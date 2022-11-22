@@ -11,6 +11,13 @@ const useScanFrontDocumentWithoutPredict = () => {
 
   const documentCallback = (result) => {
     console.log("Front scan callback result:", result);
+    if (result.returnValue.op_status === 0) {
+      setIsFound(true);
+    }
+    else {
+      setIsFound(false);
+      scanFrontDocument();
+    }
   };
 
   const scanFrontDocument = async () => {
@@ -21,9 +28,9 @@ const useScanFrontDocumentWithoutPredict = () => {
       false
     );
     console.log("Validate DL", resultData);
-    if (resultData.result === 0) {
-        setIsFound(true);
-    }
+    // if (resultData.result === 0) {
+    //     setIsFound(true);
+    // }
   };
 
   return {

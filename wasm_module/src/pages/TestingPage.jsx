@@ -179,24 +179,24 @@ const Ready = () => {
   } = useScanFrontDocument();
   const handleScanDLFront = async () => {
     setCurrentAction("useScanDocumentFront");
-    // await scanFrontDocument();
+    await scanFrontDocument();
   };
 
   // useEffect To scan front of the DL every 0.3 sec
-  useEffect(() => {
-    const doScan = async () => {
-      console.log("scanning front:");
-      await scanFrontDocument();
-    };
-    let interval;
-    if (currentAction === "useScanDocumentFront") {
-      if (!isFound) {
-        doScan();
-        interval = setInterval(doScan, 300);
-      }
-    }
-    return () => clearInterval(interval);
-  }, [currentAction, isFound]);
+  // useEffect(() => {
+  //   const doScan = async () => {
+  //     console.log("scanning front:");
+  //     await scanFrontDocument();
+  //   };
+  //   let interval;
+  //   if (currentAction === "useScanDocumentFront") {
+  //     if (!isFound) {
+  //       doScan();
+  //       interval = setInterval(doScan, 300);
+  //     }
+  //   }
+  //   return () => clearInterval(interval);
+  // }, [currentAction, isFound]);
 
   // Scan Document Back
   const { scanBackDocument, scannedCodeData } = useScanBackDocument();
@@ -220,7 +220,7 @@ const Ready = () => {
   }, [currentAction, scannedCodeData]);
 
   const isDocumentOrBackCamera =
-    ["useScanDocumentBack", "useScanDocumentFront"].includes(currentAction) ||
+    ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) ||
     isBack;
 
   // Predict Age
@@ -255,25 +255,28 @@ const Ready = () => {
     scanFrontDocument: scanFrontValidity,
   } = useScanFrontDocumentWithoutPredict();
 
-  const handleFrontDLValidity = () => {
+  const handleFrontDLValidity = async () => {
     setCurrentAction("useScanDocumentFrontValidity");
+    await scanFrontValidity();
   };
 
   // useEffect To scan front of the DL every 0.3 sec
-  useEffect(() => {
-    const doScan = async () => {
-      console.log("scanning front:");
-      await scanFrontValidity();
-    };
-    let interval;
-    if (currentAction === "useScanDocumentFrontValidity") {
-      if (!isfoundValidity) {
-        doScan();
-        interval = setInterval(doScan, 300);
-      }
-    }
-    return () => clearInterval(interval);
-  }, [currentAction, isfoundValidity]);
+  // useEffect(() => {
+  //   const doScan = async () => {
+  //     console.log("scanning front:");
+  //     await scanFrontValidity();
+  //   };
+  //   let interval;
+  //   if (currentAction === "useScanDocumentFrontValidity") {
+  //     if (!isfoundValidity) {
+  //       doScan();
+  //       interval = setInterval(doScan, 300);
+  //     }
+  //   }
+  //   return () => clearInterval(interval);
+  // }, [currentAction, isfoundValidity]);
+
+  console.log("API KEY: ", process.env.REACT_APP_API_KEY)
 
   return (
     <div id="canvasInput" className="container">
