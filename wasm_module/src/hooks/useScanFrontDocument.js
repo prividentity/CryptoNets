@@ -11,12 +11,15 @@ const useScanFrontDocument = () => {
 
   const documentCallback = (result) => {
     console.log("Front scan callback result:", result)
-    if (result.returnValue.status === 0) {
+    if (result.returnValue.predict_status === 0) {
       setIsFound(true);
-      setResultStatus(result.returnValue.status);
-      setDocumentUUID(result.returnValue.PI.uuid);
-      setDocumentGUID(result.returnValue.PI.guid);
+      setResultStatus(result.returnValue.predict_status);
+      setDocumentUUID(result.returnValue.uuid);
+      setDocumentGUID(result.returnValue.guid);
     } 
+    else{
+      scanFrontDocument();
+    }
   };
 
   const scanFrontDocument = async () => {
