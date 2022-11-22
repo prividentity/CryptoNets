@@ -1,6 +1,5 @@
-﻿namespace PrivId.Demo
+﻿namespace PrivId.Demo;
+
+public partial class App
 {
-    public partial class App
-    {
-    }
 }

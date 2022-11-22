@@ -16,9 +16,9 @@ using PrivateIdentity;
 
 namespace PrivId.Demo;
 
-internal sealed class AppModel : INotifyPropertyChanged
+internal sealed class AppModel : INotifyPropertyChanged, IDisposable
 {
-    private const String ApiKey = "";
+    private const String ApiKey = "00000000000000001962";
 
     private sealed class CommandHandler : ICommand
     {
@@ -34,7 +34,7 @@ internal sealed class AppModel : INotifyPropertyChanged
 
         public Boolean CanExecute(Object? parameter) => _canExecute.Invoke();
 
-        public void Execute(Object? parameter) => _action?.Invoke();
+        public void Execute(Object? parameter) => _action.Invoke();
 
         public event EventHandler? CanExecuteChanged
         {
@@ -50,8 +50,6 @@ internal sealed class AppModel : INotifyPropertyChanged
     private String _diagnosticMessage = String.Empty;
     
     private readonly WriteableBitmap _writableBitmap;
-
-    //private readonly privid_fhe_face _privIdFace;
 
     private readonly IFaceModule _faceModule;
 
@@ -89,6 +87,12 @@ internal sealed class AppModel : INotifyPropertyChanged
         PredictCommand = new CommandHandler(CleanupDiagnosticMessage, () => !IsValidRunning && !EnrollRunning);
         EnrollCommand = new CommandHandler(CleanupDiagnosticMessage, () => !IsValidRunning && !PredictRunning);
         DeleteCommand = new CommandHandler(DeleteEnrolledFace, () => !String.IsNullOrEmpty(_uuid));
+    }
+
+    public void Dispose()
+    {
+        _faceModule.Dispose();
+        _capture?.Dispose();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -228,14 +232,14 @@ internal sealed class AppModel : INotifyPropertyChanged
                 }
                 else
                 {
-                    DiagnosticMessage = $"Predicted with UUID: {_uuid}";
+                    DiagnosticMessage = $"Enrolled with UUID: {_uuid}";
                     PredictRunning = false;
                     CommandManager.InvalidateRequerySuggested();
                 }
                 return;
             }
 
-            CleanupDiagnosticMessage();
+            //CleanupDiagnosticMessage();
         }
         finally
         {
@@ -248,7 +252,7 @@ internal sealed class AppModel : INotifyPropertyChanged
     private async void DeleteEnrolledFace()
     {
         IsValidRunning = EnrollRunning = PredictRunning = false;
-        var result = await _faceModule.DeleteAsync(_uuid);
+        var result = await _faceModule.DeleteAsync(_uuid ?? String.Empty);
         DiagnosticMessage = result.Message;
         _uuid = null;
     }
