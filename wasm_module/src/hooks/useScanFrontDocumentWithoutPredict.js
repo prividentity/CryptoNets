@@ -24,7 +24,6 @@ const useScanFrontDocumentWithoutPredict = () => {
     const { result: resultData } = await isValidPhotoID(
       "PHOTO_ID_FRONT",
       documentCallback,
-      null,
       false
     );
     console.log("Validate DL", resultData);
