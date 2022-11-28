@@ -7,9 +7,10 @@ import com.cryptonets.sample.R
 import com.cryptonets.sample.utils.MyCameraHandler
 import com.cryptonets.sample.utils.ResourceProvider
 import com.cryptonets.sample.utils.toLiveData
-import com.privateidentity.prividlib.ImageRawDataInfo
-import com.privateidentity.prividlib.PrividFheFace
-import com.privateidentity.prividlib.ResponseModel
+import com.privateidentity.prividlib.PrivateIdentity
+import com.privateidentity.prividlib.model.FacePredictResult
+import com.privateidentity.prividlib.model.FaceValidation
+import com.privateidentity.prividlib.model.ImageData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,7 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-        private val resourceProvider: ResourceProvider, private val prividFheFace: PrividFheFace
+    private val resourceProvider: ResourceProvider, private val privateIdentity: PrivateIdentity
 ) : ViewModel() {
 
     private val _sampleTypeLiveData = MutableLiveData(SampleType.Validity)
@@ -28,21 +29,21 @@ class MainViewModel @Inject constructor(
     val statusLiveData = _statusLiveData.toLiveData()
 
     private var isEnrolled = false
-    private val enrollImageByteArray = arrayListOf<ByteArray>()
+    private val enrollingImages = arrayListOf<ImageData>()
 
-    fun onImageAvailable(imageDetails: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
+    fun onImageAvailable(imageData: ImageData, cameraHandler: MyCameraHandler) {
         when (_sampleTypeLiveData.value) {
             SampleType.Validity          -> {
-                isValid(imageDetails, cameraHandler)
+                isValid(imageData, cameraHandler)
             }
             SampleType.Enrolling         -> {
-                enroll(imageDetails, cameraHandler)
+                enroll(imageData, cameraHandler)
             }
             SampleType.ContinuousPredict -> {
-                predictContinuously(imageDetails, cameraHandler)
+                predictContinuously(imageData, cameraHandler)
             }
             SampleType.Delete            -> {
-                deleteContinuously(imageDetails, cameraHandler)
+                deleteContinuously(imageData, cameraHandler)
             }
             else                         -> {} // should never happen
         }
@@ -71,21 +72,16 @@ class MainViewModel @Inject constructor(
     private fun clearData() {
         _statusLiveData.value = Status()
         isEnrolled = false
-        enrollImageByteArray.clear()
+        enrollingImages.clear()
     }
 
-    private fun isValid(imageRawDataInfo: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
+    private fun isValid(imageData: ImageData, cameraHandler: MyCameraHandler) {
         viewModelScope.launch {
             cameraHandler.isProcessingImage = true
             val responseIsValid = withContext(Dispatchers.IO) {
-                prividFheFace.isValid(
-                    imageRawDataInfo.imageData,
-                    imageRawDataInfo.width,
-                    imageRawDataInfo.height,
-                    0
-                )
+                privateIdentity.validate(imageData)
             }
-            if (responseIsValid.status == 0) {
+            if (responseIsValid.faceValidation == FaceValidation.ValidBiometric) {
                 _statusLiveData.value = Status(resourceProvider.getString(R.string.face_valid_message))
             } else {
                 _statusLiveData.value = Status(resourceProvider.getString(R.string.face_invalid_message))
@@ -94,13 +90,15 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun predictContinuously(imageDetails: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
+    private fun predictContinuously(imageDa: ImageData, cameraHandler: MyCameraHandler) {
         viewModelScope.launch {
             cameraHandler.isProcessingImage = true
-            predictUser(imageDetails)?.let {
-                val status1 = resourceProvider.getString(R.string.face_valid_message)
-                val status2 = resourceProvider.getString(R.string.predict_uuid_, it.piModel.uuid)
-                val status3 = resourceProvider.getString(R.string.predict_guid_, it.piModel.guid)
+            predictUser(imageDa)?.let {
+                val status1 = if (!it.uuid.isNullOrEmpty()) resourceProvider.getString(
+                    R.string.face_valid_message
+                ) else resourceProvider.getString(R.string.user_not_enrolled)
+                val status2 = resourceProvider.getString(R.string.predict_uuid_, it.uuid)
+                val status3 = resourceProvider.getString(R.string.predict_guid_, it.guid)
                 _statusLiveData.value = Status(status1, status2, status3)
             } ?: run {
                 _statusLiveData.value = Status(resourceProvider.getString(R.string.face_invalid_message))
@@ -109,33 +107,33 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private suspend fun predictUser(imageRawDataInfo: ImageRawDataInfo): ResponseModel? {
+    private suspend fun predictUser(imageData: ImageData): FacePredictResult? {
         return withContext(Dispatchers.IO) {
             val responsePredict = withContext(Dispatchers.IO) {
-                prividFheFace.predict(imageRawDataInfo.imageData, imageRawDataInfo.width, imageRawDataInfo.height)
+                privateIdentity.predict(imageData)
             }
             return@withContext responsePredict
         }
     }
 
-    private fun deleteContinuously(imageRawDataInfo: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
+    private fun deleteContinuously(imageData: ImageData, cameraHandler: MyCameraHandler) {
         viewModelScope.launch {
             cameraHandler.isProcessingImage = true
-            predictUser(imageRawDataInfo)?.let {
-                if (it.status == 0) {
+            predictUser(imageData)?.let {
+                if (!it.uuid.isNullOrEmpty()) {
                     val status1 = resourceProvider.getString(R.string.deletion_status_deleting)
-                    val status2 = resourceProvider.getString(R.string.predict_uuid_, it.piModel.uuid)
-                    val status3 = resourceProvider.getString(R.string.predict_guid_, it.piModel.guid)
+                    val status2 = resourceProvider.getString(R.string.predict_uuid_, it.uuid)
+                    val status3 = resourceProvider.getString(R.string.predict_guid_, it.guid)
                     _statusLiveData.value = Status(status1, status2, status3)
                     val deleteResult = withContext(Dispatchers.IO) {
-                        prividFheFace.delete(it.piModel.uuid)
+                        privateIdentity.delete(it.uuid!!)
                     }
-                    if (deleteResult.status == 0) {
+                    deleteResult?.let {
                         _statusLiveData.value = Status(
                             resourceProvider.getString(R.string.deletion_status_success),
                             status2, status3
                         )
-                    } else {
+                    } ?: run {
                         _statusLiveData.value = Status(
                             resourceProvider.getString(R.string.deletion_status_failed),
                             status2, status3
@@ -151,41 +149,39 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun enroll(imageRawDataInfo: ImageRawDataInfo, cameraHandler: MyCameraHandler) {
+    private fun enroll(imageData: ImageData, cameraHandler: MyCameraHandler) {
         if (isEnrolled) return
         viewModelScope.launch {
             cameraHandler.isProcessingImage = true
-            val responseIsValid = withContext(Dispatchers.IO) {
-                prividFheFace.isValid(imageRawDataInfo.imageData, imageRawDataInfo.width, imageRawDataInfo.height, 1)
+            val faceValidateResult = withContext(Dispatchers.IO) {
+                privateIdentity.validateToEnroll(imageData)
             }
-            if (responseIsValid.status == 0) {
-                enrollImageByteArray.add(imageRawDataInfo.imageData)
+            if (faceValidateResult.faceValidation == FaceValidation.ValidBiometric) {
+                enrollingImages.add(imageData)
                 val status1 = resourceProvider.getString(R.string.face_valid_message)
                 val percent =
                     resourceProvider.getString(
-                        R.string.enroll_progress_, (enrollImageByteArray.size * 100 / 10).toString()
+                        R.string.enroll_progress_, (enrollingImages.size * 100 / 10).toString()
                     )
                 _statusLiveData.value = Status(status1, "", percent)
-                if (enrollImageByteArray.size == 10) {
+                if (enrollingImages.size == 10) {
                     isEnrolled = true
                     val enrollResult = withContext(Dispatchers.IO) {
-                        prividFheFace.enroll(
-                            enrollImageByteArray, imageRawDataInfo.height, imageRawDataInfo.width,
-                            imageRawDataInfo.byteCount
-                        )
+                        privateIdentity.enroll(enrollingImages)
                     }
-                    if (enrollResult.status == 0) {
-                        val guid = enrollResult.piModel.guid
-                        val uuid = enrollResult.piModel.uuid
+
+                    enrollResult?.let {
+                        val guid = it.guid
+                        val uuid = it.uuid
 
                         val status2 = resourceProvider.getString(R.string.enroll_success)
                         val status4 = resourceProvider.getString(R.string.enrolled_uuid_, uuid)
                         val status5 = resourceProvider.getString(R.string.enrolled_guid_, guid)
                         _statusLiveData.value = Status(status1, status2, percent, status4, status5)
-                    } else {
+                    } ?: run {
                         val status2 = resourceProvider.getString(R.string.enroll_failed)
                         _statusLiveData.value = Status(status1, status2, percent)
-                        enrollImageByteArray.clear()
+                        enrollingImages.clear()
                         isEnrolled = false
                     }
 
@@ -210,5 +206,5 @@ enum class SampleType {
 }
 
 data class Status(
-        val status1: String = "", val status2: String = "", val status3: String = "", val status4: String = "", val
-        status5: String = "")
+    val status1: String = "", val status2: String = "", val status3: String = "", val status4: String = "", val
+    status5: String = "")
