@@ -17,7 +17,7 @@ import {
   useScanFrontDocument,
   useScanBackDocument,
 } from "../hooks";
-import { isAndroid, isBackCamera, isIOS, osVersion } from '../utils'
+import {canvasSizes, isAndroid, isBackCamera, isIOS, osVersion} from '../utils';
 
 import "./styles.css";
 import usePredictAge from "../hooks/usePredictAge";
@@ -25,9 +25,11 @@ import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocumentWit
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
-  const { ready, init, device, devices, faceMode, setDevice } = useCamera("userVideo");
+  const { ready, init, device, devices, faceMode, setDevice } =
+    useCamera("userVideo");
   const isBack = isBackCamera(devices, device);
   const [deviceId, setDeviceId] = useState(device);
+  const [canvasSize, setCanvasSize] = useState(canvasSizes[0].value)
 
   // Use Continuous Predict
   const predictRetryTimes = 1;
@@ -220,8 +222,11 @@ const Ready = () => {
   }, [currentAction, scannedCodeData]);
 
   const isDocumentOrBackCamera =
-    ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) ||
-    isBack;
+    [
+      "useScanDocumentBack",
+      "useScanDocumentFront",
+      "useScanDocumentFrontValidity",
+    ].includes(currentAction) || isBack;
 
   // Predict Age
   const { doPredictAge, age, predictAgeHasFinished, setPredictAgeHasFinished } =
@@ -250,10 +255,8 @@ const Ready = () => {
 
   // Scan Front DL without predict
 
-  const {
-    isFound: isfoundValidity,
-    scanFrontDocument: scanFrontValidity,
-  } = useScanFrontDocumentWithoutPredict();
+  const { isFound: isfoundValidity, scanFrontDocument: scanFrontValidity } =
+    useScanFrontDocumentWithoutPredict();
 
   const handleFrontDLValidity = async () => {
     setCurrentAction("useScanDocumentFrontValidity");
@@ -276,8 +279,12 @@ const Ready = () => {
   //   return () => clearInterval(interval);
   // }, [currentAction, isfoundValidity]);
 
-  console.log("API KEY: ", process.env.REACT_APP_API_KEY)
+  const handleCanvasSize = async e => {
+    setCanvasSize(e.target.value);
+    await scanFrontDocument(e.target.value);
+  }
 
+  console.log("API KEY: ", process.env.REACT_APP_API_KEY);
   return (
     <div id="canvasInput" className="container">
       <div
@@ -291,20 +298,46 @@ const Ready = () => {
           gap: "10px",
         }}
       >
-        <label> Select Camera: </label>
-        <select value={deviceId || device} onChange={(e) => handleSwitchCamera(e)}>
-          {devices.map((e, index) => {
-            return (
-              <option id={e.value} value={e.value} key={index}>
-                {e.label}
-              </option>
-            );
-          })}
-        </select>
+        <div style={{ display: "flex", justifyContent: currentAction === "useScanDocumentFront" ? "space-between" : "center", width: '47%' }}>
+          <div>
+            <label> Select Camera: </label>
+            <select
+              value={deviceId || device}
+              onChange={(e) => handleSwitchCamera(e)}
+            >
+              {devices.map((e, index) => {
+                return (
+                  <option id={e.value} value={e.value} key={index}>
+                    {e.label}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+          {currentAction === "useScanDocumentFront" && (
+            <div>
+              <label> Canvas Size: </label>
+              <select
+                value={canvasSize}
+                onChange={(e) => handleCanvasSize(e)}
+              >
+                {canvasSizes.map((e, index) => {
+                  return (
+                    <option id={e.label} value={e.value} key={index}>
+                      {e.label}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
+        </div>
         <div className="cameraContainer">
           <video
             id="userVideo"
-            className={ `cameraDisplay ${isDocumentOrBackCamera ? '' : 'mirrored'}`  }
+            className={`cameraDisplay ${
+              isDocumentOrBackCamera ? "" : "mirrored"
+            }`}
             muted
             autoPlay
             playsInline
