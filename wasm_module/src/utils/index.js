@@ -54,7 +54,7 @@ export const isBackCamera = (availableDevices, currentDevice) => {
   return mediaDevice?.label?.toLowerCase().includes('back');
 };
 
-export const canvasSizes = [
+export const canvasSizeOptions = [
   { label: "10K", value: "10K" },
   { label: "8K", value: "8K" },
   { label: "5K", value: "5K" },
