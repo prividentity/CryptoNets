@@ -17,7 +17,13 @@ import {
   useScanFrontDocument,
   useScanBackDocument,
 } from "../hooks";
-import {canvasSizes, isAndroid, isBackCamera, isIOS, osVersion} from '../utils';
+import {
+  canvasSizeOptions,
+  isAndroid,
+  isBackCamera,
+  isIOS,
+  osVersion,
+} from "../utils";
 
 import "./styles.css";
 import usePredictAge from "../hooks/usePredictAge";
@@ -29,7 +35,7 @@ const Ready = () => {
     useCamera("userVideo");
   const isBack = isBackCamera(devices, device);
   const [deviceId, setDeviceId] = useState(device);
-  const [canvasSize, setCanvasSize] = useState(canvasSizes[0].value)
+  const [canvasSize, setCanvasSize] = useState(canvasSizeOptions[0].value);
 
   // Use Continuous Predict
   const predictRetryTimes = 1;
@@ -279,10 +285,10 @@ const Ready = () => {
   //   return () => clearInterval(interval);
   // }, [currentAction, isfoundValidity]);
 
-  const handleCanvasSize = async e => {
+  const handleCanvasSize = async (e) => {
     setCanvasSize(e.target.value);
     await scanFrontDocument(e.target.value);
-  }
+  };
 
   console.log("API KEY: ", process.env.REACT_APP_API_KEY);
   return (
@@ -298,7 +304,16 @@ const Ready = () => {
           gap: "10px",
         }}
       >
-        <div style={{ display: "flex", justifyContent: currentAction === "useScanDocumentFront" ? "space-between" : "center", width: '47%' }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent:
+              currentAction === "useScanDocumentFront"
+                ? "space-between"
+                : "center",
+            width: "47%",
+          }}
+        >
           <div>
             <label> Select Camera: </label>
             <select
@@ -317,16 +332,12 @@ const Ready = () => {
           {currentAction === "useScanDocumentFront" && (
             <div>
               <label> Canvas Size: </label>
-              <select
-                value={canvasSize}
-                onChange={(e) => handleCanvasSize(e)}
-              >
-                {canvasSizeOptions.map(({label, value}) => (
-                    <option id={value} value={value} key={value}>
-                      {label}
-                    </option>
-                  );
-                })}
+              <select value={canvasSize} onChange={(e) => handleCanvasSize(e)}>
+                {canvasSizeOptions.map(({ label, value }) => (
+                  <option id={value} value={value} key={value}>
+                    {label}
+                  </option>
+                ))}
               </select>
             </div>
           )}
