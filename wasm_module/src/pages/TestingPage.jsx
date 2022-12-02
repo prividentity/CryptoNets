@@ -321,10 +321,9 @@ const Ready = () => {
                 value={canvasSize}
                 onChange={(e) => handleCanvasSize(e)}
               >
-                {canvasSizes.map((e, index) => {
-                  return (
-                    <option id={e.label} value={e.value} key={index}>
-                      {e.label}
+                {canvasSizeOptions.map(({label, value}) => (
+                    <option id={value} value={value} key={value}>
+                      {label}
                     </option>
                   );
                 })}
