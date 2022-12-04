@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
-import { CANVAS_SIZE } from "../utils";
 
-let internalCanvasSize;
 const useScanFrontDocument = () => {
   const [scanResult, setScanResult] = useState(null);
   const [scannedIdData, setScannedIdData] = useState(null);
@@ -18,29 +16,16 @@ const useScanFrontDocument = () => {
       setResultStatus(result.returnValue.predict_status);
       setDocumentUUID(result.returnValue.uuid);
       setDocumentGUID(result.returnValue.guid);
-    }
+    } 
     else{
       scanFrontDocument();
     }
   };
 
-  const scanFrontDocument = async (canvasSize) => {
-    if (canvasSize && canvasSize !== internalCanvasSize) {
-      internalCanvasSize = canvasSize;
-    }
-    const canvasObj = canvasSize
-      ? CANVAS_SIZE[canvasSize]
-      : internalCanvasSize
-      ? CANVAS_SIZE[internalCanvasSize]
-      : { width: 10240, height: 4320 };
-    console.log({canvasObj})
+  const scanFrontDocument = async () => {
     const { result: resultData } = await isValidPhotoID(
       "PHOTO_ID_FRONT",
-      documentCallback,
-      true,
-      undefined,
-      undefined,
-      canvasObj
+      documentCallback
     );
   };
 

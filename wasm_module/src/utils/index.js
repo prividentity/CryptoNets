@@ -53,21 +53,3 @@ export const isBackCamera = (availableDevices, currentDevice) => {
   const mediaDevice = availableDevices.find((device) => device.value === currentDevice);
   return mediaDevice?.label?.toLowerCase().includes('back');
 };
-
-export const canvasSizeOptions = [
-  { label: "10K", value: "10K" },
-  { label: "8K", value: "8K" },
-  { label: "5K", value: "5K" },
-  { label: "4K", value: "4K" },
-  { label: "2K", value: "2K" },
-  { label: "FHD (1080p)", value: "FHD"}
-];
-
-export const CANVAS_SIZE = {
-  "10K": { width: 10240, height: 4320 },
-  "8K": { width: 7680, height: 4320 },
-  "5K": { width: 5120, height: 2880 },
-  "4K": { width: 4096, height: 2160 },
-  "2K": { width: 2560, height: 1440 },
-  "FHD": { width: 1920, height: 1080}
-};
