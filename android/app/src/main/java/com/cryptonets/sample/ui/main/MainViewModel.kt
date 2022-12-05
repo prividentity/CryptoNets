@@ -45,7 +45,10 @@ class MainViewModel @Inject constructor(
             SampleType.Delete            -> {
                 deleteContinuously(imageData, cameraHandler)
             }
-            else                         -> {} // should never happen
+            SampleType.DL_FrontSide      -> {
+                scanDLFrontside(imageData, cameraHandler)
+            }
+            null                         -> {}
         }
     }
 
@@ -69,6 +72,11 @@ class MainViewModel @Inject constructor(
         clearData()
     }
 
+    fun onDLFrontsideClicked() {
+        _sampleTypeLiveData.value = SampleType.DL_FrontSide
+        clearData()
+    }
+
     private fun clearData() {
         _statusLiveData.value = Status()
         isEnrolled = false
@@ -78,13 +86,14 @@ class MainViewModel @Inject constructor(
     private fun isValid(imageData: ImageData, cameraHandler: MyCameraHandler) {
         viewModelScope.launch {
             cameraHandler.isProcessingImage = true
-            val responseIsValid = withContext(Dispatchers.IO) {
+            val faceValidateResult = withContext(Dispatchers.IO) {
                 privateIdentity.validate(imageData)
             }
-            if (responseIsValid.faceValidation == FaceValidation.ValidBiometric) {
+            if (faceValidateResult.faceValidation == FaceValidation.ValidBiometric) {
                 _statusLiveData.value = Status(resourceProvider.getString(R.string.face_valid_message))
             } else {
-                _statusLiveData.value = Status(resourceProvider.getString(R.string.face_invalid_message))
+                _statusLiveData.value =
+                    Status(resourceProvider.getString(R.string.face_invalid, faceValidateResult.faceValidation.name))
             }
             cameraHandler.isProcessingImage = false
         }
@@ -142,8 +151,6 @@ class MainViewModel @Inject constructor(
                 } else {
                     // No user
                 }
-            } ?: run {
-//                _statusLiveData.value = Status(resourceProvider.getString(R.string.face_invalid_message))
             }
             cameraHandler.isProcessingImage = false
         }
@@ -188,11 +195,20 @@ class MainViewModel @Inject constructor(
                 }
             } else {
                 _statusLiveData.value = Status(
-                    resourceProvider.getString(R.string.face_invalid_message),
+                    resourceProvider.getString(R.string.face_invalid, faceValidateResult.faceValidation.name),
                     resourceProvider.getString(R.string.enroll_please_look_at_the_camera)
                 )
             }
 
+            cameraHandler.isProcessingImage = false
+        }
+    }
+
+    private fun scanDLFrontside(imageData: ImageData, cameraHandler: MyCameraHandler) {
+        viewModelScope.launch {
+            cameraHandler.isProcessingImage = true
+            withContext(Dispatchers.IO) {
+            }
             cameraHandler.isProcessingImage = false
         }
     }
@@ -202,7 +218,8 @@ enum class SampleType {
     Validity,
     Enrolling,
     ContinuousPredict,
-    Delete
+    Delete,
+    DL_FrontSide
 }
 
 data class Status(

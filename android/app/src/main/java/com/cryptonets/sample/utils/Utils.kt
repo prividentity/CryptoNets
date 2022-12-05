@@ -6,9 +6,11 @@ import android.content.res.Resources
 import android.graphics.*
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.media.Image
+import android.os.Build
 import android.os.Environment
 import android.util.Patterns
 import android.util.Size
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
@@ -191,4 +193,11 @@ fun getScreenWidth(): Int {
 
 fun getScreenHeight(): Int {
     return Resources.getSystem().displayMetrics.heightPixels
+}
+
+fun Button.setColorFilter(color: Int) {
+    if (Build.VERSION.SDK_INT >= 29)
+        background.colorFilter = BlendModeColorFilter(color, BlendMode.MULTIPLY)
+    else
+        background.setColorFilter(color, PorterDuff.Mode.MULTIPLY)
 }

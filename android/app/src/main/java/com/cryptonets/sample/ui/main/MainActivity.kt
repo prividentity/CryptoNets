@@ -4,11 +4,14 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.cryptonets.sample.R
 import com.cryptonets.sample.databinding.ActivityMainBinding
 import com.cryptonets.sample.ui.base.ViewBindingActivity
 import com.cryptonets.sample.utils.MyCameraHandler
 import com.cryptonets.sample.utils.PermissionObserver
+import com.cryptonets.sample.utils.setColorFilter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import timber.log.Timber
@@ -50,16 +53,22 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>() {
 
     private fun observeLiveData() {
         viewModel.sampleTypeLiveData.observe(this) {
-            binding.btnIsValid.setTextColor(Color.WHITE)
-            binding.btnEnroll.setTextColor(Color.WHITE)
-            binding.btnContinuousPredict.setTextColor(Color.WHITE)
-            binding.btnDelete.setTextColor(Color.WHITE)
+            val hlColor = Color.RED
+            val normalColor = ContextCompat.getColor(this, R.color.purple_500)
+
+            binding.btnIsValid.setColorFilter(normalColor)
+            binding.btnEnroll.setColorFilter(normalColor)
+            binding.btnContinuousPredict.setColorFilter(normalColor)
+            binding.btnDelete.setColorFilter(normalColor)
+            binding.btnScanDLFrontSide.setColorFilter(normalColor)
 
             when (it) {
-                SampleType.Validity          -> binding.btnIsValid.setTextColor(Color.BLACK)
-                SampleType.Enrolling         -> binding.btnEnroll.setTextColor(Color.BLACK)
-                SampleType.ContinuousPredict -> binding.btnContinuousPredict.setTextColor(Color.BLACK)
-                SampleType.Delete            -> binding.btnDelete.setTextColor(Color.BLACK)
+                SampleType.Validity          -> binding.btnIsValid.setColorFilter(hlColor)
+                SampleType.Enrolling         -> binding.btnEnroll.setColorFilter(hlColor)
+                SampleType.ContinuousPredict -> binding.btnContinuousPredict.setColorFilter(hlColor)
+                SampleType.Delete            -> binding.btnDelete.setColorFilter(hlColor)
+                SampleType.DL_FrontSide      -> binding.btnScanDLFrontSide.setColorFilter(hlColor)
+                null                         -> {}
             }
         }
 
