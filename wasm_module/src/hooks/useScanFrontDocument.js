@@ -3,7 +3,7 @@ import { isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
 import { CANVAS_SIZE } from "../utils";
 
 let internalCanvasSize;
-const useScanFrontDocument = () => {
+const useScanFrontDocument = (onSuccess) => {
   const [scanResult, setScanResult] = useState(null);
   const [scannedIdData, setScannedIdData] = useState(null);
   const [isFound, setIsFound] = useState(false);
@@ -12,14 +12,14 @@ const useScanFrontDocument = () => {
   const [documentGUID, setDocumentGUID] = useState(null);
 
   const documentCallback = (result) => {
-    console.log("Front scan callback result:", result)
+    console.log("Front scan callback result:", result);
     if (result.returnValue.predict_status === 0) {
       setIsFound(true);
       setResultStatus(result.returnValue.predict_status);
       setDocumentUUID(result.returnValue.uuid);
       setDocumentGUID(result.returnValue.guid);
-    }
-    else{
+      return result.returnValue;
+    } else {
       scanFrontDocument();
     }
   };
@@ -33,15 +33,9 @@ const useScanFrontDocument = () => {
       : internalCanvasSize
       ? CANVAS_SIZE[internalCanvasSize]
       : { width: 10240, height: 4320 };
-    console.log({canvasObj})
-    const { result: resultData } = await isValidPhotoID(
-      "PHOTO_ID_FRONT",
-      documentCallback,
-      true,
-      undefined,
-      undefined,
-      canvasObj
-    );
+    console.log({ canvasObj });
+    const result = await isValidPhotoID("PHOTO_ID_FRONT", documentCallback, true, undefined, undefined, canvasObj);
+    onSuccess(result);
   };
 
   return { scanResult, scanFrontDocument, isFound, scannedIdData, resultStatus, documentUUID, documentGUID };
