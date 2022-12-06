@@ -13,7 +13,13 @@ import {
   useScanFrontDocument,
   useScanBackDocument,
 } from "../hooks";
-import { canvasSizeOptions, isAndroid, isBackCamera, isIOS, osVersion } from "../utils";
+import {
+  canvasSizeOptions,
+  isAndroid,
+  isBackCamera,
+  isIOS,
+  osVersion,
+} from "../utils";
 
 import "./styles.css";
 import usePredictAge from "../hooks/usePredictAge";
@@ -24,7 +30,6 @@ const Ready = () => {
   const { ready, init, device, devices, faceMode, setDevice } = useCamera("userVideo");
   const isBack = isBackCamera(devices, device);
   const [deviceId, setDeviceId] = useState(device);
-  const [canvasSize, setCanvasSize] = useState(canvasSizeOptions[0].value);
 
   // Use Continuous Predict
   const predictRetryTimes = 1;
@@ -171,7 +176,11 @@ const Ready = () => {
   };
 
   const isDocumentOrBackCamera =
-    ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) || isBack;
+    [
+      "useScanDocumentBack",
+      "useScanDocumentFront",
+      "useScanDocumentFrontValidity",
+    ].includes(currentAction) || isBack;
 
   // Predict Age
   const { doPredictAge, age, predictAgeHasFinished, setPredictAgeHasFinished } = usePredictAge();
@@ -222,10 +231,7 @@ const Ready = () => {
   //   return () => clearInterval(interval);
   // }, [currentAction, isfoundValidity]);
 
-  const handleCanvasSize = async (e) => {
-    setCanvasSize(e.target.value);
-    await scanFrontDocument(e.target.value);
-  };
+  console.log("API KEY: ", process.env.REACT_APP_API_KEY)
 
   // console.log("API KEY: ", process.env.REACT_APP_API_KEY);
   return (

@@ -3,7 +3,8 @@ package com.cryptonets.sample.di
 import android.content.Context
 import com.cryptonets.sample.utils.Constants
 import com.cryptonets.sample.utils.Utils
-import com.privateidentity.prividlib.PrividFheFace
+import com.privateidentity.prividlib.PrivateIdentity
+import com.privateidentity.prividlib.config.PrivateIdentityConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,15 +19,12 @@ class PrivateIdModule {
 
     @Singleton
     @Provides
-    fun providePrivateFheFace(@ApplicationContext context: Context): PrividFheFace {
-        Timber.e("providePrivateFheFace")
-        val fileStoragePath: String = Utils.getLocalStoragePath(context)
-        Utils.makeFileStorage(fileStoragePath)
-        Utils.makeFileStorage(Utils.getImageStoragePath(context))
-        Utils.makeFileStorage(Utils.getDocumentStoragePath(context))
-        val prividFheFace = PrividFheFace(fileStoragePath, context)
-        prividFheFace.FHEConfigureUrl(Constants.BASE_URL_SO_CALLS, Constants.BASE_URL_PARAM_ID)
-        prividFheFace.FHEConfigureUrl(Constants.HEADER, Constants.HEADER_KEY_PARAM_ID)
-        return prividFheFace
+    fun providePrivateIdentity(@ApplicationContext context: Context): PrivateIdentity {
+        Timber.e("providePrivateIdentity")
+        val config = PrivateIdentityConfig
+            .Builder(context, Constants.API_KEY)
+            .logEnabled(true)
+            .build()
+        return PrivateIdentity(config)
     }
 }
