@@ -140,13 +140,14 @@ function deleteUUID(uuid, cb) {
   wasmPrivModule._free(uuidInputPtr);
 }
 
-const isValidBarCode = (imageInput, simd, cb, config, debug_type = 0) =>
+const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
   new Promise(async (resolve, reject) => {
     privid_wasm_result = cb;
     if (!wasmPrivModule) {
       console.log('loaded for first wsm wrkr', simd);
       await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
     }
+    configGlobal = config;
     const version = wasmPrivModule._get_version();
     console.log('Version = ', version);
     console.log('BARCODE SCAN =========== IMAGE INPUT ', imageInput);
@@ -173,23 +174,32 @@ const isValidBarCode = (imageInput, simd, cb, config, debug_type = 0) =>
     const configInputSize = config.length;
     const configInputPtr = wasmPrivModule._malloc(configInputSize);
     wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
+
+    // Initialize Session
+    const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
+    if (s_result) {
+      console.log('[FAR_DEBUG] : session initialized successfully');
+    } else {
+      console.log('[FAR_DEBUG] : session initialized failed');
+    }
+    // console.log('[FAR_DEBUG] : Getting session second pointer')
+    const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
+
     let result = null;
+    console.log("BARCODE INPUTS: ", {sessionFirstPtr})
     try {
-      result = await wasmPrivModule._is_valid(
-        1100,
+      result = wasmPrivModule._privid_doc_scan_barcode(
+        sessionSecPtr,
+        configInputPtr,
+        configInputSize,
         barCodePtr,
         imageInput.width,
         imageInput.height,
-        // null,
-        // 0,
-        outputBufferFirstPtr,
-        outputBufferLenPtr,
-        // resultFirstPtr,
-        // resultLenPtr,
         null,
         0,
-        configInputPtr,
-        configInputSize,
+        null,
+        0,
       );
     } catch (err) {
       console.error('-----------_E_-----------', err);

@@ -1,10 +1,6 @@
 /* eslint-disable */
 import { useEffect, useState } from "react";
-import {
-  isValid,
-  switchCamera,
-  setStopLoopContinuousEnrollPredict,
-} from "@privateid/cryptonets-web-sdk-alpha";
+import { isValid, switchCamera, setStopLoopContinuousEnrollPredict } from "@privateid/cryptonets-web-sdk";
 
 import {
   useCamera,
@@ -17,7 +13,13 @@ import {
   useScanFrontDocument,
   useScanBackDocument,
 } from "../hooks";
-import { isAndroid, isBackCamera, isIOS, osVersion } from '../utils'
+import {
+  canvasSizeOptions,
+  isAndroid,
+  isBackCamera,
+  isIOS,
+  osVersion,
+} from "../utils";
 
 import "./styles.css";
 import usePredictAge from "../hooks/usePredictAge";
@@ -41,10 +43,7 @@ const Ready = () => {
     setContinuousPredictUUID(null);
     setContinuousPredictGUID(null);
   };
-  const {
-    faceDetected: continuousFaceDetected,
-    predictUser: continuousPredictUser,
-  } = useContinuousPredict(
+  const { faceDetected: continuousFaceDetected, predictUser: continuousPredictUser } = useContinuousPredict(
     "userVideo",
     continuousPredictSuccess,
     continuousOnNotFoundAndFailure,
@@ -60,19 +59,12 @@ const Ready = () => {
     if (isIOS && osVersion < 15) {
       console.log("Does not support old version of iOS os version 15 below.");
     } else if (isAndroid && osVersion < 11) {
-      console.log(
-        "Does not support old version of Android os version 11 below."
-      );
+      console.log("Does not support old version of Android os version 11 below.");
     }
     console.log("--- wasm status ", wasmReady, ready);
   }, [wasmReady, ready]);
 
-  const {
-    faceDetected: isValidFaceDetected,
-    isValidCall,
-    hasFinished,
-    setHasFinished,
-  } = useIsValid("userVideo");
+  const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
     setCurrentAction("isValid");
@@ -113,13 +105,8 @@ const Ready = () => {
   const handlePreidctSuccess = (result) => {
     console.log("======PREDICT SUCCESS========");
   };
-  const {
-    predictOneFaData,
-    predictOneFaStatus,
-    predictOneFaaceDetected,
-    predictOneFaprogress,
-    predictUserOneFa,
-  } = usePredictOneFa("userVideo", handlePreidctSuccess);
+  const { predictOneFaData, predictOneFaStatus, predictOneFaaceDetected, predictOneFaprogress, predictUserOneFa } =
+    usePredictOneFa("userVideo", handlePreidctSuccess);
   const handlePredictOneFa = async () => {
     setCurrentAction("usePredictOneFa");
     predictUserOneFa();
@@ -168,64 +155,35 @@ const Ready = () => {
   }, [currentAction, predictOneFaData]);
 
   // Scan Document Front
-  const {
-    scanResult,
-    scanFrontDocument,
-    isFound,
-    scannedIdData,
-    resultStatus,
-    documentUUID,
-    documentGUID,
-  } = useScanFrontDocument();
+  const handleFrontSuccess = (result) => {
+    console.log("FRONT SUCCSES: ", result);
+  };
+  const { scanResult, scanFrontDocument, isFound, scannedIdData, resultStatus, documentUUID, documentGUID } =
+    useScanFrontDocument(handleFrontSuccess);
   const handleScanDLFront = async () => {
     setCurrentAction("useScanDocumentFront");
     await scanFrontDocument();
   };
 
-  // useEffect To scan front of the DL every 0.3 sec
-  // useEffect(() => {
-  //   const doScan = async () => {
-  //     console.log("scanning front:");
-  //     await scanFrontDocument();
-  //   };
-  //   let interval;
-  //   if (currentAction === "useScanDocumentFront") {
-  //     if (!isFound) {
-  //       doScan();
-  //       interval = setInterval(doScan, 300);
-  //     }
-  //   }
-  //   return () => clearInterval(interval);
-  // }, [currentAction, isFound]);
-
   // Scan Document Back
-  const { scanBackDocument, scannedCodeData } = useScanBackDocument();
+  const handleBackSuccess = (result) => {
+    console.log("BACK SUCCESS: ", result);
+  };
+  const { scanBackDocument, scannedCodeData } = useScanBackDocument(handleBackSuccess);
   const handleScanDocumentBack = async () => {
     setCurrentAction("useScanDocumentBack");
+    await scanBackDocument();
   };
-  // useEffect To scan front of the DL every 0.3 sec
-  useEffect(() => {
-    const doScan = async () => {
-      console.log("scanning back:");
-      await scanBackDocument();
-    };
-    let interval;
-    if (currentAction === "useScanDocumentBack") {
-      if (!scannedCodeData) {
-        doScan();
-        interval = setInterval(doScan, 300);
-      }
-    }
-    return () => clearInterval(interval);
-  }, [currentAction, scannedCodeData]);
 
   const isDocumentOrBackCamera =
-    ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) ||
-    isBack;
+    [
+      "useScanDocumentBack",
+      "useScanDocumentFront",
+      "useScanDocumentFrontValidity",
+    ].includes(currentAction) || isBack;
 
   // Predict Age
-  const { doPredictAge, age, predictAgeHasFinished, setPredictAgeHasFinished } =
-    usePredictAge();
+  const { doPredictAge, age, predictAgeHasFinished, setPredictAgeHasFinished } = usePredictAge();
 
   const handlePredictAge = async () => {
     setCurrentAction("usePredictAge");
@@ -250,10 +208,7 @@ const Ready = () => {
 
   // Scan Front DL without predict
 
-  const {
-    isFound: isfoundValidity,
-    scanFrontDocument: scanFrontValidity,
-  } = useScanFrontDocumentWithoutPredict();
+  const { isFound: isfoundValidity, scanFrontDocument: scanFrontValidity } = useScanFrontDocumentWithoutPredict();
 
   const handleFrontDLValidity = async () => {
     setCurrentAction("useScanDocumentFrontValidity");
@@ -278,6 +233,7 @@ const Ready = () => {
 
   console.log("API KEY: ", process.env.REACT_APP_API_KEY)
 
+  // console.log("API KEY: ", process.env.REACT_APP_API_KEY);
   return (
     <div id="canvasInput" className="container">
       <div
@@ -291,20 +247,42 @@ const Ready = () => {
           gap: "10px",
         }}
       >
-        <label> Select Camera: </label>
-        <select value={deviceId || device} onChange={(e) => handleSwitchCamera(e)}>
-          {devices.map((e, index) => {
-            return (
-              <option id={e.value} value={e.value} key={index}>
-                {e.label}
-              </option>
-            );
-          })}
-        </select>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: currentAction === "useScanDocumentFront" ? "space-between" : "center",
+            width: "47%",
+          }}
+        >
+          <div>
+            <label> Select Camera: </label>
+            <select value={deviceId || device} onChange={(e) => handleSwitchCamera(e)}>
+              {devices.map((e, index) => {
+                return (
+                  <option id={e.value} value={e.value} key={index}>
+                    {e.label}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+          {currentAction === "useScanDocumentFront" && (
+            <div>
+              <label> Canvas Size: </label>
+              <select value={canvasSize} onChange={(e) => handleCanvasSize(e)}>
+                {canvasSizeOptions.map(({ label, value }) => (
+                  <option id={value} value={value} key={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
         <div className="cameraContainer">
           <video
             id="userVideo"
-            className={ `cameraDisplay ${isDocumentOrBackCamera ? '' : 'mirrored'}`  }
+            className={`cameraDisplay ${isDocumentOrBackCamera ? "" : "mirrored"}`}
             muted
             autoPlay
             playsInline
@@ -344,62 +322,30 @@ const Ready = () => {
 
           {currentAction === "useContinuousPredict" && (
             <div>
-              <div>
-                {`Face Valid: ${
-                  continuousFaceDetected ? "Face Detected" : "Face not detected"
-                }`}
-              </div>
-              <div>
-                {`Predicted GUID: ${
-                  continuousPredictGUID ? continuousPredictGUID : ""
-                }`}
-              </div>
-              <div>
-                {`Predicted UUID: ${
-                  continuousPredictUUID ? continuousPredictUUID : ""
-                }`}
-              </div>
+              <div>{`Face Valid: ${continuousFaceDetected ? "Face Detected" : "Face not detected"}`}</div>
+              <div>{`Predicted GUID: ${continuousPredictGUID ? continuousPredictGUID : ""}`}</div>
+              <div>{`Predicted UUID: ${continuousPredictUUID ? continuousPredictUUID : ""}`}</div>
             </div>
           )}
 
           {currentAction === "usePredictOneFa" && (
             <div>
-              <div>
-                {`Face Valid: ${
-                  predictOneFaaceDetected
-                    ? "Face Detected"
-                    : "Face not detected"
-                }`}
-              </div>
-              <div>
-                {`Predicted GUID: ${
-                  predictOneFaData ? predictOneFaData.PI.guid : ""
-                }`}
-              </div>
-              <div>
-                {`Predicted UUID: ${
-                  predictOneFaData ? predictOneFaData.PI.uuid : ""
-                }`}
-              </div>
+              <div>{`Face Valid: ${predictOneFaaceDetected ? "Face Detected" : "Face not detected"}`}</div>
+              <div>{`Predicted GUID: ${predictOneFaData ? predictOneFaData.PI.guid : ""}`}</div>
+              <div>{`Predicted UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
             </div>
           )}
 
           {currentAction === "useDelete" && (
             <div>
               <div>{`Deletion Status: ${deletionStatus}`}</div>
-              <div>{`User UUID: ${
-                predictOneFaData ? predictOneFaData.PI.uuid : ""
-              }`}</div>
+              <div>{`User UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
             </div>
           )}
 
           {currentAction === "useScanDocumentFront" && (
             <div>
-              <div>
-                {`Scan Document Result: ${
-                  resultStatus === 0 ? "success" : "not found"
-                }`}
-              </div>
+              <div>{`Scan Document Result: ${resultStatus === 0 ? "success" : "not found"}`}</div>
               <div>{`Has found valid document: ${isFound}`}</div>
               <div>{`Document GUID: ${documentGUID}`} </div>
               <div>{`Document UUID: ${documentUUID}`} </div>
@@ -408,21 +354,22 @@ const Ready = () => {
 
           {currentAction === "useScanDocumentBack" && (
             <div>
-              <div style={{ backgroundColor: "black" }}>
-                {`Scanned code data: ${
-                  scannedCodeData ? JSON.stringify(scannedCodeData) : ""
-                }`}
-              </div>
+              <div>{`Scanned code data: ${scannedCodeData ? "success" : "not found"}`}</div>
+              <div>{`First Name: ${scannedCodeData ? scannedCodeData.firstName : ""}`}</div>
+              <div>{`Middle Name: ${scannedCodeData ? scannedCodeData.middleName : ""}`}</div>
+              <div>{`Last Name: ${scannedCodeData ? scannedCodeData.lastName : ""}`}</div>
+              <div>{`Date of Birth: ${scannedCodeData ? scannedCodeData.dateOfBirth : ""}`}</div>
+              <div>{`Gender: ${scannedCodeData ? scannedCodeData.gender : ""}`}</div>
+              <div>{`Street Address1: ${scannedCodeData ? scannedCodeData.streetAddress1 : ""}`}</div>
+              <div>{`Street Address2: ${scannedCodeData ? scannedCodeData.streetAddress2 : ""}`}</div>
+              <div>{`City: ${scannedCodeData ? scannedCodeData.city : ""}`}</div>
+              <div>{`Postal Code: ${scannedCodeData ? scannedCodeData.postCode : ""}`}</div>
             </div>
           )}
 
           {currentAction === "useScanDocumentFrontValidity" && (
             <div>
-              <div>
-                {`Scan Document Result: ${
-                  isfoundValidity ? "Valid Front Document found" : "not found"
-                }`}
-              </div>
+              <div>{`Scan Document Result: ${isfoundValidity ? "Valid Front Document found" : "not found"}`}</div>
             </div>
           )}
         </div>

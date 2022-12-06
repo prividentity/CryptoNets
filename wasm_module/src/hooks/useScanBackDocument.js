@@ -1,68 +1,53 @@
 import { useState } from "react";
-import { isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
+import { isValidPhotoID } from "@privateid/cryptonets-web-sdk";
+import { CANVAS_SIZE } from "../utils";
 
-const useScanBackDocument = () => {
+let internalCanvasSize;
+const useScanBackDocument = (onSuccess) => {
   const [scanResult, setScanResult] = useState(null);
   const [scannedCodeData, setScannedCodeData] = useState(null);
   const [isFound, setIsFound] = useState(false);
 
   const documentCallback = (result) => {
     console.log("--------- Back scan callback result:", result);
-    console.log("--------- returnedValue:",result.returnValue)
+    console.log("--------- returnedValue:", result.returnValue);
     if (result.status === "WASM_RESPONSE") {
-      // setIsFound(true);
-      // setScannedCodeData(JSON.stringify(result.returnValue));
-      const {
-        firstName,
-        lastName,
-        dateOfBirth,
-        streetAddress1,
-        state,
-        city,
-        postalCode,
-        issuingCountry,
-      } = result.returnValue;
-      if (
-        firstName &&
-        lastName &&
-        dateOfBirth &&
-        streetAddress1 &&
-        state &&
-        city &&
-        postalCode &&
-        issuingCountry
-      ) {
+      if(result.returnValue.op_status === 0){
+        const { firstName, middleName, lastName, dateOfBirth, gender, streetAddress1, streetAddress2, state, city, postCode, issuingCountry } =
+        result.returnValue;
+        const finalResult = {
+          firstName,
+          middleName,
+          lastName,
+          dateOfBirth,
+          gender,
+          streetAddress1,
+          streetAddress2,
+          state,
+          city,
+          postCode,
+          issuingCountry,
+        };
         setIsFound(true);
-        setScannedCodeData(
-          JSON.stringify({
-            firstName,
-            lastName,
-            dateOfBirth,
-            streetAddress1,
-            state,
-            city,
-            postalCode,
-            issuingCountry,
-          })
-        );
+        setScannedCodeData(finalResult);
+        return finalResult;
       }
     }
+    scanBackDocument();
   };
 
-  const scanBackDocument = async () => {
-    const { result: resultData } = await isValidPhotoID(
-      "PHOTO_ID_BACK",
-      documentCallback
-    );
-    if (resultData === "error") {
-      setScanResult({ error: "Something went wrong." });
+  const scanBackDocument = async (canvasSize) => {
+    if (canvasSize && canvasSize !== internalCanvasSize) {
+      internalCanvasSize = canvasSize;
     }
-    // } else {
-    //   if(!scannedCodeData && resultData.result === 0){
-    //     const { firstName, lastName, dateOfBirth, streetAddress1, state, city, postalCode, country } = resultData.userData;
-    //     setScannedCodeData(JSON.stringify({firstName, lastName, dateOfBirth, streetAddress1, state, city, postalCode, country}));
-    //   }
-    // }
+    const canvasObj = canvasSize
+      ? CANVAS_SIZE[canvasSize]
+      : internalCanvasSize
+      ? CANVAS_SIZE[internalCanvasSize]
+      : { width: 10240, height: 4320 };
+    console.log({ canvasObj });
+    const result = await isValidPhotoID("PHOTO_ID_BACK", documentCallback, true, undefined, undefined, canvasObj);
+    onSuccess(result);
   };
 
   return { scanBackDocument, scannedCodeData, scanResult, isFound };

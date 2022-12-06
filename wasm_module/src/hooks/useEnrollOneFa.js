@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { enroll1FA } from "@privateid/cryptonets-web-sdk-alpha";
+import { enroll1FA } from "@privateid/cryptonets-web-sdk";
 
 const useEnrollOneFa = (
   element = "userVideo",
@@ -97,7 +97,7 @@ const useEnrollOneFa = (
         if (result.returnValue?.status === 0) {
           setEnrollStatus("ENROLL SUCCESS");
           setEnrollData(result.returnValue);
-          onSuccess();
+          onSuccess(result.returnValue);
         }
         if (result.returnValue?.status === -1) {
           if (tries === retryTimes) {
