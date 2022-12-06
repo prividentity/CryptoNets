@@ -348,9 +348,16 @@ const Ready = () => {
 
           {currentAction === "useScanDocumentBack" && (
             <div>
-              <div style={{ backgroundColor: "black" }}>
-                {`Scanned code data: ${scannedCodeData ? JSON.stringify(scannedCodeData) : ""}`}
-              </div>
+              <div>{`Scanned code data: ${scannedCodeData ? "success" : "not found"}`}</div>
+              <div>{`First Name: ${scannedCodeData ? scannedCodeData.firstName : ""}`}</div>
+              <div>{`Middle Name: ${scannedCodeData ? scannedCodeData.middleName : ""}`}</div>
+              <div>{`Last Name: ${scannedCodeData ? scannedCodeData.lastName : ""}`}</div>
+              <div>{`Date of Birth: ${scannedCodeData ? scannedCodeData.dateOfBirth : ""}`}</div>
+              <div>{`Gender: ${scannedCodeData ? scannedCodeData.gender : ""}`}</div>
+              <div>{`Street Address1: ${scannedCodeData ? scannedCodeData.streetAddress1 : ""}`}</div>
+              <div>{`Street Address2: ${scannedCodeData ? scannedCodeData.streetAddress2 : ""}`}</div>
+              <div>{`City: ${scannedCodeData ? scannedCodeData.city : ""}`}</div>
+              <div>{`Postal Code: ${scannedCodeData ? scannedCodeData.postCode : ""}`}</div>
             </div>
           )}
 

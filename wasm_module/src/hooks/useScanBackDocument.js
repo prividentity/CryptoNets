@@ -12,17 +12,20 @@ const useScanBackDocument = (onSuccess) => {
     console.log("--------- Back scan callback result:", result);
     console.log("--------- returnedValue:", result.returnValue);
     if (result.status === "WASM_RESPONSE") {
-      const { firstName, lastName, dateOfBirth, streetAddress1, state, city, postalCode, issuingCountry } =
+      if(result.returnValue.op_status === 0){
+        const { firstName, middleName, lastName, dateOfBirth, gender, streetAddress1, streetAddress2, state, city, postCode, issuingCountry } =
         result.returnValue;
-      if (firstName && lastName && dateOfBirth && streetAddress1 && state && city && postalCode && issuingCountry) {
         const finalResult = {
           firstName,
+          middleName,
           lastName,
           dateOfBirth,
+          gender,
           streetAddress1,
+          streetAddress2,
           state,
           city,
-          postalCode,
+          postCode,
           issuingCountry,
         };
         setIsFound(true);
