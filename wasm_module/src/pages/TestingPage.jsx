@@ -231,8 +231,6 @@ const Ready = () => {
   //   return () => clearInterval(interval);
   // }, [currentAction, isfoundValidity]);
 
-  console.log("API KEY: ", process.env.REACT_APP_API_KEY)
-
   // console.log("API KEY: ", process.env.REACT_APP_API_KEY);
   return (
     <div id="canvasInput" className="container">
