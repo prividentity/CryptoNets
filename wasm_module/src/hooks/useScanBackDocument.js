@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
+import { isValidPhotoID } from "@privateid/cryptonets-web-sdk";
 import { CANVAS_SIZE } from "../utils";
 
 let internalCanvasSize;
