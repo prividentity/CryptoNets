@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   isValid,
   switchCamera,
@@ -18,11 +18,13 @@ import {
   useScanBackDocument,
 } from "../hooks";
 import {
+  CANVAS_SIZE,
   canvasSizeOptions,
   isAndroid,
   isBackCamera,
   isIOS,
   osVersion,
+  WIDTH_TO_STANDARDS,
 } from "../utils";
 
 import "./styles.css";
@@ -31,11 +33,24 @@ import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocumentWit
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
-  const { ready, init, device, devices, faceMode, setDevice } =
+  const { ready, init, device, devices, settings, capabilities } =
     useCamera("userVideo");
+  const [deviceCapabilities, setDeviceCapabilities] = useState(capabilities);
+  const canvasSizeList = useMemo(() => {
+    const label =
+      WIDTH_TO_STANDARDS[
+        deviceCapabilities?.width?.max || capabilities?.width?.max
+      ];
+    const sliceIndex = canvasSizeOptions.findIndex(
+      (option) => option.value === label
+    );
+    return canvasSizeOptions.slice(sliceIndex);
+  }, [capabilities, deviceCapabilities]);
+  const initialCanvasSize = WIDTH_TO_STANDARDS[settings?.width];
   const isBack = isBackCamera(devices, device);
   const [deviceId, setDeviceId] = useState(device);
-  const [canvasSize, setCanvasSize] = useState(canvasSizeOptions[0].value);
+
+  const [canvasSize, setCanvasSize] = useState();
 
   // Use Continuous Predict
   const predictRetryTimes = 1;
@@ -147,9 +162,13 @@ const Ready = () => {
     }
   }, [currentAction]);
 
-  const handleSwitchCamera = (e) => {
+  const handleSwitchCamera = async (e) => {
     setDeviceId(e.target.value);
-    switchCamera(null, e.target.value);
+    console.log(162);
+    const { capabilities, settings } = await switchCamera(null, e.target.value);
+    setDeviceCapabilities(capabilities);
+    const width = WIDTH_TO_STANDARDS[settings?.width];
+    await handleCanvasSize({ target: { value: width } });
   };
 
   // Use Delete
@@ -287,6 +306,8 @@ const Ready = () => {
 
   const handleCanvasSize = async (e) => {
     setCanvasSize(e.target.value);
+    const canvasSize = CANVAS_SIZE[e.target.value];
+    await switchCamera(null, deviceId || device, canvasSize);
     await scanFrontDocument(e.target.value);
   };
 
@@ -332,8 +353,12 @@ const Ready = () => {
           {currentAction === "useScanDocumentFront" && (
             <div>
               <label> Canvas Size: </label>
-              <select value={canvasSize} onChange={(e) => handleCanvasSize(e)}>
-                {canvasSizeOptions.map(({ label, value }) => (
+              <select
+                defaultValue={initialCanvasSize}
+                value={canvasSize}
+                onChange={(e) => handleCanvasSize(e)}
+              >
+                {canvasSizeList.map(({ label, value }) => (
                   <option id={value} value={value} key={value}>
                     {label}
                   </option>
