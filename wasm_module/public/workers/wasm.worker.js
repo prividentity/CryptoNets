@@ -183,11 +183,10 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
     } else {
       console.log('[FAR_DEBUG] : session initialized failed');
     }
-    // console.log('[FAR_DEBUG] : Getting session second pointer')
     const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
 
     let result = null;
-    console.log("BARCODE INPUTS: ", {sessionFirstPtr})
+    console.log('BARCODE INPUTS: ', { sessionFirstPtr });
     try {
       result = wasmPrivModule._privid_doc_scan_barcode(
         sessionSecPtr,
@@ -196,8 +195,8 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
         barCodePtr,
         imageInput.width,
         imageInput.height,
-        null,
-        0,
+        outputBufferFirstPtr,
+        outputBufferLenPtr,
         null,
         0,
       );
@@ -205,92 +204,21 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
       console.error('-----------_E_-----------', err);
       reject(new Error(err));
     }
-    // console.log("===================WASM=WORKER==BEFORE STATUS CHECK============")
-    // const href = [];
-    // // let conf_score = null;
-    // const userData = {};
-    // try {
-    //   const [resultLength] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultLenPtr, 1);
-    //   console.log("===> ResultLength", resultLength);
-    //   if (resultLength > 0) {
-    //     const [resultSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, resultFirstPtr, 1);
-    //     const resultDataArray = new Uint8Array(wasmPrivModule.HEAPU8.buffer, resultSecPtr, resultLength);
-    //     const resultString = String.fromCharCode.apply(null, resultDataArray);
-    //     console.log('resultString =====>', JSON.parse(resultString));
-    //    const res = JSON.parse(resultString);
-    //     const userAttributes = [
-    //       'firstName',
-    //       'lastName',
-    //       'dateOfBirth',
-    //       'streetAddress1',
-    //       'streetAddress2',
-    //       'state',
-    //       'city',
-    //       'postalCode',
-    //       'country',
-    //       'barcode_string',
-    //       'ResStreetAddress1',
-    //       'ResStreetAddress2',
-    //       'barcodeHash128_string',
-    //       'documentId',
-    //       'expirationDate',
-    //       'gender',
-    //       'height',
-    //       'issueDate',
-    //       'issuingCountry',
-    //       'middleName',
-    //       'placeOfBirth',
-    //     ];
 
-    //     userAttributes.forEach((attr) => (userData[attr] = res[attr]));
+    const [outputBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferLenPtr, 1);
+    const [outputBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferFirstPtr, 1);
+    const outputBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, outputBufferSecPtr, outputBufferSize);
 
-    //     console.log("USER DATA AFTER LOOP", userData);
+    const imgData = Uint8ClampedArray.from(outputBufferPtr);
 
-    //     wasmPrivModule._free(resultSecPtr);
-    //   }
-    //   wasmPrivModule._free(resultLength);
-    // } catch (e) {
-    //   console.log('==parsing block==', e);
-    // }
-    // wasmPrivModule._free(resultFirstPtr);
-    // wasmPrivModule._free(resultLenPtr);
-    // const [outputBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferLenPtr, 1);
-    // const [outputBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferFirstPtr, 1);
-    // const outputBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, outputBufferSecPtr, outputBufferSize);
-
-    // const imgData = Uint8ClampedArray.from(outputBufferPtr);
-
-    // const image = new ImageData(imgData, res.crop_doc_width, res.crop_doc_height);
-    // //   conf_score = res.barcode_conf_score;
-    // //   console.log('---------resultString--back-------', res);
-    // // const href = [];
-    // href.push(image);
-
-    // //   wasmPrivModule._free(inputPtr);
-    // //   wasmPrivModule._free(outputBufferSecPtr);
-    // //   // wasmPrivModule._free(outputBufferSize)
     wasmPrivModule._free(outputBufferFirstPtr);
     wasmPrivModule._free(outputBufferLenPtr);
-    // wasmPrivModule._free(resultFirstPtr);
-    // wasmPrivModule._free(resultLenPtr);
 
-    //   inputPtr = undefined;
-    // } else {
-    //   wasmPrivModule._free(outputBufferFirstPtr);
-    //   wasmPrivModule._free(outputBufferLenPtr);
-    //   wasmPrivModule._free(resultFirstPtr);
-    //   wasmPrivModule._free(resultLenPtr);
-    // }
-
-    if (result === 0 || result === -10) {
-      wasmPrivModule._free(barCodePtr);
-      barCodePtr = null;
-    }
+    wasmPrivModule._free(barCodePtr);
+    barCodePtr = null;
     wasmPrivModule._free(configInputPtr);
-    // console.log(conf_score, '-----------------conf_score---------------');
 
-    // resolve({ result, href, conf_score, userData });
-    resolve({ result });
+    resolve({ result, croppedBarcode:imgData });
   });
 
 const configureBlur = async (paramID, param) => {
@@ -347,7 +275,7 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
     const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
     let result = null;
     try {
-      console.log("==== module list ==>",wasmPrivModule);
+      console.log('==== module list ==>', wasmPrivModule);
       result = wasmPrivModule._privid_doc_scan_face(
         sessionSecPtr,
         configInputPtr,
