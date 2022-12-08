@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { useEffect, useState } from "react";
-import { isValid, switchCamera, setStopLoopContinuousEnrollPredict } from "@privateid/cryptonets-web-sdk-alpha";
+import { isValid, switchCamera, setStopLoopContinuousEnrollPredict } from "@privateid/cryptonets-web-sdk";
 
 import {
   useCamera,
