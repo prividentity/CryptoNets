@@ -186,7 +186,7 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
     const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
 
     let result = null;
-    console.log("BARCODE INPUTS: ", {sessionFirstPtr})
+    console.log('BARCODE INPUTS: ', { sessionFirstPtr });
     try {
       result = wasmPrivModule._privid_doc_scan_barcode(
         sessionSecPtr,
@@ -195,8 +195,8 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
         barCodePtr,
         imageInput.width,
         imageInput.height,
-        null,
-        0,
+        outputBufferFirstPtr,
+        outputBufferLenPtr,
         null,
         0,
       );
@@ -204,16 +204,22 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
       console.error('-----------_E_-----------', err);
       reject(new Error(err));
     }
+
+    const [outputBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferLenPtr, 1);
+    const [outputBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferFirstPtr, 1);
+    const outputBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, outputBufferSecPtr, outputBufferSize);
+
+    const imgData = Uint8ClampedArray.from(outputBufferPtr);
+
     wasmPrivModule._free(outputBufferFirstPtr);
     wasmPrivModule._free(outputBufferLenPtr);
 
-    if (result === 0 || result === -10) {
-      wasmPrivModule._free(barCodePtr);
-      barCodePtr = null;
-    }
+    wasmPrivModule._free(barCodePtr);
+    barCodePtr = null;
     wasmPrivModule._free(configInputPtr);
+    // console.log(conf_score, '-----------------conf_score---------------');
 
-    resolve({ result });
+    resolve({ result, croppedBarcode:imgData });
   });
 
 const configureBlur = async (paramID, param) => {
@@ -270,7 +276,7 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
     const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
     let result = null;
     try {
-      console.log("==== module list ==>",wasmPrivModule);
+      console.log('==== module list ==>', wasmPrivModule);
       result = wasmPrivModule._privid_doc_scan_face(
         sessionSecPtr,
         configInputPtr,
