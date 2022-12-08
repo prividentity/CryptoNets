@@ -151,7 +151,7 @@ const Ready = () => {
 
   // Scan Document Front
   const handleFrontSuccess = (result) => {
-    console.log("FRONT SUCCSES: ", result);
+    console.log("FRONT SCAN DATA: ", result);
   };
   const { scanResult, scanFrontDocument, isFound, scannedIdData, resultStatus, documentUUID, documentGUID } =
     useScanFrontDocument(handleFrontSuccess);
@@ -162,7 +162,7 @@ const Ready = () => {
 
   // Scan Document Back
   const handleBackSuccess = (result) => {
-    console.log("BACK SUCCESS: ", result);
+    console.log("BACK SCAN DATA: ", result);
   };
   const { scanBackDocument, scannedCodeData } = useScanBackDocument(handleBackSuccess);
   const handleScanDocumentBack = async () => {

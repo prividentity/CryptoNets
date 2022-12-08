@@ -1,15 +1,16 @@
-import { useState } from "react";
-import { isValidPhotoID } from "@privateid/cryptonets-web-sdk";
+import { useEffect, useState } from "react";
+import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk";
 import { CANVAS_SIZE } from "../utils";
 
 let internalCanvasSize;
 const useScanFrontDocument = (onSuccess) => {
-  const [scanResult, setScanResult] = useState(null);
-  const [scannedIdData, setScannedIdData] = useState(null);
   const [isFound, setIsFound] = useState(false);
   const [resultStatus, setResultStatus] = useState(null);
   const [documentUUID, setDocumentUUID] = useState(null);
   const [documentGUID, setDocumentGUID] = useState(null);
+  const [base64Image, setBase64Image] = useState(null);
+
+  const [imageData, setImageData] = useState(null);
 
   const documentCallback = (result) => {
     console.log("Front scan callback result:", result);
@@ -20,9 +21,22 @@ const useScanFrontDocument = (onSuccess) => {
       setDocumentGUID(result.returnValue.guid);
       return result.returnValue;
     } else {
+      setImageData(null);
       scanFrontDocument();
     }
   };
+
+  useEffect(() => {
+    const convertImage = async () => {
+      const convertedImage = await convertCroppedImage(imageData.data, imageData.width, imageData.height);
+      console.log("converted Image:", convertedImage);
+      setBase64Image(convertedImage);
+    };
+
+    if(isFound) {
+      convertImage();
+    }
+  }, [isFound, imageData]);
 
   const scanFrontDocument = async (canvasSize) => {
     if (canvasSize && canvasSize !== internalCanvasSize) {
@@ -35,10 +49,12 @@ const useScanFrontDocument = (onSuccess) => {
       : { width: 10240, height: 4320 };
     console.log({ canvasObj });
     const result = await isValidPhotoID("PHOTO_ID_FRONT", documentCallback, true, undefined, undefined, canvasObj);
+    const imageData = result.imageData;
+    setImageData(imageData);
     onSuccess(result);
   };
 
-  return { scanResult, scanFrontDocument, isFound, scannedIdData, resultStatus, documentUUID, documentGUID };
+  return { scanFrontDocument, isFound, resultStatus, documentUUID, documentGUID, base64Image };
 };
 
 export default useScanFrontDocument;
