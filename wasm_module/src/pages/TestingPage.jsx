@@ -35,6 +35,17 @@ const Ready = () => {
   const { ready: wasmReady } = useWasm();
   const { ready, init, device, devices, settings, capabilities } =
     useCamera("userVideo");
+  // Scan Document Front
+  const {
+    scanResult,
+    scanFrontDocument,
+    isFound,
+    scannedIdData,
+    resultStatus,
+    documentUUID,
+    documentGUID,
+    setShouldTriggerCallback,
+  } = useScanFrontDocument();
   const [deviceCapabilities, setDeviceCapabilities] = useState(capabilities);
   const canvasSizeList = useMemo(() => {
     const label =
@@ -88,6 +99,9 @@ const Ready = () => {
       );
     }
     console.log("--- wasm status ", wasmReady, ready);
+    if (wasmReady && ready) {
+      scanFrontDocument(canvasSizeOptions[1].value, () => {});
+    }
   }, [wasmReady, ready]);
 
   const {
@@ -167,8 +181,14 @@ const Ready = () => {
     console.log(162);
     const { capabilities, settings } = await switchCamera(null, e.target.value);
     setDeviceCapabilities(capabilities);
-    const width = WIDTH_TO_STANDARDS[settings?.width];
-    await handleCanvasSize({ target: { value: width } });
+    if (currentAction === "useScanDocumentFront") {
+
+      let width = WIDTH_TO_STANDARDS[settings?.width];
+      if(width === 'FHD' && settings?.height === 1440) {
+        width = 'iPHONECC';
+      }
+      await handleCanvasSize({ target: { value: width } });
+    }
   };
 
   // Use Delete
@@ -194,19 +214,9 @@ const Ready = () => {
     }
   }, [currentAction, predictOneFaData]);
 
-  // Scan Document Front
-  const {
-    scanResult,
-    scanFrontDocument,
-    isFound,
-    scannedIdData,
-    resultStatus,
-    documentUUID,
-    documentGUID,
-  } = useScanFrontDocument();
   const handleScanDLFront = async () => {
     setCurrentAction("useScanDocumentFront");
-    await scanFrontDocument();
+    await scanFrontDocument(initialCanvasSize);
   };
 
   // useEffect To scan front of the DL every 0.3 sec
@@ -305,10 +315,19 @@ const Ready = () => {
   // }, [currentAction, isfoundValidity]);
 
   const handleCanvasSize = async (e) => {
+    setShouldTriggerCallback(false);
     setCanvasSize(e.target.value);
     const canvasSize = CANVAS_SIZE[e.target.value];
-    await switchCamera(null, deviceId || device, canvasSize);
-    await scanFrontDocument(e.target.value);
+    const { capabilities } = await switchCamera(
+      null,
+      deviceId || device,
+      canvasSize
+    );
+    setDeviceCapabilities(capabilities);
+    setShouldTriggerCallback(true);
+    setTimeout(async () => {
+      await scanFrontDocument(e.target.value);
+    }, 1000);
   };
 
   console.log("API KEY: ", process.env.REACT_APP_API_KEY);

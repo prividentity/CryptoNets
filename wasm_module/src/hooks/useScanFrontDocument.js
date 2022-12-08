@@ -3,6 +3,7 @@ import { isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
 import { CANVAS_SIZE } from "../utils";
 
 let internalCanvasSize;
+let triggerValue;
 const useScanFrontDocument = () => {
   const [scanResult, setScanResult] = useState(null);
   const [scannedIdData, setScannedIdData] = useState(null);
@@ -10,7 +11,8 @@ const useScanFrontDocument = () => {
   const [resultStatus, setResultStatus] = useState(null);
   const [documentUUID, setDocumentUUID] = useState(null);
   const [documentGUID, setDocumentGUID] = useState(null);
-
+  const [shouldTriggerCallback, setShouldTriggerCallback] = useState(true);
+  triggerValue = shouldTriggerCallback;
   const documentCallback = (result) => {
     console.log("Front scan callback result:", result)
     if (result.returnValue.predict_status === 0) {
@@ -18,13 +20,12 @@ const useScanFrontDocument = () => {
       setResultStatus(result.returnValue.predict_status);
       setDocumentUUID(result.returnValue.uuid);
       setDocumentGUID(result.returnValue.guid);
-    }
-    else{
+    } else if (triggerValue) {
       scanFrontDocument();
     }
   };
 
-  const scanFrontDocument = async (canvasSize) => {
+  const scanFrontDocument = async (canvasSize, initializeCanvas) => {
     if (canvasSize && canvasSize !== internalCanvasSize) {
       internalCanvasSize = canvasSize;
     }
@@ -36,7 +37,7 @@ const useScanFrontDocument = () => {
     console.log({canvasObj})
     const { result: resultData } = await isValidPhotoID(
       "PHOTO_ID_FRONT",
-      documentCallback,
+      initializeCanvas || documentCallback,
       true,
       undefined,
       undefined,
@@ -45,7 +46,16 @@ const useScanFrontDocument = () => {
     console.log({resultData})
   };
 
-  return { scanResult, scanFrontDocument, isFound, scannedIdData, resultStatus, documentUUID, documentGUID };
+  return {
+    scanResult,
+    scanFrontDocument,
+    isFound,
+    scannedIdData,
+    resultStatus,
+    documentUUID,
+    documentGUID,
+    setShouldTriggerCallback,
+  };
 };
 
 export default useScanFrontDocument;

@@ -64,6 +64,7 @@ export const canvasSizeOptions = [
   { label: "4K", value: "4K" },
   { label: "2K", value: "2K" },
   { label: "FHD (1080p)", value: "FHD" },
+  { width: "iPHONECC", height: "iPHONECC" },
   { label: "UXGA", value: "UXGA" },
 ];
 
@@ -74,8 +75,8 @@ export const WIDTH_TO_STANDARDS = {
   4096: "4K",
   5120: "5K",
   7680: "8K",
-  10240: "10K"
-}
+  10240: "10K",
+};
 
 export const CANVAS_SIZE = {
   "10K": { width: 10240, height: 4320 },
@@ -84,5 +85,6 @@ export const CANVAS_SIZE = {
   "4K": { width: 4096, height: 2160 },
   "2K": { width: 2560, height: 1440 },
   FHD: { width: 1920, height: 1080 },
+  iPHONECC: { width: 1920, height: 1440 },
   UXGA: { width: 1600, height: 1200 },
 };
