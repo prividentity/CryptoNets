@@ -22,7 +22,10 @@ import java.io.OutputStream
 object Utils {
     const val TAG: String = "CommonMethods"
     fun getSizeSmall(): Size {
-        return Size(480, 640)
+        val width = 480
+        val height = width * getScreenHeight() / getScreenWidth()
+        Timber.e("Small size: $width, $height")
+        return Size(width, height)
     }
 
     fun getSizeMax(): Size {
@@ -161,6 +164,23 @@ object Utils {
         } catch (e: java.lang.Exception) {
             showLog(TAG, "exception  saveImage " + e.message)
             return "0"
+        }
+    }
+
+    fun rotateBitmap(bitmap: Bitmap, orientation: Int): Bitmap {
+        val matrix = Matrix()
+        when (orientation) {
+            180  -> matrix.setRotate(180f)
+            90   -> matrix.setRotate(90f)
+            270  -> matrix.setRotate(-90f)
+            else -> return bitmap
+        }
+        return try {
+            val bmRotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+            bitmap.recycle()
+            bmRotated
+        } catch (e: OutOfMemoryError) {
+            bitmap
         }
     }
 }

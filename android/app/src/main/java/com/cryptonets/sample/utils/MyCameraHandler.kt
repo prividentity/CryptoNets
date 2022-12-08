@@ -1,7 +1,6 @@
 package com.cryptonets.sample.utils
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -11,19 +10,14 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import com.google.common.util.concurrent.ListenableFuture
-import com.privateidentity.prividlib.CommonMethods
-import com.privateidentity.prividlib.ImageRawDataInfo
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.core.Observable
+import com.privateidentity.prividlib.model.ImageData
 import io.reactivex.rxjava3.disposables.CompositeDisposable
-import io.reactivex.rxjava3.schedulers.Schedulers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 class MyCameraHandler(private val activity: FragmentActivity, private val previewView: PreviewView) {
     lateinit var cameraProvider: ProcessCameraProvider
@@ -70,10 +64,10 @@ class MyCameraHandler(private val activity: FragmentActivity, private val previe
                     return@Analyzer
                 }
                 lastImageAnalyzeTime = System.currentTimeMillis()
-                val imageDetails = imageProxy.image?.let { Utils.getByteArrayFromImage(it) }
-                if (imageDetails != null) {
-                    val imageRaw = CommonMethods.getImageDetailLib(imageDetails, imageProxy.imageInfo.rotationDegrees)
-                    imageListener?.invoke(imageRaw)
+                val bitmap = imageProxy.image?.let { Utils.getByteArrayFromImage(it) }
+                if (bitmap != null) {
+                    val rotatedBitmap = Utils.rotateBitmap(bitmap, imageProxy.imageInfo.rotationDegrees)
+                    imageListener?.invoke(ImageData(rotatedBitmap))
                 }
                 imageProxy.close()
             })
@@ -108,37 +102,6 @@ class MyCameraHandler(private val activity: FragmentActivity, private val previe
             Timber.i(" ")
         }
     }
-
-    private fun startPreviewCatcher() {
-        val disposable = Observable
-            .interval(imageAnalyzeRate.toLong(), imageAnalyzeRate.toLong(), TimeUnit.MILLISECONDS)
-            .subscribeOn(Schedulers.io())
-            .throttleLast(imageAnalyzeRate.toLong(), TimeUnit.MILLISECONDS)
-            .observeOn(AndroidSchedulers.mainThread())
-            .flatMap {
-                if (isProcessingImage || imageListener == null) {
-                    return@flatMap Observable.empty<Bitmap>()
-                }
-                val bitmap = previewView.bitmap
-                return@flatMap if (bitmap == null) {
-                    Observable.empty()
-                } else {
-                    Observable.just(bitmap)
-                }
-            }
-            .observeOn(Schedulers.io())
-            .map {
-                Timber.i("Bitmap size: ${it.width}x${it.height}")
-                return@map CommonMethods.getImageDetailLib(it, 0)
-            }
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({
-                imageListener?.invoke(it)
-            }, {
-                Timber.e(it)
-            })
-        compositeDisposable.add(disposable)
-    }
 }
 
-typealias ImageListener = (ImageRawDataInfo) -> Unit
+typealias ImageListener = (ImageData) -> Unit
