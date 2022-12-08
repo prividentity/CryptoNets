@@ -164,7 +164,6 @@ const Ready = () => {
 
   const handleSwitchCamera = async (e) => {
     setDeviceId(e.target.value);
-    console.log(162);
     const { capabilities={}, settings={} } = await switchCamera(null, e.target.value);
     setDeviceCapabilities(capabilities);
     if (currentAction === "useScanDocumentFront") {

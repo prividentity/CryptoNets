@@ -80,8 +80,7 @@ const useScanBackDocument = (onSuccess) => {
       ? CANVAS_SIZE[canvasSize]
       : internalCanvasSize
       ? CANVAS_SIZE[internalCanvasSize]
-      : { width: 10240, height: 4320 };
-    console.log({ canvasObj });
+      : {};
     const data = await isValidPhotoID("PHOTO_ID_BACK", documentCallback, true, undefined, undefined, canvasObj);
     if (data.result === 0) {
       setImageData(data.croppedBarcode);

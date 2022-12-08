@@ -48,8 +48,7 @@ const useScanFrontDocument = (onSuccess) => {
       ? CANVAS_SIZE[canvasSize]
       : internalCanvasSize
       ? CANVAS_SIZE[internalCanvasSize]
-      : { width: 10240, height: 4320 };
-    console.log({ canvasObj });
+      : {};
     const result = await isValidPhotoID(
         "PHOTO_ID_FRONT",
         initializeCanvas || documentCallback,
