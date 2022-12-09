@@ -95,9 +95,9 @@ const Ready = () => {
       console.log("Does not support old version of Android os version 11 below.");
     }
     console.log("--- wasm status ", wasmReady, ready);
-    if (wasmReady && ready) {
-      scanFrontDocument(canvasSizeOptions[1].value, () => {});
-    }
+    // if (wasmReady && ready) {
+    //   scanFrontDocument(canvasSizeOptions[1].value, () => {});
+    // }
   }, [wasmReady, ready]);
 
   const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");
@@ -250,36 +250,22 @@ const Ready = () => {
     await scanFrontValidity();
   };
 
-  // useEffect To scan front of the DL every 0.3 sec
-  // useEffect(() => {
-  //   const doScan = async () => {
-  //     console.log("scanning front:");
-  //     await scanFrontValidity();
-  //   };
-  //   let interval;
-  //   if (currentAction === "useScanDocumentFrontValidity") {
-  //     if (!isfoundValidity) {
-  //       doScan();
-  //       interval = setInterval(doScan, 300);
-  //     }
-  //   }
-  //   return () => clearInterval(interval);
-  // }, [currentAction, isfoundValidity]);
-
   const handleCanvasSize = async (e) => {
-    setShouldTriggerCallback(false);
-    setCanvasSize(e.target.value);
-    const canvasSize = CANVAS_SIZE[e.target.value];
-    const { capabilities={} } = await switchCamera(
-      null,
-      deviceId || device,
-      canvasSize
-    );
-    setDeviceCapabilities(capabilities);
-    setShouldTriggerCallback(true);
-    setTimeout(async () => {
-      await scanFrontDocument(e.target.value);
-    }, 1000);
+    if (currentAction === "useScanDocumentFront"){
+      setShouldTriggerCallback(false);
+      setCanvasSize(e.target.value);
+      const canvasSize = CANVAS_SIZE[e.target.value];
+      const { capabilities={} } = await switchCamera(
+        null,
+        deviceId || device,
+        canvasSize
+      );
+      setDeviceCapabilities(capabilities);
+      setShouldTriggerCallback(true);
+      setTimeout(async () => {
+        await scanFrontDocument(e.target.value);
+      }, 1000);
+    }
   };
 
   // console.log("API KEY: ", process.env.REACT_APP_API_KEY);
