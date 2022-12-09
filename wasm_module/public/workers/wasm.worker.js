@@ -161,8 +161,13 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
 
     console.log('-----------------GOING TO WASM---------------');
 
-    const outputBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    const outputBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // Cropped Document malloc
+    const croppedDocumentBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    const croppedDocumentBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+
+    // Cropped Barcode malloc
+    const croppedBarcodeBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    const croppedBarcodeBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
     // // create a pointer to interger to hold the length of the output buffer
     // const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
@@ -195,8 +200,10 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
         barCodePtr,
         imageInput.width,
         imageInput.height,
-        outputBufferFirstPtr,
-        outputBufferLenPtr,
+        croppedDocumentBufferFirstPtr,
+        croppedDocumentBufferLenPtr,
+        croppedBarcodeBufferFirstPtr,
+        croppedBarcodeBufferLenPtr,
         null,
         0,
       );
@@ -205,21 +212,26 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
       reject(new Error(err));
     }
 
-    const [outputBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferLenPtr, 1);
-    const [outputBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferFirstPtr, 1);
-    const outputBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, outputBufferSecPtr, outputBufferSize);
+    const [croppedDocumentBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedDocumentBufferLenPtr, 1);
+    const [croppedDocumentBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedDocumentBufferFirstPtr, 1);
+    const croppedDocumentBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, croppedDocumentBufferSecPtr, croppedDocumentBufferSize);
+    const croppedDocumentData = Uint8ClampedArray.from(croppedDocumentBufferPtr);
 
-    const imgData = Uint8ClampedArray.from(outputBufferPtr);
+    const [croppedBarcodeBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedBarcodeBufferLenPtr, 1);
+    const [croppedBarcodeBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedBarcodeBufferFirstPtr, 1);
+    const croppedBarcodeBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, croppedBarcodeBufferSecPtr, croppedBarcodeBufferSize);
+    const croppedBarcodeData = Uint8ClampedArray.from(croppedBarcodeBufferPtr);
 
-    wasmPrivModule._free(outputBufferFirstPtr);
-    wasmPrivModule._free(outputBufferLenPtr);
+    wasmPrivModule._free(croppedDocumentBufferFirstPtr);
+    wasmPrivModule._free(croppedDocumentBufferLenPtr);
+    wasmPrivModule._free(croppedBarcodeBufferFirstPtr);
+    wasmPrivModule._free(croppedBarcodeBufferLenPtr);
 
     wasmPrivModule._free(barCodePtr);
     barCodePtr = null;
     wasmPrivModule._free(configInputPtr);
-    // console.log(conf_score, '-----------------conf_score---------------');
 
-    resolve({ result, croppedBarcode:imgData });
+    resolve({ result, croppedDocument:croppedDocumentData, croppedBarcode:croppedBarcodeData  });
   });
 
 const configureBlur = async (paramID, param) => {
