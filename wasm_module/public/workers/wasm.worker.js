@@ -217,6 +217,7 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
     wasmPrivModule._free(barCodePtr);
     barCodePtr = null;
     wasmPrivModule._free(configInputPtr);
+    // console.log(conf_score, '-----------------conf_score---------------');
 
     resolve({ result, croppedBarcode:imgData });
   });
