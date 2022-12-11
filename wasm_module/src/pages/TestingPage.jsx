@@ -253,35 +253,21 @@ const Ready = () => {
     await scanFrontValidity();
   };
 
-  // useEffect To scan front of the DL every 0.3 sec
-  // useEffect(() => {
-  //   const doScan = async () => {
-  //     console.log("scanning front:");
-  //     await scanFrontValidity();
-  //   };
-  //   let interval;
-  //   if (currentAction === "useScanDocumentFrontValidity") {
-  //     if (!isfoundValidity) {
-  //       doScan();
-  //       interval = setInterval(doScan, 300);
-  //     }
-  //   }
-  //   return () => clearInterval(interval);
-  // }, [currentAction, isfoundValidity]);
-
   const handleCanvasSize = async (e, skipSwitchCamera = false) => {
-    setShouldTriggerCallback(false);
-    setCanvasSize(e.target.value);
-    const canvasSize = CANVAS_SIZE[e.target.value];
-    if (!skipSwitchCamera) {
-      const { capabilities = {}, devices } = await switchCamera(null, deviceId || device, canvasSize);
-      setDeviceCapabilities(capabilities);
-      setDevicesList(devices.map(mapDevices));
+    if (currentAction === "useScanDocumentFront"){
+      setShouldTriggerCallback(false);
+      setCanvasSize(e.target.value);
+      const canvasSize = CANVAS_SIZE[e.target.value];
+      if (!skipSwitchCamera) {
+        const { capabilities = {}, devices } = await switchCamera(null, deviceId || device, canvasSize);
+        setDeviceCapabilities(capabilities);
+        setDevicesList(devices.map(mapDevices));
+      }
+      setShouldTriggerCallback(true);
+      setTimeout(async () => {
+        await scanFrontDocument(e.target.value);
+      }, 1000);
     }
-    setShouldTriggerCallback(true);
-    setTimeout(async () => {
-      await scanFrontDocument(e.target.value);
-    }, 1000);
   };
 
   // console.log("API KEY: ", process.env.REACT_APP_API_KEY);
