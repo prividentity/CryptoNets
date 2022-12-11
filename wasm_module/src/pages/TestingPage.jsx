@@ -98,9 +98,6 @@ const Ready = () => {
       console.log("Does not support old version of Android os version 11 below.");
     }
     console.log("--- wasm status ", wasmReady, ready);
-    if (wasmReady && ready) {
-      scanFrontDocument(canvasSizeOptions[1].value, () => {});
-    }
   }, [wasmReady, ready]);
 
   const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");
@@ -204,6 +201,8 @@ const Ready = () => {
 
   const handleScanDLFront = async () => {
     setCurrentAction("useScanDocumentFront");
+    // hack to initialize canvas with large memory, so it doesn't cause an issue.
+    await scanFrontDocument(canvasSizeOptions[1].value, () => {});
     await scanFrontDocument(initialCanvasSize);
   };
 
