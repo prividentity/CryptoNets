@@ -23,6 +23,7 @@ import {
   isAndroid,
   isBackCamera,
   isIOS,
+  mapDevices,
   osVersion,
   WIDTH_TO_STANDARDS,
 } from "../utils";
@@ -33,9 +34,9 @@ import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocumentWit
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
-  const { ready, init, device, devices, settings, capabilities } =
-    useCamera("userVideo");
+  const { ready, init, device, devices, settings, capabilities } = useCamera("userVideo");
   // Scan Document Front
+
   const handleFrontSuccess = (result) => {
     console.log("FRONT SCAN DATA: ", result);
   };
@@ -49,18 +50,20 @@ const Ready = () => {
   } = useScanFrontDocument(handleFrontSuccess);
   const [deviceCapabilities, setDeviceCapabilities] = useState(capabilities);
   const canvasSizeList = useMemo(() => {
-    const label =
-      WIDTH_TO_STANDARDS[
-        deviceCapabilities?.width?.max || capabilities?.width?.max
-      ];
-    const sliceIndex = canvasSizeOptions.findIndex(
-      (option) => option.value === label
-    );
-    return canvasSizeOptions.slice(sliceIndex);
+    let canvasList = [...canvasSizeOptions];
+    const maxHeight = deviceCapabilities?.height?.max || capabilities?.height?.max;
+    let label = WIDTH_TO_STANDARDS[deviceCapabilities?.width?.max || capabilities?.width?.max];
+    const sliceIndex = canvasList.findIndex((option) => option.value === label);
+    const slicedArr = canvasList.slice(sliceIndex);
+    if (label === "FHD" && maxHeight === 1440) {
+      return [{ label: "iPhoneCC", value: "iPhoneCC" }, ...slicedArr];
+    }
+    return slicedArr;
   }, [capabilities, deviceCapabilities]);
   const initialCanvasSize = WIDTH_TO_STANDARDS[settings?.width];
   const isBack = isBackCamera(devices, device);
   const [deviceId, setDeviceId] = useState(device);
+  const [devicesList, setDevicesList] = useState(devices);
 
   const [canvasSize, setCanvasSize] = useState();
 
@@ -95,9 +98,6 @@ const Ready = () => {
       console.log("Does not support old version of Android os version 11 below.");
     }
     console.log("--- wasm status ", wasmReady, ready);
-    // if (wasmReady && ready) {
-    //   scanFrontDocument(canvasSizeOptions[1].value, () => {});
-    // }
   }, [wasmReady, ready]);
 
   const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");
@@ -164,15 +164,15 @@ const Ready = () => {
 
   const handleSwitchCamera = async (e) => {
     setDeviceId(e.target.value);
-    const { capabilities={}, settings={} } = await switchCamera(null, e.target.value);
+    const { capabilities = {}, settings = {}, devices } = await switchCamera(null, e.target.value);
     setDeviceCapabilities(capabilities);
+    setDevicesList(devices.map(mapDevices));
     if (currentAction === "useScanDocumentFront") {
-
       let width = WIDTH_TO_STANDARDS[settings?.width];
-      if(width === 'FHD' && settings?.height === 1440) {
-        width = 'iPHONECC';
+      if (width === "FHD" && settings?.height === 1440) {
+        width = "iPhoneCC";
       }
-      await handleCanvasSize({ target: { value: width } });
+      await handleCanvasSize({ target: { value: width } }, true);
     }
   };
 
@@ -201,6 +201,8 @@ const Ready = () => {
 
   const handleScanDLFront = async () => {
     setCurrentAction("useScanDocumentFront");
+    // hack to initialize canvas with large memory, so it doesn't cause an issue.
+    await scanFrontDocument(canvasSizeOptions[1].value, () => {});
     await scanFrontDocument(initialCanvasSize);
   };
 
@@ -250,17 +252,16 @@ const Ready = () => {
     await scanFrontValidity();
   };
 
-  const handleCanvasSize = async (e) => {
+  const handleCanvasSize = async (e, skipSwitchCamera = false) => {
     if (currentAction === "useScanDocumentFront"){
       setShouldTriggerCallback(false);
       setCanvasSize(e.target.value);
       const canvasSize = CANVAS_SIZE[e.target.value];
-      const { capabilities={} } = await switchCamera(
-        null,
-        deviceId || device,
-        canvasSize
-      );
-      setDeviceCapabilities(capabilities);
+      if (!skipSwitchCamera) {
+        const { capabilities = {}, devices } = await switchCamera(null, deviceId || device, canvasSize);
+        setDeviceCapabilities(capabilities);
+        setDevicesList(devices.map(mapDevices));
+      }
       setShouldTriggerCallback(true);
       setTimeout(async () => {
         await scanFrontDocument(e.target.value);
@@ -292,7 +293,7 @@ const Ready = () => {
           <div>
             <label> Select Camera: </label>
             <select value={deviceId || device} onChange={(e) => handleSwitchCamera(e)}>
-              {devices.map((e, index) => {
+              {(devicesList?.length ? devicesList : devices).map((e, index) => {
                 return (
                   <option id={e.value} value={e.value} key={index}>
                     {e.label}
