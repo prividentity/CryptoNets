@@ -1,6 +1,10 @@
 /* eslint-disable */
-import { useEffect, useState } from "react";
-import { isValid, switchCamera, setStopLoopContinuousEnrollPredict } from "@privateid/cryptonets-web-sdk";
+import { useEffect, useMemo, useState } from "react";
+import {
+  isValid,
+  switchCamera,
+  setStopLoopContinuousEnrollPredict,
+} from "@privateid/cryptonets-web-sdk";
 
 import {
   useCamera,
@@ -13,7 +17,15 @@ import {
   useScanFrontDocument,
   useScanBackDocument,
 } from "../hooks";
-import { canvasSizeOptions, isAndroid, isBackCamera, isIOS, osVersion } from "../utils";
+import {
+  CANVAS_SIZE,
+  canvasSizeOptions,
+  isAndroid,
+  isBackCamera,
+  isIOS,
+  osVersion,
+  WIDTH_TO_STANDARDS,
+} from "../utils";
 
 import "./styles.css";
 import usePredictAge from "../hooks/usePredictAge";
@@ -21,10 +33,36 @@ import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocumentWit
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
-  const { ready, init, device, devices, faceMode, setDevice } = useCamera("userVideo");
+  const { ready, init, device, devices, settings, capabilities } =
+    useCamera("userVideo");
+  // Scan Document Front
+  const handleFrontSuccess = (result) => {
+    console.log("FRONT SCAN DATA: ", result);
+  };
+  const {
+    scanFrontDocument,
+    isFound,
+    resultStatus,
+    documentUUID,
+    documentGUID,
+    setShouldTriggerCallback,
+  } = useScanFrontDocument(handleFrontSuccess);
+  const [deviceCapabilities, setDeviceCapabilities] = useState(capabilities);
+  const canvasSizeList = useMemo(() => {
+    const label =
+      WIDTH_TO_STANDARDS[
+        deviceCapabilities?.width?.max || capabilities?.width?.max
+      ];
+    const sliceIndex = canvasSizeOptions.findIndex(
+      (option) => option.value === label
+    );
+    return canvasSizeOptions.slice(sliceIndex);
+  }, [capabilities, deviceCapabilities]);
+  const initialCanvasSize = WIDTH_TO_STANDARDS[settings?.width];
   const isBack = isBackCamera(devices, device);
   const [deviceId, setDeviceId] = useState(device);
-  const [canvasSize, setCanvasSize] = useState(canvasSizeOptions[0].value);
+
+  const [canvasSize, setCanvasSize] = useState();
 
   // Use Continuous Predict
   const predictRetryTimes = 1;
@@ -57,6 +95,9 @@ const Ready = () => {
       console.log("Does not support old version of Android os version 11 below.");
     }
     console.log("--- wasm status ", wasmReady, ready);
+    // if (wasmReady && ready) {
+    //   scanFrontDocument(canvasSizeOptions[1].value, () => {});
+    // }
   }, [wasmReady, ready]);
 
   const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");
@@ -121,9 +162,18 @@ const Ready = () => {
     }
   }, [currentAction]);
 
-  const handleSwitchCamera = (e) => {
+  const handleSwitchCamera = async (e) => {
     setDeviceId(e.target.value);
-    switchCamera(null, e.target.value);
+    const { capabilities={}, settings={} } = await switchCamera(null, e.target.value);
+    setDeviceCapabilities(capabilities);
+    if (currentAction === "useScanDocumentFront") {
+
+      let width = WIDTH_TO_STANDARDS[settings?.width];
+      if(width === 'FHD' && settings?.height === 1440) {
+        width = 'iPHONECC';
+      }
+      await handleCanvasSize({ target: { value: width } });
+    }
   };
 
   // Use Delete
@@ -149,15 +199,9 @@ const Ready = () => {
     }
   }, [currentAction, predictOneFaData]);
 
-  // Scan Document Front
-  const handleFrontSuccess = (result) => {
-    console.log("FRONT SCAN DATA: ", result);
-  };
-  const { scanResult, scanFrontDocument, isFound, scannedIdData, resultStatus, documentUUID, documentGUID } =
-    useScanFrontDocument(handleFrontSuccess);
   const handleScanDLFront = async () => {
     setCurrentAction("useScanDocumentFront");
-    await scanFrontDocument();
+    await scanFrontDocument(initialCanvasSize);
   };
 
   // Scan Document Back
@@ -206,25 +250,22 @@ const Ready = () => {
     await scanFrontValidity();
   };
 
-  // useEffect To scan front of the DL every 0.3 sec
-  // useEffect(() => {
-  //   const doScan = async () => {
-  //     console.log("scanning front:");
-  //     await scanFrontValidity();
-  //   };
-  //   let interval;
-  //   if (currentAction === "useScanDocumentFrontValidity") {
-  //     if (!isfoundValidity) {
-  //       doScan();
-  //       interval = setInterval(doScan, 300);
-  //     }
-  //   }
-  //   return () => clearInterval(interval);
-  // }, [currentAction, isfoundValidity]);
-
   const handleCanvasSize = async (e) => {
-    setCanvasSize(e.target.value);
-    await scanFrontDocument(e.target.value);
+    if (currentAction === "useScanDocumentFront"){
+      setShouldTriggerCallback(false);
+      setCanvasSize(e.target.value);
+      const canvasSize = CANVAS_SIZE[e.target.value];
+      const { capabilities={} } = await switchCamera(
+        null,
+        deviceId || device,
+        canvasSize
+      );
+      setDeviceCapabilities(capabilities);
+      setShouldTriggerCallback(true);
+      setTimeout(async () => {
+        await scanFrontDocument(e.target.value);
+      }, 1000);
+    }
   };
 
   // console.log("API KEY: ", process.env.REACT_APP_API_KEY);
@@ -263,8 +304,12 @@ const Ready = () => {
           {currentAction === "useScanDocumentFront" && (
             <div>
               <label> Canvas Size: </label>
-              <select value={canvasSize} onChange={(e) => handleCanvasSize(e)}>
-                {canvasSizeOptions.map(({ label, value }) => (
+              <select
+                defaultValue={initialCanvasSize}
+                value={canvasSize}
+                onChange={(e) => handleCanvasSize(e)}
+              >
+                {canvasSizeList.map(({ label, value }) => (
                   <option id={value} value={value} key={value}>
                     {label}
                   </option>

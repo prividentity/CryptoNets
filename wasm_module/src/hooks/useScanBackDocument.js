@@ -8,11 +8,17 @@ const useScanBackDocument = (onSuccess) => {
   const [scannedCodeData, setScannedCodeData] = useState(null);
   const [isFound, setIsFound] = useState(false);
 
-  const [imageData, setImageData] = useState(null);
-  const [cropImageWidth, setCropImageWidth] = useState(null);
-  const [cropImageHeight, setCropImageHeight] = useState(null);
+  const [croppedDocumentImageData, setCroppedDocumentImageData] = useState(null);
+  const [croppedDocumentWidth, setCropedDocumentWidth] = useState(null);
+  const [croppedDocumentHeight, setCroppedDocumentHeight] = useState(null);
 
-  const [image, setImage] = useState(null);
+  const [croppedBarcodeImageData, setCroppedBarcodeImageData] = useState(null);
+  const [croppedBarcodeWidth, setCroppedBarcodeWidth] = useState(null);
+  const [croppedBarcodeHeight, setCroppedBarcodeHeight] = useState(null);
+
+
+  const [croppedDocumentImage, setCroppedDocumentImage] = useState(null);
+  const [croppedBarcodeImage, setCroppedBarcodeImage] = useState(null);
 
   const documentCallback = (result) => {
     console.log("--------- Back scan callback result:", result);
@@ -33,6 +39,8 @@ const useScanBackDocument = (onSuccess) => {
           issuingCountry,
           crop_doc_width,
           crop_doc_height,
+          crop_barcode_width,
+          crop_barcode_height,
         } = result.returnValue;
         const finalResult = {
           firstName,
@@ -47,30 +55,48 @@ const useScanBackDocument = (onSuccess) => {
           postCode,
           issuingCountry,
         };
-        setCropImageWidth(crop_doc_width);
-        setCropImageHeight(crop_doc_height);
+        setCropedDocumentWidth(crop_doc_width);
+        setCroppedDocumentHeight(crop_doc_height);
+        setCroppedBarcodeWidth(crop_barcode_width);
+        setCroppedBarcodeHeight(crop_barcode_height);
         setIsFound(true);
         setScannedCodeData(finalResult);
         return finalResult;
       } else {
-        setCropImageWidth(null);
-        setCropImageHeight(null);
+        setCropedDocumentWidth(null);
+        setCroppedDocumentHeight(null);
+        setCroppedBarcodeWidth(null);
+        setCroppedBarcodeHeight(null);
       }
     }
-    setImageData(null);
+    setCroppedDocumentImageData(null);
+    setCroppedBarcodeImageData(null)
     scanBackDocument();
   };
 
+  const convertImageData = async (imageData, width, height, setState) => {
+    const convertedImage = await convertCroppedImage(imageData, width, height);
+    setState(convertedImage);
+  };
+
   useEffect(() => {
-    const convertImageData = async () => {
-      const convertedImage = await convertCroppedImage(imageData, cropImageWidth, cropImageHeight);
-      console.log("converted Image to base64", convertedImage);
-      setImage(convertedImage);
-    };
-    if (isFound && cropImageHeight && cropImageWidth && imageData) {
-      convertImageData();
+    if (isFound && croppedDocumentImageData && croppedDocumentWidth && croppedDocumentHeight) {
+      convertImageData(croppedDocumentImageData,croppedDocumentWidth,croppedDocumentHeight,setCroppedDocumentImage);
     }
-  }, [isFound, cropImageWidth, cropImageHeight, imageData]);
+  }, [isFound, croppedDocumentImageData, croppedDocumentWidth, croppedDocumentHeight]);
+
+  useEffect(() => {
+    if (isFound && croppedBarcodeImageData && croppedBarcodeWidth && croppedBarcodeHeight) {
+      convertImageData(croppedBarcodeImageData,croppedBarcodeWidth,croppedBarcodeHeight,setCroppedBarcodeImage);
+    }
+  }, [isFound, croppedBarcodeImageData, croppedBarcodeWidth, croppedBarcodeHeight]);
+
+
+  useEffect(() => {
+    if(croppedDocumentImage && croppedBarcodeImage){
+      console.log("Barcode Images:", {croppedBarcodeImage, croppedDocumentImage});
+    }
+  }, [croppedDocumentImage, croppedBarcodeImage])
 
   const scanBackDocument = async (canvasSize) => {
     if (canvasSize && canvasSize !== internalCanvasSize) {
@@ -80,18 +106,19 @@ const useScanBackDocument = (onSuccess) => {
       ? CANVAS_SIZE[canvasSize]
       : internalCanvasSize
       ? CANVAS_SIZE[internalCanvasSize]
-      : { width: 10240, height: 4320 };
-    console.log({ canvasObj });
-    const data = await isValidPhotoID("PHOTO_ID_BACK", documentCallback, true, undefined, undefined, canvasObj);
-    if (data.result === 0) {
-      setImageData(data.croppedBarcode);
+      : {};
+    const {result, croppedBarcode, croppedDocument} = await isValidPhotoID("PHOTO_ID_BACK", documentCallback, true, undefined, undefined, canvasObj);
+    if (result === 0) {
+      setCroppedDocumentImageData(croppedDocument);
+      setCroppedBarcodeImageData(croppedBarcode);
     } else {
-      setImageData(null);
+      setCroppedDocumentImageData(null);
+      setCroppedBarcodeImageData(null);
     }
-    onSuccess(data);
+    onSuccess({result, croppedBarcode, croppedDocument});
   };
 
-  return { scanBackDocument, scannedCodeData, scanResult, isFound, image };
+  return { scanBackDocument, scannedCodeData, scanResult, isFound, croppedDocumentImage, croppedBarcodeImage };
 };
 
 export default useScanBackDocument;

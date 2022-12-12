@@ -2,13 +2,13 @@
 import { useState } from "react";
 import { openCamera } from "@privateid/cryptonets-web-sdk";
 
-const useCamera = (element = "userVideo") => {
+const useCamera = (element = "userVideo", resolution = null) => {
   // Initialize the state
   const [ready, setReady] = useState(false);
   const [devices, setDevices] = useState([]);
-  const [device, setDevice] = useState('');
+  const [device, setDevice] = useState("");
   const [faceMode, setFaceMode] = useState(false);
-
+  const [cameraFeatures, setCameraFeatures] = useState({});
   const init = async () => {
     if (ready) return;
     try {
@@ -19,7 +19,9 @@ const useCamera = (element = "userVideo") => {
         status,
         stream,
         errorMessage,
-      } = await openCamera(element, false, null, "front");
+        capabilities,
+      } = await openCamera(element, false, null, "front", resolution);
+      setCameraFeatures({ settings, capabilities });
       setFaceMode(faceMode);
       console.log("hasError??", { status, errorMessage });
       if (devices.length > 0) {
@@ -28,7 +30,7 @@ const useCamera = (element = "userVideo") => {
           value: d.deviceId,
         }));
         setDevices(options);
-        setDevice(settings.deviceId)
+        setDevice(settings.deviceId);
       }
       setReady(true);
     } catch (e) {
@@ -36,20 +38,21 @@ const useCamera = (element = "userVideo") => {
     }
     const setCameraFocus = async () => {
       try {
-        const video = document.getElementById('userVideo');
+        const video = document.getElementById("userVideo");
         const mediaStream = video.srcObject;
         const track = await mediaStream.getTracks()[0];
         const capabilities = track.getCapabilities();
-        if (typeof capabilities.focusDistance !== 'undefined') {
+        if (typeof capabilities.focusDistance !== "undefined") {
           await track.applyConstraints({
             advanced: [
               {
-                focusMode: capabilities.focusMode.includes('continuous') ? 'continuous' : 'manual',
+                focusMode: capabilities.focusMode.includes("continuous")
+                  ? "continuous"
+                  : "manual",
                 focusDistance: 100,
               },
             ],
           });
-
         }
       } catch (e) {
         // eslint-disable-next-line no-console
@@ -59,7 +62,7 @@ const useCamera = (element = "userVideo") => {
     await setCameraFocus();
   };
 
-  return { ready, init, devices, device, setDevice, faceMode };
+  return { ready, init, devices, device, setDevice, faceMode, ...cameraFeatures };
 };
 
 export default useCamera;
