@@ -63,7 +63,7 @@ const Ready = () => {
   const initialCanvasSize = WIDTH_TO_STANDARDS[settings?.width];
   const isBack = isBackCamera(devices, device);
   const [deviceId, setDeviceId] = useState(device);
-  const [devicesList, setDevicesList] = useState(devices);
+  const [devicesList] = useState(devices);
 
   const [canvasSize, setCanvasSize] = useState();
 
@@ -166,7 +166,7 @@ const Ready = () => {
     setDeviceId(e.target.value);
     const { capabilities = {}, settings = {}, devices } = await switchCamera(null, e.target.value);
     setDeviceCapabilities(capabilities);
-    setDevicesList(devices.map(mapDevices));
+    // setDevicesList(devices.map(mapDevices));
     if (currentAction === "useScanDocumentFront") {
       let width = WIDTH_TO_STANDARDS[settings?.width];
       if (width === "FHD" && settings?.height === 1440) {
@@ -258,9 +258,9 @@ const Ready = () => {
       setCanvasSize(e.target.value);
       const canvasSize = CANVAS_SIZE[e.target.value];
       if (!skipSwitchCamera) {
-        const { capabilities = {}, devices } = await switchCamera(null, deviceId || device, canvasSize);
+        const { capabilities = {} } = await switchCamera(null, deviceId || device, canvasSize);
         setDeviceCapabilities(capabilities);
-        setDevicesList(devices.map(mapDevices));
+        // setDevicesList(devices.map(mapDevices));
       }
       setShouldTriggerCallback(true);
       setTimeout(async () => {
