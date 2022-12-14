@@ -38,7 +38,7 @@ android {
 }
 
 dependencies {
-    implementation 'com.github.openinfer:cryptonets-lib:1.0'
+    implementation 'com.github.openinfer:cryptonets-lib:1.1'
     implementation fileTree(dir: "libs", include: ["*.aar"])
 
     implementation 'androidx.core:core-ktx:1.8.0'
