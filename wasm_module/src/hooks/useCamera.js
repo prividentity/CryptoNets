@@ -1,6 +1,8 @@
 /* eslint-disable */
 import { useState } from "react";
 import { openCamera } from "@privateid/cryptonets-web-sdk";
+import {mapDevices} from '../utils';
+
 
 const useCamera = (element = "userVideo", resolution = null) => {
   // Initialize the state
@@ -25,10 +27,7 @@ const useCamera = (element = "userVideo", resolution = null) => {
       setFaceMode(faceMode);
       console.log("hasError??", { status, errorMessage });
       if (devices.length > 0) {
-        const options = devices.map((d) => ({
-          label: d.label,
-          value: d.deviceId,
-        }));
+        const options = devices.map(mapDevices);
         setDevices(options);
         setDevice(settings.deviceId);
       }
