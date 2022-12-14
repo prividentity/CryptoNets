@@ -213,13 +213,25 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
     }
 
     const [croppedDocumentBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedDocumentBufferLenPtr, 1);
-    const [croppedDocumentBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedDocumentBufferFirstPtr, 1);
-    const croppedDocumentBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, croppedDocumentBufferSecPtr, croppedDocumentBufferSize);
+    const [croppedDocumentBufferSecPtr] = new Uint32Array(
+      wasmPrivModule.HEAPU8.buffer,
+      croppedDocumentBufferFirstPtr,
+      1,
+    );
+    const croppedDocumentBufferPtr = new Uint8Array(
+      wasmPrivModule.HEAPU8.buffer,
+      croppedDocumentBufferSecPtr,
+      croppedDocumentBufferSize,
+    );
     const croppedDocumentData = Uint8ClampedArray.from(croppedDocumentBufferPtr);
 
     const [croppedBarcodeBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedBarcodeBufferLenPtr, 1);
     const [croppedBarcodeBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedBarcodeBufferFirstPtr, 1);
-    const croppedBarcodeBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, croppedBarcodeBufferSecPtr, croppedBarcodeBufferSize);
+    const croppedBarcodeBufferPtr = new Uint8Array(
+      wasmPrivModule.HEAPU8.buffer,
+      croppedBarcodeBufferSecPtr,
+      croppedBarcodeBufferSize,
+    );
     const croppedBarcodeData = Uint8ClampedArray.from(croppedBarcodeBufferPtr);
 
     wasmPrivModule._free(croppedDocumentBufferFirstPtr);
@@ -231,7 +243,7 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
     barCodePtr = null;
     wasmPrivModule._free(configInputPtr);
 
-    resolve({ result, croppedDocument:croppedDocumentData, croppedBarcode:croppedBarcodeData  });
+    resolve({ result, croppedDocument: croppedDocumentData, croppedBarcode: croppedBarcodeData });
   });
 
 const configureBlur = async (paramID, param) => {
@@ -268,8 +280,13 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
 
     wasmPrivModule.HEAP8.set(imageData, inputPtr / imageData.BYTES_PER_ELEMENT);
 
-    // const outputBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    // const outputBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // Cropped Document malloc
+    const croppedDocumentBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    const croppedDocumentBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+
+    // Cropped Mugshot malloc
+    const croppedMugshotBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    const croppedMugshotBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
     // const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     // // create a pointer to intechromger to hold the length of the output buffer
@@ -296,8 +313,10 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
         inputPtr,
         imageInput.width,
         imageInput.height,
-        null,
-        0,
+        croppedDocumentBufferFirstPtr,
+        croppedDocumentBufferLenPtr,
+        croppedMugshotBufferFirstPtr,
+        croppedMugshotBufferLenPtr,
         null,
         0,
       );
@@ -306,9 +325,39 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
       reject(new Error(err));
       return;
     }
+    // Document
+    const [croppedDocumentBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedDocumentBufferLenPtr, 1);
+    const [croppedDocumentBufferSecPtr] = new Uint32Array(
+      wasmPrivModule.HEAPU8.buffer,
+      croppedDocumentBufferFirstPtr,
+      1,
+    );
+    const croppedDocumentBufferPtr = new Uint8Array(
+      wasmPrivModule.HEAPU8.buffer,
+      croppedDocumentBufferSecPtr,
+      croppedDocumentBufferSize,
+    );
+    const croppedDocumentData = Uint8ClampedArray.from(croppedDocumentBufferPtr);
+
+    // Mugshot
+    const [croppedMugshotBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedMugshotBufferLenPtr, 1);
+    console.log("Cropped face length: ", croppedMugshotBufferSize);
+    const [croppedMugshotBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedMugshotBufferFirstPtr, 1);
+    const croppedMugshotBufferPtr = new Uint8Array(
+      wasmPrivModule.HEAPU8.buffer,
+      croppedMugshotBufferSecPtr,
+      croppedMugshotBufferSize,
+    );
+    const croppedMugshotData = Uint8ClampedArray.from(croppedMugshotBufferPtr);
+
+    wasmPrivModule._free(croppedDocumentBufferFirstPtr);
+    wasmPrivModule._free(croppedDocumentBufferLenPtr);
+    wasmPrivModule._free(croppedMugshotBufferFirstPtr);
+    wasmPrivModule._free(croppedMugshotBufferLenPtr);
+    wasmPrivModule._free(configInputPtr);
 
     console.log(result, '-----------------OUT OF WASM---------------');
-    resolve({ result });
+    resolve({ result, croppedDocument:croppedDocumentData, croppedMugshot:croppedMugshotData  });
   });
 
 const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) =>

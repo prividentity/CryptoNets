@@ -8,16 +8,20 @@ const useScanBackDocument = (onSuccess) => {
   const [scannedCodeData, setScannedCodeData] = useState(null);
   const [isFound, setIsFound] = useState(false);
 
+  // Input image
+  const [inputImageData, setInputImageData] = useState(null);
+  const [inputImage, setInputImage] = useState(null);
+
+  // Cropped Document
   const [croppedDocumentImageData, setCroppedDocumentImageData] = useState(null);
   const [croppedDocumentWidth, setCropedDocumentWidth] = useState(null);
   const [croppedDocumentHeight, setCroppedDocumentHeight] = useState(null);
+  const [croppedDocumentImage, setCroppedDocumentImage] = useState(null);
 
+  // Cropped Barcode
   const [croppedBarcodeImageData, setCroppedBarcodeImageData] = useState(null);
   const [croppedBarcodeWidth, setCroppedBarcodeWidth] = useState(null);
   const [croppedBarcodeHeight, setCroppedBarcodeHeight] = useState(null);
-
-
-  const [croppedDocumentImage, setCroppedDocumentImage] = useState(null);
   const [croppedBarcodeImage, setCroppedBarcodeImage] = useState(null);
 
   const documentCallback = (result) => {
@@ -71,6 +75,7 @@ const useScanBackDocument = (onSuccess) => {
     }
     setCroppedDocumentImageData(null);
     setCroppedBarcodeImageData(null)
+    setInputImageData(null)
     scanBackDocument();
   };
 
@@ -91,12 +96,18 @@ const useScanBackDocument = (onSuccess) => {
     }
   }, [isFound, croppedBarcodeImageData, croppedBarcodeWidth, croppedBarcodeHeight]);
 
+  useEffect(()=>{
+    if (isFound && inputImageData) {
+      convertImageData(inputImageData.data,inputImageData.width,inputImageData.height,setInputImage);
+    }
+  }, [isFound, inputImageData] )
+
 
   useEffect(() => {
-    if(croppedDocumentImage && croppedBarcodeImage){
-      console.log("Barcode Images:", {croppedBarcodeImage, croppedDocumentImage});
+    if(croppedDocumentImage && croppedBarcodeImage && inputImage){
+      console.log("Barcode Images:", {inputImage, croppedBarcodeImage, croppedDocumentImage});
     }
-  }, [croppedDocumentImage, croppedBarcodeImage])
+  }, [croppedDocumentImage, croppedBarcodeImage, inputImage])
 
   const scanBackDocument = async (canvasSize) => {
     if (canvasSize && canvasSize !== internalCanvasSize) {
@@ -107,15 +118,17 @@ const useScanBackDocument = (onSuccess) => {
       : internalCanvasSize
       ? CANVAS_SIZE[internalCanvasSize]
       : {};
-    const {result, croppedBarcode, croppedDocument} = await isValidPhotoID("PHOTO_ID_BACK", documentCallback, true, undefined, undefined, canvasObj);
+    const {result, croppedBarcode, croppedDocument, imageData} = await isValidPhotoID("PHOTO_ID_BACK", documentCallback, true, undefined, undefined, canvasObj);
     if (result === 0) {
       setCroppedDocumentImageData(croppedDocument);
       setCroppedBarcodeImageData(croppedBarcode);
+      setInputImageData(imageData);
     } else {
       setCroppedDocumentImageData(null);
       setCroppedBarcodeImageData(null);
+      setInputImageData(null);
     }
-    onSuccess({result, croppedBarcode, croppedDocument});
+    onSuccess({result, croppedBarcode, croppedDocument, imageData});
   };
 
   return { scanBackDocument, scannedCodeData, scanResult, isFound, croppedDocumentImage, croppedBarcodeImage };
