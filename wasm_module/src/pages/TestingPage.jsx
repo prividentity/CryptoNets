@@ -251,7 +251,7 @@ const Ready = () => {
   };
 
   const handleCanvasSize = async (e) => {
-    if (currentAction === "useScanDocumentFront"){
+    if (currentAction === "useScanDocumentFront" || currentAction === "useScanDocumentBack"){
       setShouldTriggerCallback(false);
       setCanvasSize(e.target.value);
       const canvasSize = CANVAS_SIZE[e.target.value];
@@ -262,9 +262,18 @@ const Ready = () => {
       );
       setDeviceCapabilities(capabilities);
       setShouldTriggerCallback(true);
-      setTimeout(async () => {
-        await scanFrontDocument(e.target.value);
-      }, 1000);
+
+      if(currentAction === "useScanDocumentFront"){
+        setTimeout(async () => {
+          await scanFrontDocument(e.target.value);
+        }, 1000);
+      }
+      else{
+        setTimeout(async () => {
+          await scanBackDocument(e.target.value);
+        }, 1000);
+      }
+     
     }
   };
 
@@ -301,7 +310,7 @@ const Ready = () => {
               })}
             </select>
           </div>
-          {currentAction === "useScanDocumentFront" && (
+          {currentAction === "useScanDocumentFront" || currentAction === "useScanDocumentBack" ? (
             <div>
               <label> Canvas Size: </label>
               <select
@@ -316,7 +325,7 @@ const Ready = () => {
                 ))}
               </select>
             </div>
-          )}
+          ): <></>}
         </div>
         <div className="cameraContainer">
           <video

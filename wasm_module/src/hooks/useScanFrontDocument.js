@@ -76,8 +76,8 @@ const useScanFrontDocument = (onSuccess) => {
   // Cropped Mugshot
   useEffect(() => {
     if (isFound && croppedMugshotImageData && croppedMugshotWidth && croppedMugshotHeight) {
-      console.log("before converting", { croppedMugshotImageData, croppedMugshotWidth, croppedMugshotHeight });
-      convertImage(croppedMugshotImageData, croppedMugshotWidth, croppedMugshotHeight, setCroppedMugshotImage, true);
+      console.log("before converting cropped face: ", { croppedMugshotImageData, croppedMugshotWidth, croppedMugshotHeight });
+      convertImage(croppedMugshotImageData, croppedMugshotWidth, croppedMugshotHeight, setCroppedMugshotImage);
     }
   }, [isFound, croppedMugshotImageData, croppedMugshotWidth, croppedMugshotHeight]);
 
