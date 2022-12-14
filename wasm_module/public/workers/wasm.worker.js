@@ -14,6 +14,7 @@ let imageInputSize;
 let configGlobal;
 let barCodePtr;
 let privid_wasm_result = null;
+let wasmSession = null;
 
 const isLoad = (simd, url, key, module, debug_type = '0') =>
   new Promise(async (resolve, reject) => {
@@ -120,23 +121,24 @@ function deleteUUID(uuid, cb) {
   const encoder = new TextEncoder();
   const uuid_bytes = encoder.encode(`${uuid}\0`);
 
-  // console.log('[FAR_DEBUG] : Calling session preparation')
-  const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-  const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-  if (s_result) {
-    console.log('[FAR_DEBUG] : session initialized successfully');
-  } else {
-    console.log('[FAR_DEBUG] : session initialized failed');
+  // Initialize Session
+  if (!wasmSession) {
+    const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
+    if (s_result) {
+      console.log('[FAR_DEBUG] : session initialized successfully');
+    } else {
+      console.log('[FAR_DEBUG] : session initialized failed');
+    }
+    const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
+    wasmSession = sessionSecPtr;
   }
-  // console.log('[FAR_DEBUG] : Getting session second pointer')
-  const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
-  // console.log(`[FAR_DEBUG] : Session second pointer = [${  sessionSecPtr  }]`)
 
   const uuidInputSize = uuid.length;
   const uuidInputPtr = wasmPrivModule._malloc(uuidInputSize);
   wasmPrivModule.HEAP8.set(uuid_bytes, uuidInputPtr / uuid_bytes.BYTES_PER_ELEMENT);
 
-  wasmPrivModule._privid_user_delete(sessionSecPtr, null, 0, uuidInputPtr, uuidInputSize, 0, 0);
+  wasmPrivModule._privid_user_delete(wasmSession, null, 0, uuidInputPtr, uuidInputSize, 0, 0);
   wasmPrivModule._free(uuidInputPtr);
 }
 
@@ -150,7 +152,6 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
     configGlobal = config;
     const version = wasmPrivModule._get_version();
     console.log('Version = ', version);
-    console.log('BARCODE SCAN =========== IMAGE INPUT ', imageInput);
     const { data: imageData } = imageInput;
 
     const imageInputSize = imageData.length * imageData.BYTES_PER_ELEMENT;
@@ -181,20 +182,22 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
     wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
 
     // Initialize Session
-    const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-    if (s_result) {
-      console.log('[FAR_DEBUG] : session initialized successfully');
-    } else {
-      console.log('[FAR_DEBUG] : session initialized failed');
+    if (!wasmSession) {
+      const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+      const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
+      if (s_result) {
+        console.log('[FAR_DEBUG] : session initialized successfully');
+      } else {
+        console.log('[FAR_DEBUG] : session initialized failed');
+      }
+      const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
+      wasmSession = sessionSecPtr;
     }
-    const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
 
     let result = null;
-    console.log('BARCODE INPUTS: ', { sessionFirstPtr });
     try {
       result = wasmPrivModule._privid_doc_scan_barcode(
-        sessionSecPtr,
+        wasmSession,
         configInputPtr,
         configInputSize,
         barCodePtr,
@@ -213,13 +216,25 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
     }
 
     const [croppedDocumentBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedDocumentBufferLenPtr, 1);
-    const [croppedDocumentBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedDocumentBufferFirstPtr, 1);
-    const croppedDocumentBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, croppedDocumentBufferSecPtr, croppedDocumentBufferSize);
+    const [croppedDocumentBufferSecPtr] = new Uint32Array(
+      wasmPrivModule.HEAPU8.buffer,
+      croppedDocumentBufferFirstPtr,
+      1,
+    );
+    const croppedDocumentBufferPtr = new Uint8Array(
+      wasmPrivModule.HEAPU8.buffer,
+      croppedDocumentBufferSecPtr,
+      croppedDocumentBufferSize,
+    );
     const croppedDocumentData = Uint8ClampedArray.from(croppedDocumentBufferPtr);
 
     const [croppedBarcodeBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedBarcodeBufferLenPtr, 1);
     const [croppedBarcodeBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedBarcodeBufferFirstPtr, 1);
-    const croppedBarcodeBufferPtr = new Uint8Array(wasmPrivModule.HEAPU8.buffer, croppedBarcodeBufferSecPtr, croppedBarcodeBufferSize);
+    const croppedBarcodeBufferPtr = new Uint8Array(
+      wasmPrivModule.HEAPU8.buffer,
+      croppedBarcodeBufferSecPtr,
+      croppedBarcodeBufferSize,
+    );
     const croppedBarcodeData = Uint8ClampedArray.from(croppedBarcodeBufferPtr);
 
     wasmPrivModule._free(croppedDocumentBufferFirstPtr);
@@ -231,7 +246,10 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
     barCodePtr = null;
     wasmPrivModule._free(configInputPtr);
 
-    resolve({ result, croppedDocument:croppedDocumentData, croppedBarcode:croppedBarcodeData  });
+    const croppedDocument = croppedBarcodeBufferSize > 0? croppedDocumentData : null;
+    const croppedBarcode = croppedBarcodeBufferSize > 0? croppedBarcodeData: null;
+
+    resolve({ result, croppedDocument, croppedBarcode });
   });
 
 const configureBlur = async (paramID, param) => {
@@ -268,8 +286,13 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
 
     wasmPrivModule.HEAP8.set(imageData, inputPtr / imageData.BYTES_PER_ELEMENT);
 
-    // const outputBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    // const outputBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // Cropped Document malloc
+    const croppedDocumentBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    const croppedDocumentBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+
+    // Cropped Mugshot malloc
+    const croppedMugshotBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    const croppedMugshotBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
     // const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     // // create a pointer to intechromger to hold the length of the output buffer
@@ -277,27 +300,32 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
 
     console.log('-----------------GOING TO WASM---------------');
 
-    const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-    if (s_result) {
-      console.log('[FAR_DEBUG] : session initialized successfully');
-    } else {
-      console.log('[FAR_DEBUG] : session initialized failed');
+    // Initialize Session
+    if (!wasmSession) {
+      const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+      const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
+      if (s_result) {
+        console.log('[FAR_DEBUG] : session initialized successfully');
+      } else {
+        console.log('[FAR_DEBUG] : session initialized failed');
+      }
+      const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
+      wasmSession = sessionSecPtr;
     }
-    // console.log('[FAR_DEBUG] : Getting session second pointer')
-    const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
+
     let result = null;
     try {
-      console.log('==== module list ==>', wasmPrivModule);
       result = wasmPrivModule._privid_doc_scan_face(
-        sessionSecPtr,
+        wasmSession,
         configInputPtr,
         configInputSize,
         inputPtr,
         imageInput.width,
         imageInput.height,
-        null,
-        0,
+        croppedDocumentBufferFirstPtr,
+        croppedDocumentBufferLenPtr,
+        croppedMugshotBufferFirstPtr,
+        croppedMugshotBufferLenPtr,
         null,
         0,
       );
@@ -306,9 +334,42 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
       reject(new Error(err));
       return;
     }
+    // Document
+    const [croppedDocumentBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedDocumentBufferLenPtr, 1);
+    const [croppedDocumentBufferSecPtr] = new Uint32Array(
+      wasmPrivModule.HEAPU8.buffer,
+      croppedDocumentBufferFirstPtr,
+      1,
+    );
+    const croppedDocumentBufferPtr = new Uint8Array(
+      wasmPrivModule.HEAPU8.buffer,
+      croppedDocumentBufferSecPtr,
+      croppedDocumentBufferSize,
+    );
+    const croppedDocumentData = Uint8ClampedArray.from(croppedDocumentBufferPtr);
+
+    // Mugshot
+    const [croppedMugshotBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedMugshotBufferLenPtr, 1);
+    const [croppedMugshotBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedMugshotBufferFirstPtr, 1);
+    const croppedMugshotBufferPtr = new Uint8Array(
+      wasmPrivModule.HEAPU8.buffer,
+      croppedMugshotBufferSecPtr,
+      croppedMugshotBufferSize,
+    );
+    const croppedMugshotData = Uint8ClampedArray.from(croppedMugshotBufferPtr);
+
+    wasmPrivModule._free(croppedDocumentBufferFirstPtr);
+    wasmPrivModule._free(croppedDocumentBufferLenPtr);
+    wasmPrivModule._free(croppedMugshotBufferFirstPtr);
+    wasmPrivModule._free(croppedMugshotBufferLenPtr);
+    wasmPrivModule._free(configInputPtr);
+
+    const croppedDocument = croppedDocumentBufferSize > 0 ? croppedDocumentData : null;
+
+    const croppedMugshot = croppedMugshotBufferSize > 0 ? croppedMugshotData : null;
 
     console.log(result, '-----------------OUT OF WASM---------------');
-    resolve({ result });
+    resolve({ result, croppedDocument, croppedMugshot });
   });
 
 const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) =>
@@ -354,22 +415,22 @@ const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) 
     let result = null;
     console.log('wasmPrivModule', wasmPrivModule);
 
-    // console.log('[FAR_DEBUG] : Calling session preparation')
-    const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-    if (s_result) {
-      console.log('[FAR_DEBUG] : session initialized successfully');
-    } else {
-      console.log('[FAR_DEBUG] : session initialized failed');
+    // Initialize Session
+    if (!wasmSession) {
+      const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+      const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
+      if (s_result) {
+        console.log('[FAR_DEBUG] : session initialized successfully');
+      } else {
+        console.log('[FAR_DEBUG] : session initialized failed');
+      }
+      const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
+      wasmSession = sessionSecPtr;
     }
-    // console.log('[FAR_DEBUG] : Getting session second pointer')
-    const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
-    // console.log(`[FAR_DEBUG] : Session second pointer = [${  sessionSecPtr  }]`)
 
-    // console.log('[FAR_DEBUG] : Calling enroll_onefa')
     try {
       result = await wasmPrivModule._privid_enroll_onefa(
-        sessionSecPtr /* session pointer */,
+        wasmSession /* session pointer */,
         configInputPtr,
         configInputSize,
         imageInputPtr /* input images */,
@@ -461,21 +522,23 @@ const FHE_predictOnefa = (originalImages, simd, debug_type = 0, cb, config = {})
     // create a pointer to interger to hold the length of the output buffer
     const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     let result = null;
-    console.log('wasmPrivModule', wasmPrivModule);
 
-    const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-    if (s_result) {
-      console.log('[FAR_DEBUG] : session initialized successfully');
-    } else {
-      console.log('[FAR_DEBUG] : session initialized failed');
+    // Initialize Session
+    if (!wasmSession) {
+      const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+      const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
+      if (s_result) {
+        console.log('[FAR_DEBUG] : session initialized successfully');
+      } else {
+        console.log('[FAR_DEBUG] : session initialized failed');
+      }
+      const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
+      wasmSession = sessionSecPtr;
     }
-
-    const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
 
     try {
       result = await wasmPrivModule._privid_face_predict_onefa(
-        sessionSecPtr /* session pointer */,
+        wasmSession /* session pointer */,
         configInputPtr,
         configInputSize,
         imageInputPtr /* input images */,

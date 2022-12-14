@@ -1,6 +1,3 @@
-// NOT DONE
-// STILL IN DEVELOPMENT
-
 import { useState } from "react";
 import { isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
 
