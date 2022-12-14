@@ -152,7 +152,6 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
     configGlobal = config;
     const version = wasmPrivModule._get_version();
     console.log('Version = ', version);
-    console.log('BARCODE SCAN =========== IMAGE INPUT ', imageInput);
     const { data: imageData } = imageInput;
 
     const imageInputSize = imageData.length * imageData.BYTES_PER_ELEMENT;
@@ -196,7 +195,6 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
     }
 
     let result = null;
-    console.log('Session: ', { wasmSession });
     try {
       result = wasmPrivModule._privid_doc_scan_barcode(
         wasmSession,
@@ -248,7 +246,10 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
     barCodePtr = null;
     wasmPrivModule._free(configInputPtr);
 
-    resolve({ result, croppedDocument: croppedDocumentData, croppedBarcode: croppedBarcodeData });
+    const croppedDocument = croppedBarcodeBufferSize > 0? croppedDocumentData : null;
+    const croppedBarcode = croppedBarcodeBufferSize > 0? croppedBarcodeData: null;
+
+    resolve({ result, croppedDocument, croppedBarcode });
   });
 
 const configureBlur = async (paramID, param) => {
@@ -314,7 +315,6 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
 
     let result = null;
     try {
-      console.log("Config: ", {configInput:config, configInputSize})
       result = wasmPrivModule._privid_doc_scan_face(
         wasmSession,
         configInputPtr,
@@ -350,7 +350,6 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
 
     // Mugshot
     const [croppedMugshotBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedMugshotBufferLenPtr, 1);
-    console.log('Cropped face length: ', croppedMugshotBufferSize);
     const [croppedMugshotBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedMugshotBufferFirstPtr, 1);
     const croppedMugshotBufferPtr = new Uint8Array(
       wasmPrivModule.HEAPU8.buffer,
@@ -365,8 +364,12 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
     wasmPrivModule._free(croppedMugshotBufferLenPtr);
     wasmPrivModule._free(configInputPtr);
 
+    const croppedDocument = croppedDocumentBufferSize > 0 ? croppedDocumentData : null;
+
+    const croppedMugshot = croppedMugshotBufferSize > 0 ? croppedMugshotData : null;
+
     console.log(result, '-----------------OUT OF WASM---------------');
-    resolve({ result, croppedDocument: croppedDocumentData, croppedMugshot: croppedMugshotData });
+    resolve({ result, croppedDocument, croppedMugshot });
   });
 
 const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) =>

@@ -46,17 +46,17 @@ const useScanFrontDocument = (onSuccess) => {
       setCroppedDocumentWidth(int_doc_width);
     } else if (triggerValue) {
       setInputImageData(null);
-      setCroppedMugshotImageData(null);
       setCroppedDocumentImageData(null);
+      setCroppedMugshotImageData(null);
       scanFrontDocument();
     }
   };
 
-  const convertImage = async (imageData, width, height, setState, settings = undefined) => {
-    let convertedImage;
-    if (settings) convertedImage = await convertCroppedImage(imageData, width, height, true);
-    else convertedImage = await convertCroppedImage(imageData, width, height);
-    setState(convertedImage);
+  const convertImage = async (imageData, width, height, setState) => {
+    if (imageData.length === width * height * 4) {
+      const convertedImage = await convertCroppedImage(imageData, width, height);
+      setState(convertedImage);
+    }
   };
 
   // InputImage
@@ -69,6 +69,11 @@ const useScanFrontDocument = (onSuccess) => {
   // Cropped Document
   useEffect(() => {
     if (isFound && croppedDocumentImageData && croppedDocumentWidth && croppedDocumentHeight) {
+      console.log("before converting cropped face: ", {
+        croppedDocumentImageData,
+        croppedDocumentWidth,
+        croppedDocumentHeight,
+      });
       convertImage(croppedDocumentImageData, croppedDocumentWidth, croppedDocumentHeight, setCroppedDocumentImage);
     }
   }, [isFound, croppedDocumentImageData, croppedDocumentWidth, croppedDocumentHeight]);
@@ -76,16 +81,20 @@ const useScanFrontDocument = (onSuccess) => {
   // Cropped Mugshot
   useEffect(() => {
     if (isFound && croppedMugshotImageData && croppedMugshotWidth && croppedMugshotHeight) {
-      console.log("before converting cropped face: ", { croppedMugshotImageData, croppedMugshotWidth, croppedMugshotHeight });
+      console.log("before converting cropped face: ", {
+        croppedMugshotImageData,
+        croppedMugshotWidth,
+        croppedMugshotHeight,
+      });
       convertImage(croppedMugshotImageData, croppedMugshotWidth, croppedMugshotHeight, setCroppedMugshotImage);
     }
   }, [isFound, croppedMugshotImageData, croppedMugshotWidth, croppedMugshotHeight]);
 
   // Printing images
   useEffect(() => {
-    //if (croppedDocumentImage && croppedMugshotImage && inputImage) {
-    console.log("FRONT DL SCAN IMAGES:", { croppedDocumentImage, croppedMugshotImage, inputImage });
-    //}
+    if (croppedDocumentImage && croppedMugshotImage && inputImage) {
+      console.log("FRONT DL SCAN IMAGES:", { croppedDocumentImage, croppedMugshotImage, inputImage });
+    }
   }, [croppedDocumentImage, croppedMugshotImage, inputImage]);
 
   const scanFrontDocument = async (canvasSize, initializeCanvas) => {
@@ -96,17 +105,14 @@ const useScanFrontDocument = (onSuccess) => {
     const { result, imageData, croppedDocument, croppedMugshot } = await isValidPhotoID(
       "PHOTO_ID_FRONT",
       documentCallback,
-      true
+      true,
+      undefined,
+      undefined,
+      canvasObj
     );
-    if (result === 2) {
-      setInputImageData(imageData);
-      setCroppedDocumentImageData(croppedDocument);
-      setCroppedMugshotImageData(croppedMugshot);
-    } else {
-      setInputImageData(null);
-      setCroppedDocumentImageData(null);
-      setCroppedMugshotImageData(null);
-    }
+    setInputImageData(imageData);
+    setCroppedDocumentImageData(croppedDocument);
+    setCroppedMugshotImageData(croppedMugshot);
 
     onSuccess({ result, imageData, croppedDocument, croppedMugshot });
   };
