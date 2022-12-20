@@ -274,7 +274,7 @@ const Ready = () => {
           await scanBackDocument(e.target.value);
         }, 1000);
       }
-     
+
     }
   };
 
