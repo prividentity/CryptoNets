@@ -202,8 +202,13 @@ const Ready = () => {
   const handleScanDLFront = async () => {
     setCurrentAction("useScanDocumentFront");
     // hack to initialize canvas with large memory, so it doesn't cause an issue.
-    await scanFrontDocument(canvasSizeOptions[1].value, () => {});
-    await scanFrontDocument(initialCanvasSize);
+    if(canvasSize){
+      await scanFrontDocument(canvasSize);
+    }else{
+      await scanFrontDocument(canvasSizeOptions[1].value, () => {});
+      await scanFrontDocument(initialCanvasSize);
+    }
+
   };
 
   // Scan Document Back
