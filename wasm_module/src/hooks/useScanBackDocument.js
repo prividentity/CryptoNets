@@ -80,32 +80,27 @@ const useScanBackDocument = (onSuccess) => {
   };
 
   const convertImageData = async (imageData, width, height, setState) => {
-    const convertedImage = await convertCroppedImage(imageData, width, height);
-    setState(convertedImage);
+    if ((width * height * 4) === imageData.length) {
+      const convertedImage = await convertCroppedImage(imageData, width, height);
+      setState(convertedImage);
+    }
   };
 
   useEffect(() => {
     if (isFound && croppedDocumentImageData && croppedDocumentWidth && croppedDocumentHeight) {
       convertImageData(croppedDocumentImageData, croppedDocumentWidth, croppedDocumentHeight, setCroppedDocumentImage);
-      setCroppedDocumentImageData(null);
-      setCropedDocumentWidth(null);
-      setCroppedDocumentHeight(null);
     }
   }, [isFound, croppedDocumentImageData, croppedDocumentWidth, croppedDocumentHeight]);
 
   useEffect(() => {
     if (isFound && croppedBarcodeImageData && croppedBarcodeWidth && croppedBarcodeHeight) {
       convertImageData(croppedBarcodeImageData, croppedBarcodeWidth, croppedBarcodeHeight, setCroppedBarcodeImage);
-      setCroppedBarcodeImageData(null);
-      setCroppedBarcodeWidth(null);
-      setCroppedBarcodeHeight(null);
     }
   }, [isFound, croppedBarcodeImageData, croppedBarcodeWidth, croppedBarcodeHeight]);
 
   useEffect(() => {
     if (isFound && inputImageData) {
       convertImageData(inputImageData.data, inputImageData.width, inputImageData.height, setInputImage);
-      setInputImageData(null);
     }
   }, [isFound, inputImageData]);
 
