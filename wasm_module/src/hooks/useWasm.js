@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { loadPrivIdModule } from '@privateid/cryptonets-web-sdk-alpha';
+import { loadPrivIdModule } from '@privateid/cryptonets-web-sdk';
 
 const useWasm = () => {
   // Initialize the state
