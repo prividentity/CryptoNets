@@ -30,7 +30,7 @@ const useScanFrontDocument = (onSuccess) => {
 
   const documentCallback = (result) => {
     console.log("Front scan callback result:", result);
-    if (result.returnValue.predict_status === 0) {
+    if (result.returnValue.predict_status === 0 && result.returnValue.op_status === 0) {
       const { predict_status, uuid, guid, cropped_face_height, cropped_face_width, int_doc_width, int_doc_height } =
         result.returnValue;
 
@@ -92,9 +92,9 @@ const useScanFrontDocument = (onSuccess) => {
 
   // Printing images
   useEffect(() => {
-    if (croppedDocumentImage && croppedMugshotImage && inputImage) {
+    //if (croppedDocumentImage && croppedMugshotImage && inputImage) {
       console.log("FRONT DL SCAN IMAGES:", { croppedDocumentImage, croppedMugshotImage, inputImage });
-    }
+    // }
   }, [croppedDocumentImage, croppedMugshotImage, inputImage]);
 
   const scanFrontDocument = async (canvasSize, initializeCanvas) => {
