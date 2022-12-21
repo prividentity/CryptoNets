@@ -80,8 +80,10 @@ const useScanBackDocument = (onSuccess) => {
   };
 
   const convertImageData = async (imageData, width, height, setState) => {
-    const convertedImage = await convertCroppedImage(imageData, width, height);
-    setState(convertedImage);
+    if ((width * height * 4) === imageData.length) {
+      const convertedImage = await convertCroppedImage(imageData, width, height);
+      setState(convertedImage);
+    }
   };
 
   useEffect(() => {
