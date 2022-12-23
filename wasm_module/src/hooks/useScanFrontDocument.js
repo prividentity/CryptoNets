@@ -31,7 +31,7 @@ const useScanFrontDocument = (onSuccess) => {
   const documentCallback = (result) => {
     console.log("Front scan callback result:", result);
     if (result.returnValue.predict_status === 0 && result.returnValue.op_status === 0) {
-      const { predict_status, uuid, guid, cropped_face_height, cropped_face_width, int_doc_width, int_doc_height } =
+      const { predict_status, uuid, guid, cropped_face_height, cropped_face_width, cropped_doc_width, cropped_doc_height } =
         result.returnValue;
 
       setIsFound(true);
@@ -42,8 +42,8 @@ const useScanFrontDocument = (onSuccess) => {
       setCroppedMugshotWidth(cropped_face_width);
       setCroppedMugshotHeight(cropped_face_height);
 
-      setCroppedDocumentHeight(int_doc_height);
-      setCroppedDocumentWidth(int_doc_width);
+      setCroppedDocumentHeight(cropped_doc_height);
+      setCroppedDocumentWidth(cropped_doc_width);
     } else if (triggerValue) {
       setInputImageData(null);
       setCroppedDocumentImageData(null);
