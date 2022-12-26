@@ -2,10 +2,13 @@
     <string name="app_name">cryptonets-android-sample</string>
     <string name="face_valid_message">Face valid: valid face detected</string>
     <string name="face_invalid_message">No face detected</string>
+    <string name="face_invalid">Face invalid: %1$s</string>
     <string name="is_valid">Is Valid</string>
     <string name="enroll">Enroll</string>
     <string name="continuous_predict">Continuous Predict</string>
     <string name="delete">Delete</string>
+    <string name="dl_frontside">Doc Front Side</string>
+    <string name="dl_backside">Doc Back Side</string>
     <string name="user_not_enrolled">User is not enrolled</string>
     <string name="predict_uuid_">Predicted UUID: %1$s</string>
     <string name="predict_guid_">Predicted GUID: %1$s</string>
@@ -19,4 +22,10 @@
     <string name="enrolled_guid_">Enrolled GUID: %1$s</string>
     <string name="enroll_success">Enroll success</string>
     <string name="enroll_failed">Enroll failed</string>
+
+    <string name="dl_invalid">Invalid document</string>
+    <string name="dl_valid_barcode">Valid barcode</string>
+    <string name="estimate_age">Estimate Age</string>
+    <string name="estimate_failed">Estimate failed or no face detected</string>
+    <string name="age_">Age %1$s</string>
 </resources>
