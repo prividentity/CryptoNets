@@ -1,65 +1,68 @@
 package com.cryptonets.sample.ui.main
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.activity.viewModels
-import androidx.lifecycle.lifecycleScope
+import androidx.camera.view.PreviewView
+import androidx.core.content.ContextCompat
+import com.cryptonets.sample.R
 import com.cryptonets.sample.databinding.ActivityMainBinding
-import com.cryptonets.sample.ui.base.ViewBindingActivity
-import com.cryptonets.sample.utils.MyCameraHandler
-import com.cryptonets.sample.utils.PermissionObserver
+import com.cryptonets.sample.ui.base.BaseCameraActivity
+import com.cryptonets.sample.ui.document.DocumentActivity
+import com.cryptonets.sample.utils.ImageListener
+import com.cryptonets.sample.utils.setColorFilter
+import com.privateidentity.prividlib.model.ImageData
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
-import timber.log.Timber
-import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ViewBindingActivity<ActivityMainBinding>() {
-    @Inject
-    lateinit var permissionObserver: PermissionObserver
-    private var cameraHandler: MyCameraHandler? = null
+class MainActivity : BaseCameraActivity<ActivityMainBinding>() {
     private val viewModel by viewModels<MainViewModel>()
-
-    private fun setUpCamera() {
-        permissionObserver.requestPermissionIfNeeded(
-            arrayOf(android.Manifest.permission.CAMERA)
-        ) { allPermissionGranted, map ->
-            Timber.i("map = $map")
-            if (allPermissionGranted) {
-                openCamera()
-            }
-        }
-    }
 
     private fun setupViews() {
         binding.btnIsValid.setOnClickListener {
             viewModel.onIsValidClicked()
+        }
+        binding.btnEstimateAge.setOnClickListener {
+            viewModel.onEstimateAgeClicked()
         }
         binding.btnEnroll.setOnClickListener {
             viewModel.onEnrollClicked()
         }
         binding.btnDelete.setOnClickListener {
             viewModel.onDeleteClicked()
-
         }
         binding.btnContinuousPredict.setOnClickListener {
             viewModel.onContinuousPredictClicked()
+        }
+        binding.btnScanDLFrontSide.setOnClickListener {
+            cameraHandler?.unbindCamera()
+            startActivity(Intent(this, DocumentActivity::class.java))
+            finish()
         }
     }
 
     private fun observeLiveData() {
         viewModel.sampleTypeLiveData.observe(this) {
-            binding.btnIsValid.setTextColor(Color.WHITE)
-            binding.btnEnroll.setTextColor(Color.WHITE)
-            binding.btnContinuousPredict.setTextColor(Color.WHITE)
-            binding.btnDelete.setTextColor(Color.WHITE)
+            val hlColor = Color.RED
+            val normalColor = ContextCompat.getColor(this, R.color.purple_500)
+
+            binding.btnIsValid.setColorFilter(normalColor)
+            binding.btnEnroll.setColorFilter(normalColor)
+            binding.btnContinuousPredict.setColorFilter(normalColor)
+            binding.btnDelete.setColorFilter(normalColor)
+            binding.btnScanDLFrontSide.setColorFilter(normalColor)
+            binding.btnEstimateAge.setColorFilter(normalColor)
 
             when (it) {
-                SampleType.Validity          -> binding.btnIsValid.setTextColor(Color.BLACK)
-                SampleType.Enrolling         -> binding.btnEnroll.setTextColor(Color.BLACK)
-                SampleType.ContinuousPredict -> binding.btnContinuousPredict.setTextColor(Color.BLACK)
-                SampleType.Delete            -> binding.btnDelete.setTextColor(Color.BLACK)
+                SampleType.Validity          -> binding.btnIsValid.setColorFilter(hlColor)
+                SampleType.Enrolling         -> binding.btnEnroll.setColorFilter(hlColor)
+                SampleType.ContinuousPredict -> binding.btnContinuousPredict.setColorFilter(hlColor)
+                SampleType.Delete            -> binding.btnDelete.setColorFilter(hlColor)
+                SampleType.DL_FrontSide      -> binding.btnScanDLFrontSide.setColorFilter(hlColor)
+                SampleType.EstimateAge       -> binding.btnEstimateAge.setColorFilter(hlColor)
+                else                         -> {}
             }
         }
 
@@ -73,30 +76,24 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>() {
         }
     }
 
-    private fun openCamera() {
-        lifecycleScope.launchWhenCreated {
-            delay(1000)
-            if (cameraHandler == null) {
-                cameraHandler = MyCameraHandler(this@MainActivity, binding.viewFinder)
-            }
-            cameraHandler?.setUpCamera {
-                viewModel.onImageAvailable(it, cameraHandler!!)
-            }
-        }
-    }
 
     override val getBindingInflater: (LayoutInflater) -> ActivityMainBinding
         get() = ActivityMainBinding::inflate
 
+    override fun getImageListener(): ImageListener {
+        return {
+            viewModel.onImageAvailable(it, cameraHandler!!)
+        }
+    }
+
+    override fun getPreviewView(): PreviewView {
+        return binding.viewFinder
+    }
+
     override fun onViewCreated(savedInstanceState: Bundle?) {
-        permissionObserver.init(this)
-        setUpCamera()
+        super.onViewCreated(savedInstanceState)
         observeLiveData()
         setupViews()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        cameraHandler?.unbindCamera()
-    }
 }
