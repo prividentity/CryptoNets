@@ -97,7 +97,7 @@ const useEnrollOneFa = (
         if (result.returnValue?.status === 0) {
           setEnrollStatus("ENROLL SUCCESS");
           setEnrollData(result.returnValue);
-          onSuccess();
+          onSuccess(result.returnValue);
         }
         if (result.returnValue?.status === -1) {
           if (tries === retryTimes) {
