@@ -4,7 +4,7 @@ import {
   isValid,
   switchCamera,
   setStopLoopContinuousEnrollPredict,
-} from "@privateid/cryptonets-web-sdk-alpha";
+} from "@privateid/cryptonets-web-sdk";
 
 import {
   useCamera,
