@@ -8,6 +8,9 @@ import com.cryptonets.sample.utils.MyCameraHandler
 import com.cryptonets.sample.utils.ResourceProvider
 import com.cryptonets.sample.utils.toLiveData
 import com.privateidentity.prividlib.PrivateIdentity
+import com.privateidentity.prividlib.config.ConfigObject
+import com.privateidentity.prividlib.config.ContextString
+import com.privateidentity.prividlib.config.ImageFormat
 import com.privateidentity.prividlib.model.FacePredictResult
 import com.privateidentity.prividlib.model.FaceValidation
 import com.privateidentity.prividlib.model.ImageData
@@ -45,15 +48,22 @@ class MainViewModel @Inject constructor(
             SampleType.Delete            -> {
                 deleteContinuously(imageData, cameraHandler)
             }
-            SampleType.DL_FrontSide      -> {
-                scanDLFrontside(imageData, cameraHandler)
+            SampleType.EstimateAge       -> {
+                estimateAge(imageData, cameraHandler)
             }
-            null                         -> {}
+            else                         -> {
+
+            }
         }
     }
 
     fun onIsValidClicked() {
         _sampleTypeLiveData.value = SampleType.Validity
+        clearData()
+    }
+
+    fun onEstimateAgeClicked() {
+        _sampleTypeLiveData.value = SampleType.EstimateAge
         clearData()
     }
 
@@ -72,11 +82,6 @@ class MainViewModel @Inject constructor(
         clearData()
     }
 
-    fun onDLFrontsideClicked() {
-        _sampleTypeLiveData.value = SampleType.DL_FrontSide
-        clearData()
-    }
-
     private fun clearData() {
         _statusLiveData.value = Status()
         isEnrolled = false
@@ -87,13 +92,31 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             cameraHandler.isProcessingImage = true
             val faceValidateResult = withContext(Dispatchers.IO) {
-                privateIdentity.validate(imageData)
+                privateIdentity.isValid(imageData)
             }
             if (faceValidateResult.faceValidation == FaceValidation.ValidBiometric) {
                 _statusLiveData.value = Status(resourceProvider.getString(R.string.face_valid_message))
             } else {
                 _statusLiveData.value =
                     Status(resourceProvider.getString(R.string.face_invalid, faceValidateResult.faceValidation.name))
+            }
+            cameraHandler.isProcessingImage = false
+        }
+    }
+
+    private fun estimateAge(imageData: ImageData, cameraHandler: MyCameraHandler) {
+        viewModelScope.launch {
+            cameraHandler.isProcessingImage = true
+            val ageEstimateResult = withContext(Dispatchers.IO) {
+                privateIdentity.estimateAge(imageData)
+            }
+            if (ageEstimateResult == null || ageEstimateResult.faces.isEmpty()) {
+                _statusLiveData.value =
+                    Status(resourceProvider.getString(R.string.estimate_failed))
+            } else {
+                _statusLiveData.value = Status(
+                    resourceProvider.getString(R.string.age_, ageEstimateResult.faces.first().age.toInt().toString())
+                )
             }
             cameraHandler.isProcessingImage = false
         }
@@ -161,7 +184,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             cameraHandler.isProcessingImage = true
             val faceValidateResult = withContext(Dispatchers.IO) {
-                privateIdentity.validateToEnroll(imageData)
+                privateIdentity.isValidToEnroll(imageData)
             }
             if (faceValidateResult.faceValidation == FaceValidation.ValidBiometric) {
                 enrollingImages.add(imageData)
@@ -203,15 +226,6 @@ class MainViewModel @Inject constructor(
             cameraHandler.isProcessingImage = false
         }
     }
-
-    private fun scanDLFrontside(imageData: ImageData, cameraHandler: MyCameraHandler) {
-        viewModelScope.launch {
-            cameraHandler.isProcessingImage = true
-            withContext(Dispatchers.IO) {
-            }
-            cameraHandler.isProcessingImage = false
-        }
-    }
 }
 
 enum class SampleType {
@@ -219,9 +233,11 @@ enum class SampleType {
     Enrolling,
     ContinuousPredict,
     Delete,
-    DL_FrontSide
+    DL_FrontSide,
+    DL_BackSide,
+    EstimateAge
 }
 
 data class Status(
-    val status1: String = "", val status2: String = "", val status3: String = "", val status4: String = "", val
-    status5: String = "")
+    var status1: String = "", var status2: String = "", var status3: String = "", var status4: String = "",
+    var status5: String = "")

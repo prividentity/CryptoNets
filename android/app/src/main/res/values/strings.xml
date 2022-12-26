@@ -22,4 +22,10 @@
     <string name="enrolled_guid_">Enrolled GUID: %1$s</string>
     <string name="enroll_success">Enroll success</string>
     <string name="enroll_failed">Enroll failed</string>
+
+    <string name="dl_invalid">Invalid document</string>
+    <string name="dl_valid_barcode">Valid barcode</string>
+    <string name="estimate_age">Estimate Age</string>
+    <string name="estimate_failed">Estimate failed or no face detected</string>
+    <string name="age_">Age %1$s</string>
 </resources>

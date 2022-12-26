@@ -2,9 +2,9 @@ package com.cryptonets.sample.di
 
 import android.content.Context
 import com.cryptonets.sample.utils.Constants
-import com.cryptonets.sample.utils.Utils
 import com.privateidentity.prividlib.PrivateIdentity
-import com.privateidentity.prividlib.config.PrivateIdentityConfig
+import com.privateidentity.prividlib.config.*
+import com.privateidentity.prividlib.config.ConfigObject.ConfigObjectBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,9 +22,11 @@ class PrivateIdModule {
     fun providePrivateIdentity(@ApplicationContext context: Context): PrivateIdentity {
         Timber.e("providePrivateIdentity")
         val config = PrivateIdentityConfig
-            .Builder(context, Constants.API_KEY)
+            .Builder(context, Constants.API_KEY, Constants.DEFAULT_SERVER_URL)
             .logEnabled(true)
             .build()
-        return PrivateIdentity(config)
+
+        val privateIdentity = PrivateIdentity(config)
+        return privateIdentity
     }
 }

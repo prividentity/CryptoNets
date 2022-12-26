@@ -170,15 +170,14 @@
                 android:textSize="12sp" />
 
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/btnScanDLBackSide"
+                android:id="@+id/btnEstimateAge"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:layout_weight="1"
-                android:text="@string/dl_backside"
+                android:text="@string/estimate_age"
                 android:textAllCaps="false"
-                android:textColor="@color/white"
-                android:visibility="invisible" />
+                android:textColor="@color/white" />
 
         </LinearLayout>
 
