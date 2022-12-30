@@ -73,6 +73,7 @@ const isLoad = (simd, url, key, module, debug_type = '0') =>
           wasmPrivModule.ccall('FHE_configure_url', 'int', [], [46, keyInputtPtr, key.length]);
           wasmPrivModule._free(keyInputtPtr);
         }
+        
         resolve('Loaded');
       } else {
         const wasm = await fetch(`../wasm/${module}/${modulePath}/${moduleName}.wasm`);

@@ -22,6 +22,7 @@ const usePredictOneFa = (
       callback,
       {
         input_image_format: "rgba",
+        send_original_images: true,
       },
       element,
       deviceId
