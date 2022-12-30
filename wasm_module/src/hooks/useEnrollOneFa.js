@@ -25,6 +25,8 @@ const useEnrollOneFa = (
       {
         input_image_format: "rgba",
         send_original_images: true,
+        original_image_width: 600,
+        original_image_height: 600,
       },
       element,
       deviceId

@@ -23,6 +23,8 @@ const usePredictOneFa = (
       {
         input_image_format: "rgba",
         send_original_images: true,
+        original_image_width: 500,
+        original_image_height: 500,
       },
       element,
       deviceId
