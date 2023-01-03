@@ -89,3 +89,19 @@ export const CANVAS_SIZE = {
 };
 
 export const mapDevices = devices => ({label: devices.label, value: devices.deviceId})
+
+export function getUrlParameter(sParam, defaultValue) {
+  const sPageURL = window.location.search.substring(1);
+  const sURLVariables = sPageURL.split('&');
+  let sParameterName;
+  let i;
+
+  for (i = 0; i < sURLVariables.length; i++) {
+    sParameterName = sURLVariables[i].split('=');
+
+    if (sParameterName[0] === sParam) {
+      return typeof sParameterName[1] === undefined ? defaultValue : decodeURIComponent(sParameterName[1]);
+    }
+  }
+  return defaultValue;
+};
