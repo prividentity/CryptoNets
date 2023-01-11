@@ -31,6 +31,7 @@ import {
 import "./styles.css";
 import usePredictAge from "../hooks/usePredictAge";
 import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocumentWithoutPredict";
+import usePrividFaceISO from "../hooks/usePrividFaceISO";
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
@@ -283,6 +284,13 @@ const Ready = () => {
     }
   };
 
+  const { doFaceISO, inputImage, faceISOImageData } = usePrividFaceISO();
+
+  const handlePrividFaceISO = () =>{
+    setCurrentAction("privid_face_iso")
+    doFaceISO();
+  }
+
   // console.log("API KEY: ", process.env.REACT_APP_API_KEY);
   return (
     <div id="canvasInput" className="container">
@@ -426,6 +434,21 @@ const Ready = () => {
               <div>{`Scan Document Result: ${isfoundValidity ? "Valid Front Document found" : "not found"}`}</div>
             </div>
           )}
+
+
+          {currentAction === "privid_face_iso" && (
+            <div style={{display:"flex", gap:"30px"}}>
+              <div>
+                <h2>Input Image:</h2>
+                 { inputImage&& <img style={{maxWidth:"400px"}} src={inputImage} /> }
+              </div>
+              <div>
+                <h2>Output Image:</h2>
+                 { faceISOImageData&& <img style={{maxWidth:"400px"}} src={faceISOImageData} /> }
+              </div>
+            </div>
+          )}
+
         </div>
 
         <div id="module_functions" className="buttonContainer">
@@ -455,6 +478,9 @@ const Ready = () => {
           </button>
           <button className="button" onClick={handleScanDocumentBack}>
             Scan Back Document
+          </button>
+          <button className="button" onClick={handlePrividFaceISO}>
+            Face ISO
           </button>
         </div>
       </div>
