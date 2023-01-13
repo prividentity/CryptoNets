@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   isValid,
   switchCamera,
-  setStopLoopContinuousEnrollPredict,
+  setStopLoopContinuousAuthentication,
 } from "@privateid/cryptonets-web-sdk-alpha";
 
 import {
@@ -157,9 +157,9 @@ const Ready = () => {
   // stop Continuous predict
   useEffect(() => {
     if (currentAction !== "useContinuousPredict") {
-      setStopLoopContinuousEnrollPredict(true);
+      setStopLoopContinuousAuthentication(true);
     } else {
-      setStopLoopContinuousEnrollPredict(false);
+      setStopLoopContinuousAuthentication(false);
     }
   }, [currentAction]);
 
@@ -466,7 +466,7 @@ const Ready = () => {
             Predict
           </button>
           <button className="button" onClick={handleContinuousPredict}>
-            Continuous Predict
+            Continuous Authentication
           </button>
           <button className="button" onClick={handleDelete}>
             Delete
