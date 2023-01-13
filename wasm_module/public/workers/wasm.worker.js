@@ -49,33 +49,12 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
 
         wasmPrivModule = await createTFLiteModule({ wasmBinary: cachedWasm });
         await wasmPrivModule._FHE_init(parseInt(debug_type, 10));
+        // Initialize API URL
+        await initializeAPIUrl(url)
+        // Initialize API Key
+        await initializeAPIKey(key)
 
-        {
-          const encoder = new TextEncoder();
-          const url_bytes = encoder.encode(`${url}0`);
-          url_bytes[url_bytes.length - 1] = 0;
-
-          const urlInputSize = url_bytes.length * url_bytes.BYTES_PER_ELEMENT;
-          const urlInputtPtr = wasmPrivModule._malloc(urlInputSize);
-          wasmPrivModule.HEAP8.set(url_bytes, urlInputtPtr / url_bytes.BYTES_PER_ELEMENT);
-          console.log('------->Before Wasm PrivModule ccall', url);
-          wasmPrivModule.ccall('FHE_configure_url', 'int', [], [42, urlInputtPtr, url ? url.length + 1 : 0]);
-          wasmPrivModule._free(urlInputtPtr);
-        }
-        {
-          const encoder = new TextEncoder();
-          const key_bytes = encoder.encode(`${key}0`);
-          key_bytes[key_bytes.length - 1] = 0;
-
-          const keyInputSize = key_bytes.length * key_bytes.BYTES_PER_ELEMENT;
-          const keyInputtPtr = wasmPrivModule._malloc(keyInputSize);
-          wasmPrivModule.HEAP8.set(key_bytes, keyInputtPtr / key_bytes.BYTES_PER_ELEMENT);
-
-          wasmPrivModule.ccall('FHE_configure_url', 'int', [], [46, keyInputtPtr, key.length]);
-          wasmPrivModule._free(keyInputtPtr);
-        }
-
-        resolve('Loaded');
+        resolve('Cache Loaded');
       } else {
         const wasm = await fetch(`../wasm/${module}/${modulePath}/${moduleName}.wasm`);
         const script = await fetch(`../wasm/${module}/${modulePath}/${moduleName}.js`);
@@ -90,17 +69,11 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
         const version = wasmPrivModule._get_version();
 
         await putKey(module, buffer, scriptBuffer, version);
+        // Initialize API URL
+        await initializeAPIUrl(url)
+        // Initialize API Key
+        await initializeAPIKey(key)
 
-        const encoder = new TextEncoder();
-        const url_bytes = encoder.encode(`${url}0`);
-        url_bytes[url_bytes.length - 1] = 0;
-
-        const urlInputSize = url_bytes.length * url_bytes.BYTES_PER_ELEMENT;
-        const urlInputtPtr = wasmPrivModule._malloc(urlInputSize);
-        wasmPrivModule.HEAP8.set(url_bytes, urlInputtPtr / url_bytes.BYTES_PER_ELEMENT);
-
-        wasmPrivModule.ccall('FHE_configure_url', 'int', [], [42, urlInputtPtr, url ? url.length + 1 : 0]);
-        wasmPrivModule._free(urlInputtPtr);
         resolve('Loaded');
       }
     } else {
@@ -827,6 +800,33 @@ async function initializeWasmSession() {
   }
   return wasmSession;
 }
+
+async function initializeAPIUrl(url) {
+  const encoder = new TextEncoder();
+  const url_bytes = encoder.encode(`${url}0`);
+  url_bytes[url_bytes.length - 1] = 0;
+
+  const urlInputSize = url_bytes.length * url_bytes.BYTES_PER_ELEMENT;
+  const urlInputtPtr = wasmPrivModule._malloc(urlInputSize);
+  wasmPrivModule.HEAP8.set(url_bytes, urlInputtPtr / url_bytes.BYTES_PER_ELEMENT);
+
+  wasmPrivModule.ccall('FHE_configure_url', 'int', [], [42, urlInputtPtr, url ? url.length + 1 : 0]);
+  wasmPrivModule._free(urlInputtPtr);
+}
+
+async function initializeAPIKey(key) {
+  const encoder = new TextEncoder();
+  const key_bytes = encoder.encode(`${key}0`);
+  key_bytes[key_bytes.length - 1] = 0;
+
+  const keyInputSize = key_bytes.length * key_bytes.BYTES_PER_ELEMENT;
+  const keyInputtPtr = wasmPrivModule._malloc(keyInputSize);
+  wasmPrivModule.HEAP8.set(key_bytes, keyInputtPtr / key_bytes.BYTES_PER_ELEMENT);
+
+  wasmPrivModule.ccall('FHE_configure_url', 'int', [], [46, keyInputtPtr, key.length]);
+  wasmPrivModule._free(keyInputtPtr);
+}
+
 
 const prividFaceISO = (imageInput, simd, debug_type = 0, cb, config = {}) =>
   new Promise(async (resolve) => {

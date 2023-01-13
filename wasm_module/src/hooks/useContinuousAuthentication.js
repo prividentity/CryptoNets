@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { continuousEnrollPredict } from "@privateid/cryptonets-web-sdk-alpha";
+import { continuousAuthentication } from "@privateid/cryptonets-web-sdk-alpha";
 
 const useContinuousPredict = (
   element,
@@ -17,9 +17,9 @@ const useContinuousPredict = (
     if (onSuccessCallback) {
       successCallback = onSuccessCallback;
     }
-    await continuousEnrollPredict(
-      false,
+    await continuousAuthentication(
       callback,
+      ()=>{},
       {
         input_image_format: "rgba",
       },
