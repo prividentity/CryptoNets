@@ -15,14 +15,15 @@ let configGlobal;
 let barCodePtr;
 let privid_wasm_result = null;
 let wasmSession = null;
+let setCache = true;
 
-const isLoad = (simd, url, key, module, debug_type = '0') =>
+const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
   new Promise(async (resolve, reject) => {
     apiUrl = url;
     apiKey = key;
     wasmModule = module;
     debugType = debug_type;
-
+    setCache = cacheConfig;
     if (module === 'voice') {
       importScripts('../wasm/voice/simd/privid_fhe.js');
 
@@ -48,33 +49,12 @@ const isLoad = (simd, url, key, module, debug_type = '0') =>
 
         wasmPrivModule = await createTFLiteModule({ wasmBinary: cachedWasm });
         await wasmPrivModule._FHE_init(parseInt(debug_type, 10));
+        // Initialize API URL
+        await initializeAPIUrl(url)
+        // Initialize API Key
+        await initializeAPIKey(key)
 
-        {
-          const encoder = new TextEncoder();
-          const url_bytes = encoder.encode(`${url}0`);
-          url_bytes[url_bytes.length - 1] = 0;
-
-          const urlInputSize = url_bytes.length * url_bytes.BYTES_PER_ELEMENT;
-          const urlInputtPtr = wasmPrivModule._malloc(urlInputSize);
-          wasmPrivModule.HEAP8.set(url_bytes, urlInputtPtr / url_bytes.BYTES_PER_ELEMENT);
-          console.log('------->Before Wasm PrivModule ccall', url);
-          wasmPrivModule.ccall('FHE_configure_url', 'int', [], [42, urlInputtPtr, url ? url.length + 1 : 0]);
-          wasmPrivModule._free(urlInputtPtr);
-        }
-        {
-          const encoder = new TextEncoder();
-          const key_bytes = encoder.encode(`${key}0`);
-          key_bytes[key_bytes.length - 1] = 0;
-
-          const keyInputSize = key_bytes.length * key_bytes.BYTES_PER_ELEMENT;
-          const keyInputtPtr = wasmPrivModule._malloc(keyInputSize);
-          wasmPrivModule.HEAP8.set(key_bytes, keyInputtPtr / key_bytes.BYTES_PER_ELEMENT);
-
-          wasmPrivModule.ccall('FHE_configure_url', 'int', [], [46, keyInputtPtr, key.length]);
-          wasmPrivModule._free(keyInputtPtr);
-        }
-        
-        resolve('Loaded');
+        resolve('Cache Loaded');
       } else {
         const wasm = await fetch(`../wasm/${module}/${modulePath}/${moduleName}.wasm`);
         const script = await fetch(`../wasm/${module}/${modulePath}/${moduleName}.js`);
@@ -89,17 +69,11 @@ const isLoad = (simd, url, key, module, debug_type = '0') =>
         const version = wasmPrivModule._get_version();
 
         await putKey(module, buffer, scriptBuffer, version);
+        // Initialize API URL
+        await initializeAPIUrl(url)
+        // Initialize API Key
+        await initializeAPIKey(key)
 
-        const encoder = new TextEncoder();
-        const url_bytes = encoder.encode(`${url}0`);
-        url_bytes[url_bytes.length - 1] = 0;
-
-        const urlInputSize = url_bytes.length * url_bytes.BYTES_PER_ELEMENT;
-        const urlInputtPtr = wasmPrivModule._malloc(urlInputSize);
-        wasmPrivModule.HEAP8.set(url_bytes, urlInputtPtr / url_bytes.BYTES_PER_ELEMENT);
-
-        wasmPrivModule.ccall('FHE_configure_url', 'int', [], [42, urlInputtPtr, url ? url.length + 1 : 0]);
-        wasmPrivModule._free(urlInputtPtr);
         resolve('Loaded');
       }
     } else {
@@ -117,23 +91,24 @@ function flatten(arrays, TypedArray) {
   return arr;
 }
 
-function deleteUUID(uuid, cb) {
+async function deleteUUID(uuid, cb) {
   privid_wasm_result = cb;
   const encoder = new TextEncoder();
   const uuid_bytes = encoder.encode(`${uuid}\0`);
 
   // Initialize Session
-  if (!wasmSession) {
-    const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-    if (s_result) {
-      console.log('[FAR_DEBUG] : session initialized successfully');
-    } else {
-      console.log('[FAR_DEBUG] : session initialized failed');
-    }
-    const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
-    wasmSession = sessionSecPtr;
-  }
+  await initializeWasmSession();
+  // if (!wasmSession) {
+  //   const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+  //   const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
+  //   if (s_result) {
+  //     console.log('[FAR_DEBUG] : session initialized successfully');
+  //   } else {
+  //     console.log('[FAR_DEBUG] : session initialized failed');
+  //   }
+  //   const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
+  //   wasmSession = sessionSecPtr;
+  // }
 
   const uuidInputSize = uuid.length;
   const uuidInputPtr = wasmPrivModule._malloc(uuidInputSize);
@@ -183,17 +158,18 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
     wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
 
     // Initialize Session
-    if (!wasmSession) {
-      const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-      const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-      if (s_result) {
-        console.log('[FAR_DEBUG] : session initialized successfully');
-      } else {
-        console.log('[FAR_DEBUG] : session initialized failed');
-      }
-      const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
-      wasmSession = sessionSecPtr;
-    }
+    await initializeWasmSession();
+    // if (!wasmSession) {
+    //   const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    //   const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
+    //   if (s_result) {
+    //     console.log('[FAR_DEBUG] : session initialized successfully');
+    //   } else {
+    //     console.log('[FAR_DEBUG] : session initialized failed');
+    //   }
+    //   const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
+    //   wasmSession = sessionSecPtr;
+    // }
 
     let result = null;
     try {
@@ -247,8 +223,8 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) =>
     barCodePtr = null;
     wasmPrivModule._free(configInputPtr);
 
-    const croppedDocument = croppedDocumentBufferSize > 0? croppedDocumentData : null;
-    const croppedBarcode = croppedBarcodeBufferSize > 0? croppedBarcodeData: null;
+    const croppedDocument = croppedDocumentBufferSize > 0 ? croppedDocumentData : null;
+    const croppedBarcode = croppedBarcodeBufferSize > 0 ? croppedBarcodeData : null;
 
     resolve({ result, croppedDocument, croppedBarcode });
   });
@@ -302,17 +278,18 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
     console.log('-----------------GOING TO WASM---------------');
 
     // Initialize Session
-    if (!wasmSession) {
-      const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-      const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-      if (s_result) {
-        console.log('[FAR_DEBUG] : session initialized successfully');
-      } else {
-        console.log('[FAR_DEBUG] : session initialized failed');
-      }
-      const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
-      wasmSession = sessionSecPtr;
-    }
+    await initializeWasmSession();
+    // if (!wasmSession) {
+    //   const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    //   const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
+    //   if (s_result) {
+    //     console.log('[FAR_DEBUG] : session initialized successfully');
+    //   } else {
+    //     console.log('[FAR_DEBUG] : session initialized failed');
+    //   }
+    //   const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
+    //   wasmSession = sessionSecPtr;
+    // }
 
     let result = null;
     try {
@@ -417,17 +394,18 @@ const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) 
     console.log('wasmPrivModule', wasmPrivModule);
 
     // Initialize Session
-    if (!wasmSession) {
-      const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-      const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-      if (s_result) {
-        console.log('[FAR_DEBUG] : session initialized successfully');
-      } else {
-        console.log('[FAR_DEBUG] : session initialized failed');
-      }
-      const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
-      wasmSession = sessionSecPtr;
-    }
+    await initializeWasmSession();
+    // if (!wasmSession) {
+    //   const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    //   const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
+    //   if (s_result) {
+    //     console.log('[FAR_DEBUG] : session initialized successfully');
+    //   } else {
+    //     console.log('[FAR_DEBUG] : session initialized failed');
+    //   }
+    //   const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
+    //   wasmSession = sessionSecPtr;
+    // }
 
     try {
       result = await wasmPrivModule._privid_enroll_onefa(
@@ -525,17 +503,20 @@ const FHE_predictOnefa = (originalImages, simd, debug_type = 0, cb, config = {})
     let result = null;
 
     // Initialize Session
-    if (!wasmSession) {
-      const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-      const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-      if (s_result) {
-        console.log('[FAR_DEBUG] : session initialized successfully');
-      } else {
-        console.log('[FAR_DEBUG] : session initialized failed');
-      }
-      const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
-      wasmSession = sessionSecPtr;
-    }
+    await initializeWasmSession();
+    // if (!wasmSession) {
+    //   const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    //   const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
+    //
+    //   if (s_result) {
+    //     console.log('[FAR_DEBUG] : session initialized successfully');
+    //   } else {
+    //     console.log('[FAR_DEBUG] : session initialized failed');
+    //   }
+    //
+    //   const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
+    //   wasmSession = sessionSecPtr;
+    // }
 
     try {
       result = await wasmPrivModule._privid_face_predict_onefa(
@@ -784,6 +765,146 @@ function putKey(key, cachedWasm, cachedScript, version) {
   });
 }
 
+async function setCacheConfiguration() {
+  console.log('initializing setCacheConfiguration');
+  const cacheObj = JSON.stringify({ cache_type: 'basic' });
+  const encoder = new TextEncoder();
+  const cache_config_bytes = encoder.encode(`${cacheObj}\0`);
+
+  const cacheInputSize = cacheObj.length;
+  const cacheInputPtr = wasmPrivModule._malloc(cacheInputSize);
+
+  wasmPrivModule.HEAP8.set(cache_config_bytes, cacheInputPtr / cache_config_bytes.BYTES_PER_ELEMENT);
+  await wasmPrivModule._privid_set_configuration(wasmSession, cacheInputPtr, cacheInputSize);
+
+  wasmPrivModule._free(cacheInputPtr);
+}
+
+async function initializeWasmSession() {
+  console.log('initializing wasm session');
+  if (!wasmSession) {
+    const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
+
+    if (s_result) {
+      console.log('[FAR_DEBUG] : session initialized successfully');
+    } else {
+      console.log('[FAR_DEBUG] : session initialized failed');
+    }
+
+    const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
+    wasmSession = sessionSecPtr;
+    if (setCache) {
+      await setCacheConfiguration();
+    }
+  }
+  return wasmSession;
+}
+
+async function initializeAPIUrl(url) {
+  const encoder = new TextEncoder();
+  const url_bytes = encoder.encode(`${url}0`);
+  url_bytes[url_bytes.length - 1] = 0;
+
+  const urlInputSize = url_bytes.length * url_bytes.BYTES_PER_ELEMENT;
+  const urlInputtPtr = wasmPrivModule._malloc(urlInputSize);
+  wasmPrivModule.HEAP8.set(url_bytes, urlInputtPtr / url_bytes.BYTES_PER_ELEMENT);
+
+  wasmPrivModule.ccall('FHE_configure_url', 'int', [], [42, urlInputtPtr, url ? url.length + 1 : 0]);
+  wasmPrivModule._free(urlInputtPtr);
+}
+
+async function initializeAPIKey(key) {
+  const encoder = new TextEncoder();
+  const key_bytes = encoder.encode(`${key}0`);
+  key_bytes[key_bytes.length - 1] = 0;
+
+  const keyInputSize = key_bytes.length * key_bytes.BYTES_PER_ELEMENT;
+  const keyInputtPtr = wasmPrivModule._malloc(keyInputSize);
+  wasmPrivModule.HEAP8.set(key_bytes, keyInputtPtr / key_bytes.BYTES_PER_ELEMENT);
+
+  wasmPrivModule.ccall('FHE_configure_url', 'int', [], [46, keyInputtPtr, key.length]);
+  wasmPrivModule._free(keyInputtPtr);
+}
+
+
+const prividFaceISO = (imageInput, simd, debug_type = 0, cb, config = {}) =>
+  new Promise(async (resolve) => {
+    privid_wasm_result = cb;
+    if (!wasmPrivModule) {
+      console.log('loaded for first wsm wrkr', simd, action);
+      await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
+    }
+
+    const { data: imageData } = imageInput;
+
+    const imageInputSize = imageData.length * imageData.BYTES_PER_ELEMENT;
+    const version = wasmPrivModule._get_version();
+    console.log('Version = ', version);
+
+    const encoder = new TextEncoder();
+    const config_bytes = encoder.encode(`${config}\0`);
+    console.log("CONFIG STRING:", config);
+    const configInputSize = config.length;
+    const configInputPtr = wasmPrivModule._malloc(configInputSize);
+    wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
+    // console.log('=====> config bytes FACE_ISO', config_bytes);
+    const imageInputPtr = wasmPrivModule._malloc(imageInputSize);
+
+    wasmPrivModule.HEAP8.set(imageInput, imageInputPtr / imageInput.BYTES_PER_ELEMENT);
+
+    const BufferSize = wasmPrivModule._spl_image_embedding_length();
+    // // outupt  ptr
+    const outputBufferSize = BufferSize * 4 * 80;
+    const outputBufferPtr = wasmPrivModule._malloc(outputBufferSize);
+
+    // const augmBufferSize = 224 * 224 * 4 * 100;
+    // const augmBufferPtr = wasmPrivModule._malloc(augmBufferSize);
+
+    const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // create a pointer to interger to hold the length of the output buffer
+    const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+
+    // Initialize Session
+    await initializeWasmSession();
+
+    let result = null;
+    try {
+      result = wasmPrivModule._privid_face_iso(
+        wasmSession,
+        imageInputPtr,
+        imageInput.width /* width of one image */,
+        imageInput.height /* height of one image */,
+        configInputPtr,
+        configInputSize,
+        resultFirstPtr,
+        resultLenPtr,
+        outputBufferPtr,
+        outputBufferSize,
+      );
+    } catch (e) {
+      console.log('________ priv_face_iso _______', e);
+    }
+
+    const [imageOutputBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferSize, 1);
+    const [imageOutputBufferSizeSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outputBufferPtr, 1);
+    const imageOutputBufferPtr = new Uint8Array(
+      wasmPrivModule.HEAPU8.buffer,
+      imageOutputBufferSizeSecPtr,
+      imageOutputBufferSize,
+    );
+    const imageOutputBuffer = Uint8ClampedArray.from(imageOutputBufferPtr);
+
+    wasmPrivModule._free(imageInputPtr);
+    wasmPrivModule._free(configInputPtr);
+    wasmPrivModule._free(resultFirstPtr);
+    wasmPrivModule._free(outputBufferPtr);
+
+    const imageOutput = imageOutputBufferSize > 0 ? imageOutputBuffer : null;
+
+    resolve({ result, imageOutput });
+  });
+
 Comlink.expose({
   FHE_enrollOnefa,
   FHE_predictOnefa,
@@ -795,4 +916,5 @@ Comlink.expose({
   isValidBarCode,
   deleteUUID,
   configureBlur,
+  prividFaceISO,
 });

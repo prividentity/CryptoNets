@@ -24,10 +24,13 @@ const useScanBackDocument = (onSuccess) => {
   const [croppedBarcodeHeight, setCroppedBarcodeHeight] = useState(null);
   const [croppedBarcodeImage, setCroppedBarcodeImage] = useState(null);
 
+  const [barcodeStatusCode, setBarcodeStatusCode] = useState(null);
+
   const documentCallback = (result) => {
     console.log("--------- Back scan callback result:", result);
     console.log("--------- returnedValue:", result.returnValue);
     if (result.status === "WASM_RESPONSE") {
+      setBarcodeStatusCode(result.returnValue.op_status);
       if (result.returnValue.op_status === 0) {
         const {
           firstName,
@@ -130,7 +133,7 @@ const useScanBackDocument = (onSuccess) => {
     onSuccess({ result, croppedBarcode, croppedDocument, imageData });
   };
 
-  return { scanBackDocument, scannedCodeData, scanResult, isFound, croppedDocumentImage, croppedBarcodeImage };
+  return { scanBackDocument, scannedCodeData, scanResult, isFound, croppedDocumentImage, croppedBarcodeImage, barcodeStatusCode };
 };
 
 export default useScanBackDocument;

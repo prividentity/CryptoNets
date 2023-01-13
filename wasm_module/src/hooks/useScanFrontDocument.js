@@ -28,8 +28,12 @@ const useScanFrontDocument = (onSuccess) => {
   const [croppedMugshotHeight, setCroppedMugshotHeight] = useState(null);
   const [croppedMugshotImage, setCroppedMugshotImage] = useState(null);
 
+  // confidence value
+  const [confidenceValue, setConfidenceValue] = useState(null);
+
   const documentCallback = (result) => {
     console.log("Front scan callback result:", result);
+    setConfidenceValue(result.returnValue.conf_level.toString());
     if (result.returnValue.predict_status === 0 && result.returnValue.op_status === 0) {
       const { predict_status, uuid, guid, cropped_face_height, cropped_face_width, cropped_doc_width, cropped_doc_height } =
         result.returnValue;
@@ -107,7 +111,10 @@ const useScanFrontDocument = (onSuccess) => {
       documentCallback,
       true,
       undefined,
-      undefined,
+      {
+        input_image_format: "rgba",
+        blur_threshold_doc: 55.0
+      },
       canvasObj
     );
     setInputImageData(imageData);
@@ -128,6 +135,7 @@ const useScanFrontDocument = (onSuccess) => {
     inputImage,
     croppedDocumentImage,
     croppedMugshotImage,
+    confidenceValue,
   };
 };
 
