@@ -245,7 +245,7 @@ const Ready = () => {
 
   // Scan Front DL without predict
 
-  const { isFound: isfoundValidity, scanFrontDocument: scanFrontValidity } = useScanFrontDocumentWithoutPredict();
+  const { isFound: isfoundValidity, scanFrontDocument: scanFrontValidity, confidenceValue } = useScanFrontDocumentWithoutPredict();
 
   const handleFrontDLValidity = async () => {
     setCurrentAction("useScanDocumentFrontValidity");
@@ -415,6 +415,7 @@ const Ready = () => {
 
           {currentAction === "useScanDocumentFront" && (
             <div>
+              <h2> {`Confidence Value: ${confidenceValue}`}</h2>
               <div>{`Scan Document Result: ${resultStatus === 0 ? "success" : "not found"}`}</div>
               <div>{`Has found valid document: ${isFound}`}</div>
               <div>{`Document GUID: ${documentGUID}`} </div>
