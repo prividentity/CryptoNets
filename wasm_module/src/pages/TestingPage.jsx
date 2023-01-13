@@ -284,7 +284,7 @@ const Ready = () => {
     }
   };
 
-  const { doFaceISO, inputImage, faceISOImageData } = usePrividFaceISO();
+  const { doFaceISO, inputImage, faceISOImageData, faceISOStatus } = usePrividFaceISO();
 
   const handlePrividFaceISO = () =>{
     setCurrentAction("privid_face_iso")
@@ -437,7 +437,8 @@ const Ready = () => {
 
 
           {currentAction === "privid_face_iso" && (
-            <div style={{display:"flex", gap:"30px", flexWrap:"wrap"}}>
+            <div style={{display:"flex", gap:"30px", flexWrap:"wrap", flexDirection:"column"}}>
+              <div> FACE ISO STATUS: {faceISOStatus} </div>
               <div>
                 <h2>Input Image:</h2>
                  { inputImage&& <img style={{maxWidth:"400px"}} src={inputImage} /> }
