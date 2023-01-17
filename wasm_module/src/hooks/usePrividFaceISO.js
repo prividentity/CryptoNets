@@ -13,19 +13,26 @@ const usePrividFaceISO = () => {
   const faceISOCallback = (response) => {
     console.log("==========> FACE_ISO_RESPONSE", response);
     // {"status":0,"iso_image_width":360,"iso_image_height":480,"iso_image_channels":3,"confidence":0.9739335775375366}
-    setFaceISOStatus(response.returnValue.status);
-    if (response.returnValue.status === 0) {
-      setFaceISOHeight(response.returnValue.iso_image_height);
-      setFaceISOWidth(response.returnValue.iso_image_width);
-      setInputImage(response.portrait);
-      setIsSuccess(true);
-    } else {
-      setFaceISOHeight(null);
-      setFaceISOWidth(null);
-      setFaceISOData(null);
-      setIsSuccess(false);
-      setInputImage(null);
-      doFaceISO();
+    try{
+      setFaceISOStatus(response.returnValue.status);
+    }
+    catch (e){
+      setFaceISOStatus(null);
+    }
+    if(response.returnValue){
+      if (response.returnValue.status === 0) {
+        setFaceISOHeight(response.returnValue.iso_image_height);
+        setFaceISOWidth(response.returnValue.iso_image_width);
+        setInputImage(response.portrait);
+        setIsSuccess(true);
+      } else {
+        setFaceISOHeight(null);
+        setFaceISOWidth(null);
+        setFaceISOData(null);
+        setIsSuccess(false);
+        setInputImage(null);
+        doFaceISO();
+      }
     }
   };
 
