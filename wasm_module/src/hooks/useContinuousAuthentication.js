@@ -19,7 +19,6 @@ const useContinuousPredict = (
     }
     await continuousAuthentication(
       callback,
-      ()=>{},
       {
         input_image_format: "rgba",
       },
@@ -33,6 +32,7 @@ const useContinuousPredict = (
   // };
 
   const callback = async (result) => {
+    console.log("CONTINUOUS AUTH CALLBACK", result);
     switch (result.status) {
       case "VALID_FACE":
         setFaceDetected(true);
