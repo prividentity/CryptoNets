@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { useState } from "react";
 import { openCamera } from "@privateid/cryptonets-web-sdk-alpha";
-import {mapDevices} from '../utils';
+import { mapDevices } from "../utils";
 
 const useCamera = (element = "userVideo", resolution = null) => {
   // Initialize the state
@@ -24,6 +24,7 @@ const useCamera = (element = "userVideo", resolution = null) => {
       } = await openCamera(element, false, null, "front", resolution);
       setCameraFeatures({ settings, capabilities });
       setFaceMode(faceMode);
+      console.log({ devices, faceMode, settings, status, stream, errorMessage, capabilities });
       console.log("hasError??", { status, errorMessage });
       if (devices.length > 0) {
         const options = devices.map(mapDevices);
@@ -44,9 +45,7 @@ const useCamera = (element = "userVideo", resolution = null) => {
           await track.applyConstraints({
             advanced: [
               {
-                focusMode: capabilities.focusMode.includes("continuous")
-                  ? "continuous"
-                  : "manual",
+                focusMode: capabilities.focusMode.includes("continuous") ? "continuous" : "manual",
                 focusDistance: 100,
               },
             ],

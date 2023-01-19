@@ -201,7 +201,7 @@ const Ready = () => {
     if (canvasSize) {
       await scanFrontDocument(canvasSize);
     } else {
-      await scanFrontDocument(canvasSizeOptions[1].value, () => {});
+      await scanFrontDocument(canvasSizeOptions[3].value, () => {});
       await scanFrontDocument(initialCanvasSize);
     }
   };
@@ -245,7 +245,11 @@ const Ready = () => {
 
   // Scan Front DL without predict
 
-  const { isFound: isfoundValidity, scanFrontDocument: scanFrontValidity, confidenceValue } = useScanFrontDocumentWithoutPredict();
+  const {
+    isFound: isfoundValidity,
+    scanFrontDocument: scanFrontValidity,
+    confidenceValue,
+  } = useScanFrontDocumentWithoutPredict();
 
   const handleFrontDLValidity = async () => {
     setCurrentAction("useScanDocumentFrontValidity");
@@ -317,7 +321,7 @@ const Ready = () => {
                 display: "flex",
                 justifyContent: "center",
                 gap: "20px",
-                padding: "10px"
+                padding: "10px",
               }}
             >
               <button onClick={handleReopenCamera}> Open Camera</button>
