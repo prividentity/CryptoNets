@@ -3,6 +3,7 @@ import { useState } from "react";
 import { openCamera } from "@privateid/cryptonets-web-sdk";
 import { mapDevices } from "../utils";
 
+
 const useCamera = (element = "userVideo", resolution = null) => {
   // Initialize the state
   const [ready, setReady] = useState(false);
