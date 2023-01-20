@@ -24,6 +24,7 @@ import {
   isAndroid,
   isBackCamera,
   isIOS,
+  isMobile,
   mapDevices,
   osVersion,
   WIDTH_TO_STANDARDS,
@@ -201,7 +202,9 @@ const Ready = () => {
     if (canvasSize) {
       await scanFrontDocument(canvasSize);
     } else {
-      await scanFrontDocument(canvasSizeOptions[3].value, () => {});
+      if (!isMobile) {
+        await scanFrontDocument(canvasSizeOptions[3].value, () => {});
+      }
       await scanFrontDocument(initialCanvasSize);
     }
   };
