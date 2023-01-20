@@ -18,13 +18,13 @@ const usePredictAge = () => {
       for(let index = 0 ; faces.length > index; index++){
         const { status, age } = faces[index];
 
-        if(status === 0){
+        if(age > 0){
           setAge(age);
           setPredictAgeHasFinished(true);
           index = faces.length
         }
 
-        if(index+1 === faces.length){
+        if(index+1 === faces.length && age <= 0){
           setAge(null);
           setPredictAgeHasFinished(true);
         }
