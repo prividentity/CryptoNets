@@ -71,7 +71,6 @@ export const WIDTH_TO_STANDARDS = {
   1600: "UXGA",
   1920: "FHD",
   2560: "2K",
-  // 3648: "3K",
   4096: "4K",
   4032: "4K",
   5120: "5K",
@@ -91,11 +90,6 @@ const WEB_CANVAS_SIZE = {
 };
 
 const MOBILE_CANVAS_SIZE = {
-  "10K": { width: 10240, height: 4320 },
-  "8K": { width: 7680, height: 4320 },
-  "5K": { width: 5120, height: 2880 },
-  "4K": { width: 4032, height: 3024 },
-  // "3K": {width: 3648, height: 2736},
   "2K": { width: 2560, height: 1440 },
   FHD: { width: 1920, height: 1080 },
   UXGA: { width: 1600, height: 1200 },
