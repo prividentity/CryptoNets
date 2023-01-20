@@ -26,9 +26,9 @@ import {
   isIOS,
   isMobile,
   mapDevices,
-  osVersion,
+  osVersion, setMax2KForMobile,
   WIDTH_TO_STANDARDS,
-} from "../utils";
+} from '../utils';
 
 import "./styles.css";
 import usePredictAge from "../hooks/usePredictAge";
@@ -49,7 +49,7 @@ const Ready = () => {
   const canvasSizeList = useMemo(() => {
     let canvasList = [...canvasSizeOptions];
     const maxHeight = deviceCapabilities?.height?.max || capabilities?.height?.max;
-    let label = WIDTH_TO_STANDARDS[deviceCapabilities?.width?.max || capabilities?.width?.max];
+    let label = WIDTH_TO_STANDARDS[setMax2KForMobile(deviceCapabilities?.width?.max || capabilities?.width?.max)];
     const sliceIndex = canvasList.findIndex((option) => option.value === label);
     const slicedArr = canvasList.slice(sliceIndex);
     if (label === "FHD" && maxHeight === 1440) {

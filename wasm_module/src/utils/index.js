@@ -114,3 +114,8 @@ export function getUrlParameter(sParam, defaultValue) {
   }
   return defaultValue;
 };
+
+export const setMax2KForMobile = (width) => {
+  if(!isMobile) return width;
+  return Math.min(width, 2560);
+}
