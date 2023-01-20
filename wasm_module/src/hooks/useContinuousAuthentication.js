@@ -47,6 +47,7 @@ const useContinuousPredict = (
         break;
       case "WASM_RESPONSE":
       case -1:
+      case -100:
         if (result.returnValue.status === 0) {
           // stopTracks();
           if (successCallback) {
@@ -59,7 +60,7 @@ const useContinuousPredict = (
           }
           successCallback = null;
         }
-        if (result.returnValue.status === -1) {
+        if (result.returnValue.status !== 0) {
           if (tries === retryTimes) {
             // stopTracks();
             onFailure();

@@ -271,25 +271,10 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
     const croppedMugshotBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     const croppedMugshotBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
-    // const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    // // create a pointer to intechromger to hold the length of the output buffer
-    // const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-
     console.log('-----------------GOING TO WASM---------------');
 
     // Initialize Session
     await initializeWasmSession();
-    // if (!wasmSession) {
-    //   const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    //   const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-    //   if (s_result) {
-    //     console.log('[FAR_DEBUG] : session initialized successfully');
-    //   } else {
-    //     console.log('[FAR_DEBUG] : session initialized failed');
-    //   }
-    //   const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
-    //   wasmSession = sessionSecPtr;
-    // }
 
     let result = null;
     try {
@@ -504,19 +489,6 @@ const FHE_predictOnefa = (originalImages, simd, debug_type = 0, cb, config = {})
 
     // Initialize Session
     await initializeWasmSession();
-    // if (!wasmSession) {
-    //   const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    //   const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-    //
-    //   if (s_result) {
-    //     console.log('[FAR_DEBUG] : session initialized successfully');
-    //   } else {
-    //     console.log('[FAR_DEBUG] : session initialized failed');
-    //   }
-    //
-    //   const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
-    //   wasmSession = sessionSecPtr;
-    // }
 
     try {
       result = await wasmPrivModule._privid_face_predict_onefa(
@@ -913,8 +885,6 @@ const prividFaceISO = (imageInput, simd, debug_type = 0, cb, config = {}) =>
     const outputBufferSize = BufferSize * 4 * 80;
     const outputBufferPtr = wasmPrivModule._malloc(outputBufferSize);
 
-    // const augmBufferSize = 224 * 224 * 4 * 100;
-    // const augmBufferPtr = wasmPrivModule._malloc(augmBufferSize);
 
     const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     // create a pointer to interger to hold the length of the output buffer
