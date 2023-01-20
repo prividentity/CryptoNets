@@ -6,18 +6,25 @@ const useIsValid = (element = 'userVideo', deviceId = null) => {
   const [hasFinished, setHasFinished] = useState(false);
   const isValidCall = async () => {
       // eslint-disable-next-line no-unused-vars
-      await isValid(false, callback);
+     const result = await isValid(callback);
+
+     console.log("NEW IS VALID RETURNED DATA:", result);
   };
 
   const callback = async (result) => {
     console.log("callback hook result isValid:", result)
     switch (result.status) {
       case 'WASM_RESPONSE':
-        if (result.result === 0) {
-          setFaceDetected(true);
-        }
-        if (result.result === -1) {
+        if(result.returnValue.faces.length === 0){
           setFaceDetected(false)
+        }
+        else{
+          if (result.returnValue.faces[0].status === 0) {
+            setFaceDetected(true);
+          }
+          if (result.returnValue.faces[0].status === -1) {
+            setFaceDetected(false)
+          }
         }
         setHasFinished(true);
         break;

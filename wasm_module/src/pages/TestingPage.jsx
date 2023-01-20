@@ -24,10 +24,11 @@ import {
   isAndroid,
   isBackCamera,
   isIOS,
+  isMobile,
   mapDevices,
-  osVersion,
+  osVersion, setMax2KForMobile,
   WIDTH_TO_STANDARDS,
-} from "../utils";
+} from '../utils';
 
 import "./styles.css";
 import usePredictAge from "../hooks/usePredictAge";
@@ -48,7 +49,7 @@ const Ready = () => {
   const canvasSizeList = useMemo(() => {
     let canvasList = [...canvasSizeOptions];
     const maxHeight = deviceCapabilities?.height?.max || capabilities?.height?.max;
-    let label = WIDTH_TO_STANDARDS[deviceCapabilities?.width?.max || capabilities?.width?.max];
+    let label = WIDTH_TO_STANDARDS[setMax2KForMobile(deviceCapabilities?.width?.max || capabilities?.width?.max)];
     const sliceIndex = canvasList.findIndex((option) => option.value === label);
     const slicedArr = canvasList.slice(sliceIndex);
     if (label === "FHD" && maxHeight === 1440) {
@@ -201,7 +202,9 @@ const Ready = () => {
     if (canvasSize) {
       await scanFrontDocument(canvasSize);
     } else {
-      await scanFrontDocument(canvasSizeOptions[1].value, () => {});
+      if (!isMobile) {
+        await scanFrontDocument(canvasSizeOptions[3].value, () => {});
+      }
       await scanFrontDocument(initialCanvasSize);
     }
   };
@@ -245,7 +248,11 @@ const Ready = () => {
 
   // Scan Front DL without predict
 
-  const { isFound: isfoundValidity, scanFrontDocument: scanFrontValidity, confidenceValue } = useScanFrontDocumentWithoutPredict();
+  const {
+    isFound: isfoundValidity,
+    scanFrontDocument: scanFrontValidity,
+    confidenceValue,
+  } = useScanFrontDocumentWithoutPredict();
 
   const handleFrontDLValidity = async () => {
     setCurrentAction("useScanDocumentFrontValidity");
@@ -276,7 +283,7 @@ const Ready = () => {
     }
   };
 
-  const { doFaceISO, inputImage, faceISOImageData, faceISOStatus } = usePrividFaceISO();
+  const { doFaceISO, inputImage, faceISOImageData, faceISOStatus, faceISOError } = usePrividFaceISO();
 
   const handlePrividFaceISO = () => {
     setCurrentAction("privid_face_iso");
@@ -317,7 +324,7 @@ const Ready = () => {
                 display: "flex",
                 justifyContent: "center",
                 gap: "20px",
-                padding: "10px"
+                padding: "10px",
               }}
             >
               <button onClick={handleReopenCamera}> Open Camera</button>
@@ -448,6 +455,7 @@ const Ready = () => {
           {currentAction === "privid_face_iso" && (
             <div style={{ display: "flex", gap: "30px", flexWrap: "wrap", flexDirection: "column" }}>
               <div> FACE ISO STATUS: {faceISOStatus} </div>
+              <div> FACE ISO Error: {faceISOError} </div>
               <div>
                 <h2>Input Image:</h2>
                 {inputImage && <img style={{ maxWidth: "400px" }} src={inputImage} />}

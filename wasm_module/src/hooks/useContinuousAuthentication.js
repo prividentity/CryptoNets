@@ -19,7 +19,6 @@ const useContinuousPredict = (
     }
     await continuousAuthentication(
       callback,
-      ()=>{},
       {
         input_image_format: "rgba",
       },
@@ -33,6 +32,7 @@ const useContinuousPredict = (
   // };
 
   const callback = async (result) => {
+    console.log("CONTINUOUS AUTH CALLBACK", result);
     switch (result.status) {
       case "VALID_FACE":
         setFaceDetected(true);
@@ -47,6 +47,7 @@ const useContinuousPredict = (
         break;
       case "WASM_RESPONSE":
       case -1:
+      case -100:
         if (result.returnValue.status === 0) {
           // stopTracks();
           if (successCallback) {
@@ -59,7 +60,7 @@ const useContinuousPredict = (
           }
           successCallback = null;
         }
-        if (result.returnValue.status === -1) {
+        if (result.returnValue.status !== 0) {
           if (tries === retryTimes) {
             // stopTracks();
             onFailure();

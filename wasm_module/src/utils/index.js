@@ -72,12 +72,13 @@ export const WIDTH_TO_STANDARDS = {
   1920: "FHD",
   2560: "2K",
   4096: "4K",
+  4032: "4K",
   5120: "5K",
   7680: "8K",
   10240: "10K",
 };
 
-export const CANVAS_SIZE = {
+const WEB_CANVAS_SIZE = {
   "10K": { width: 10240, height: 4320 },
   "8K": { width: 7680, height: 4320 },
   "5K": { width: 5120, height: 2880 },
@@ -87,6 +88,14 @@ export const CANVAS_SIZE = {
   iPhoneCC: { width: 1920, height: 1440 },
   UXGA: { width: 1600, height: 1200 },
 };
+
+const MOBILE_CANVAS_SIZE = {
+  "2K": { width: 2560, height: 1440 },
+  FHD: { width: 1920, height: 1080 },
+  UXGA: { width: 1600, height: 1200 },
+};
+
+export const CANVAS_SIZE = isMobile ? MOBILE_CANVAS_SIZE : WEB_CANVAS_SIZE
 
 export const mapDevices = devices => ({label: devices.label, value: devices.deviceId})
 
@@ -105,3 +114,8 @@ export function getUrlParameter(sParam, defaultValue) {
   }
   return defaultValue;
 };
+
+export const setMax2KForMobile = (width) => {
+  if(!isMobile) return width;
+  return Math.min(width, 2560);
+}

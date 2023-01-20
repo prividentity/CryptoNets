@@ -271,25 +271,10 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
     const croppedMugshotBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     const croppedMugshotBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
-    // const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    // // create a pointer to intechromger to hold the length of the output buffer
-    // const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-
     console.log('-----------------GOING TO WASM---------------');
 
     // Initialize Session
     await initializeWasmSession();
-    // if (!wasmSession) {
-    //   const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    //   const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-    //   if (s_result) {
-    //     console.log('[FAR_DEBUG] : session initialized successfully');
-    //   } else {
-    //     console.log('[FAR_DEBUG] : session initialized failed');
-    //   }
-    //   const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
-    //   wasmSession = sessionSecPtr;
-    // }
 
     let result = null;
     try {
@@ -504,19 +489,6 @@ const FHE_predictOnefa = (originalImages, simd, debug_type = 0, cb, config = {})
 
     // Initialize Session
     await initializeWasmSession();
-    // if (!wasmSession) {
-    //   const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    //   const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-    //
-    //   if (s_result) {
-    //     console.log('[FAR_DEBUG] : session initialized successfully');
-    //   } else {
-    //     console.log('[FAR_DEBUG] : session initialized failed');
-    //   }
-    //
-    //   const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
-    //   wasmSession = sessionSecPtr;
-    // }
 
     try {
       result = await wasmPrivModule._privid_face_predict_onefa(
@@ -574,7 +546,6 @@ const isValidInternal = (
   width,
   height,
   simd,
-  action,
   debug_type = 0,
   cb,
   config = JSON.stringify({ input_image_format: 'rgba' }),
@@ -582,22 +553,21 @@ const isValidInternal = (
   new Promise(async (resolve) => {
     privid_wasm_result = cb;
 
-    if (wasmPrivModule === undefined) {
-      console.log('loaded for first wsm wrkr', simd, apiUrl, debugType, wasmModule);
-      await isLoad(simd, apiUrl, apiKey, wasmModule, debug_type);
+    if (!wasmPrivModule) {
+      console.log('loaded for first wsm wrkr', simd, action);
+      await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
     }
+    // Initialize Session
+    await initializeWasmSession();
 
     const imageSize = data.length * data.BYTES_PER_ELEMENT;
 
     const isValidPtr = wasmPrivModule._malloc(imageSize);
     wasmPrivModule.HEAP8.set(data, isValidPtr / data.BYTES_PER_ELEMENT);
 
-    // const outputBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    // const outputBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-
-    // const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     // create a pointer to interger to hold the length of the output buffer
-    // const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
     const encoder = new TextEncoder();
     const config_bytes = encoder.encode(`${config}\0`);
@@ -605,18 +575,17 @@ const isValidInternal = (
     const configInputPtr = wasmPrivModule._malloc(configInputSize);
     wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
     console.log('[FAR_DEBUG] : Calling is_valid');
-    const result = await wasmPrivModule._is_valid(
-      action,
+    const result = await wasmPrivModule._privid_validate(
+      wasmSession,
       isValidPtr,
       width,
       height,
-      null,
-      0,
-      null /* resultFirstPtr, */,
-      0 /* resultLenPtr, */,
       configInputPtr,
       configInputSize,
-    );
+      resultFirstPtr,
+      resultLenPtr
+     );
+
     console.log('[FAR_DEBUG] : is_valid result = ', result);
     if (result >= 0) {
       console.log(
@@ -629,10 +598,68 @@ const isValidInternal = (
     console.log('[FAR_DEBUG] : Now freeing the locally allocated buffers');
     wasmPrivModule._free(isValidPtr);
     wasmPrivModule._free(configInputPtr);
+    wasmPrivModule._free(resultFirstPtr);
     console.log('[FAR_DEBUG] : Done with is_valid');
-
+    console.log("[DEBUG] NEW IS VALID RESULT: ", result)
     resolve({ result });
   });
+
+const prividAgePredict = async (
+  data,
+  width,
+  height,
+  simd,
+  debug_type = 0,
+  cb,
+  config = JSON.stringify({ input_image_format: 'rgba' }),
+) => 
+  new Promise(async (resolve) => {
+    privid_wasm_result = cb;
+
+    if (!wasmPrivModule) {
+      console.log('loaded for first wsm wrkr', simd, action);
+      await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
+    }
+    // Initialize Session
+    await initializeWasmSession();
+
+    const imageSize = data.length * data.BYTES_PER_ELEMENT;
+
+    const isValidPtr = wasmPrivModule._malloc(imageSize);
+    wasmPrivModule.HEAP8.set(data, isValidPtr / data.BYTES_PER_ELEMENT);
+
+    const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // create a pointer to interger to hold the length of the output buffer
+    const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+
+    const encoder = new TextEncoder();
+    const config_bytes = encoder.encode(`${config}\0`);
+    const configInputSize = config.length;
+    const configInputPtr = wasmPrivModule._malloc(configInputSize);
+    wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
+
+    try{
+     await wasmPrivModule._privid_estimate_age(
+        wasmSession,
+        isValidPtr,
+        width,
+        height,
+        configInputPtr,
+        configInputSize,
+        resultFirstPtr,
+        resultLenPtr
+       );
+    } 
+    catch(e) {
+      console.log("_____ PREDICT AGE: ", result);
+    }
+    
+    wasmPrivModule._free(isValidPtr);
+    wasmPrivModule._free(configInputPtr);
+    wasmPrivModule._free(resultFirstPtr);
+      
+  });
+
 
 const isValidFrontDocument = (imagePtr, width, height, simd, action, debug_type = 0, cb) =>
   new Promise(async (resolve) => {
@@ -858,8 +885,6 @@ const prividFaceISO = (imageInput, simd, debug_type = 0, cb, config = {}) =>
     const outputBufferSize = BufferSize * 4 * 80;
     const outputBufferPtr = wasmPrivModule._malloc(outputBufferSize);
 
-    // const augmBufferSize = 224 * 224 * 4 * 100;
-    // const augmBufferPtr = wasmPrivModule._malloc(augmBufferSize);
 
     const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     // create a pointer to interger to hold the length of the output buffer
@@ -909,6 +934,7 @@ Comlink.expose({
   FHE_enrollOnefa,
   FHE_predictOnefa,
   isValidInternal,
+  prividAgePredict,
   isLoad,
   voicePredict,
   isValidVoice,

@@ -10,22 +10,33 @@ const usePrividFaceISO = () => {
   const [inputImage, setInputImage] = useState(null);
   const [faceISOStatus, setFaceISOStatus] = useState(null);
 
+  const [faceISOError, setFaceISOError] = useState(null);
+
   const faceISOCallback = (response) => {
     console.log("==========> FACE_ISO_RESPONSE", response);
     // {"status":0,"iso_image_width":360,"iso_image_height":480,"iso_image_channels":3,"confidence":0.9739335775375366}
-    setFaceISOStatus(response.returnValue.status);
-    if (response.returnValue.status === 0) {
-      setFaceISOHeight(response.returnValue.iso_image_height);
-      setFaceISOWidth(response.returnValue.iso_image_width);
-      setInputImage(response.portrait);
-      setIsSuccess(true);
-    } else {
-      setFaceISOHeight(null);
-      setFaceISOWidth(null);
-      setFaceISOData(null);
-      setIsSuccess(false);
-      setInputImage(null);
-      doFaceISO();
+    try{
+      setFaceISOStatus(response.returnValue.status);
+      setFaceISOError(response.returnValue.error);
+    }
+    catch (e){
+      setFaceISOStatus(null);
+    }
+    if(response.returnValue){
+      if (response.returnValue.status === 0) {
+        setFaceISOError(response.returnValue.error);
+        setFaceISOHeight(response.returnValue.iso_image_height);
+        setFaceISOWidth(response.returnValue.iso_image_width);
+        setInputImage(response.portrait);
+        setIsSuccess(true);
+      } else {
+        setFaceISOHeight(null);
+        setFaceISOWidth(null);
+        setFaceISOData(null);
+        setIsSuccess(false);
+        setInputImage(null);
+        doFaceISO();
+      }
     }
   };
 
@@ -56,13 +67,12 @@ const usePrividFaceISO = () => {
   const doFaceISO = async () => {
     const { result, imageOutput } = await faceISO(faceISOCallback, {
       input_image_format: "rgba",
-      context_string: "predict",
     });
     console.log("FACE ISO RESULT:", { result, imageOutput });
     setFaceISOData(imageOutput);
   };
 
-  return { doFaceISO,inputImage, faceISOImageData, faceISOStatus };
+  return { doFaceISO,inputImage, faceISOImageData, faceISOStatus, faceISOError };
 };
 
 export default usePrividFaceISO;

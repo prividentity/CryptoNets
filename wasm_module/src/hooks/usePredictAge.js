@@ -6,35 +6,38 @@ const usePredictAge = () => {
   const [predictAgeHasFinished, setPredictAgeHasFinished] = useState(false);
 
   const predictAgeCallback = (response) => {
-    console.log("RESPONSE: ", response);
-    const {
-      result,
-      ageFactor,
-      crop_conf_score,
-      exposure,
-      face_height,
-      face_width,
-      face_center_x,
-      face_center_y,
-    } = response.ageData;
-    switch (result) {
-      case 0:
-        setAge(ageFactor);
-        setPredictAgeHasFinished(true);
-        break;
-      default:
-        setAge(null);
-        setPredictAgeHasFinished(true);
-        break;
+    console.log("RESPONSE USEPREDICT FE: ", response);
+    
+    const { faces } = response.returnValue
+
+    if ( faces.length === 0 ){
+      setAge(null);
+      setPredictAgeHasFinished(true);
+    }
+    else{
+      for(let index = 0 ; faces.length > index; index++){
+        const { status, age } = faces[index];
+
+        if(age > 0){
+          setAge(age);
+          setPredictAgeHasFinished(true);
+          index = faces.length
+        }
+
+        if(index+1 === faces.length && age <= 0){
+          setAge(null);
+          setPredictAgeHasFinished(true);
+        }
+      }
     }
   };
 
   const doPredictAge = async () => {
-    await predictAge(
-      false,
+    const data = await predictAge(
       null,
       predictAgeCallback
     );
+    console.log("IMAGE DATA HERE??????????", data?data:false)
   };
 
   return { doPredictAge, age, predictAgeHasFinished, setPredictAgeHasFinished };
