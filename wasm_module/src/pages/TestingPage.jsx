@@ -43,7 +43,7 @@ const Ready = () => {
   const handleFrontSuccess = (result) => {
     console.log("FRONT SCAN DATA: ", result);
   };
-  const { scanFrontDocument, isFound, resultStatus, documentUUID, documentGUID, setShouldTriggerCallback } =
+  const { scanFrontDocument, isFound, resultStatus, documentUUID, documentGUID, setShouldTriggerCallback, scanDocumentFrontMessage, resultResponse } =
     useScanFrontDocument(handleFrontSuccess);
   const [deviceCapabilities, setDeviceCapabilities] = useState(capabilities);
   const canvasSizeList = useMemo(() => {
@@ -400,7 +400,7 @@ const Ready = () => {
           {currentAction === "useContinuousPredict" && (
             <div>
               <div>{`Face Valid: ${continuousFaceDetected ? "Face Detected" : "Face not detected"}`}</div>
-              <div>{`Messege: ${continuousPredictMessage}`}</div>
+              <div>{`Messege: ${continuousPredictMessage || ''}`}</div>
               <div>{`Predicted GUID: ${continuousPredictGUID ? continuousPredictGUID : ""}`}</div>
               <div>{`Predicted UUID: ${continuousPredictUUID ? continuousPredictUUID : ""}`}</div>
             </div>
@@ -409,7 +409,7 @@ const Ready = () => {
           {currentAction === "usePredictOneFa" && (
             <div>
               <div>{`Face Valid: ${predictOneFaaceDetected ? "Face Detected" : "Face not detected"}`}</div>
-              <div>{`Messege: ${predictMessage}`}</div>
+              <div>{`Messege: ${predictMessage || ''}`}</div>
               <div>{`Predicted GUID: ${predictOneFaData ? predictOneFaData.PI.guid : ""}`}</div>
               <div>{`Predicted UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
             </div>
@@ -424,10 +424,13 @@ const Ready = () => {
 
           {currentAction === "useScanDocumentFront" && (
             <div>
-              <div>{`Scan Document Result: ${resultStatus === 0 ? "success" : "not found"}`}</div>
-              <div>{`Has found valid document: ${isFound}`}</div>
-              <div>{`Document GUID: ${documentGUID}`} </div>
-              <div>{`Document UUID: ${documentUUID}`} </div>
+              {/* <div>{`Scan Document Result: ${resultStatus === 0 ? "success" : "not found"}`}</div> */}
+              <div> {`Confidence Value: ${resultResponse?.conf_level || ''  }`}</div>
+              <div>{`Predict Status: ${resultResponse?.predict_message || ''}`}</div>
+              <div>{`Scan Document Result: ${resultResponse?.op_message || ''}`}</div>
+              <div>{`Has found valid document: ${isFound || ''}`}</div>
+              <div>{`Document GUID: ${documentGUID || ''}`} </div>
+              <div>{`Document UUID: ${documentUUID || ''}`} </div>
             </div>
           )}
 
