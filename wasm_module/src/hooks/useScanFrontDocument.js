@@ -9,6 +9,7 @@ const useScanFrontDocument = (onSuccess) => {
   const [resultStatus, setResultStatus] = useState(null);
   const [documentUUID, setDocumentUUID] = useState(null);
   const [documentGUID, setDocumentGUID] = useState(null);
+  const [scanDocumentFrontMessage, setScanFrontDocumentMessage] = useState('');
   const [shouldTriggerCallback, setShouldTriggerCallback] = useState(true);
   triggerValue = shouldTriggerCallback;
 
@@ -29,11 +30,11 @@ const useScanFrontDocument = (onSuccess) => {
   const [croppedMugshotImage, setCroppedMugshotImage] = useState(null);
 
   // confidence value
-  const [confidenceValue, setConfidenceValue] = useState(null);
-
+  const [resultResponse, setResultResponse] = useState(null);
   const documentCallback = (result) => {
     console.log("Front scan callback result:", result);
-    setConfidenceValue(result.returnValue.conf_level.toString());
+    setScanFrontDocumentMessage(result.returnValue.predict_message);
+    setResultResponse(result.returnValue);
     if (result.returnValue.predict_status === 0 && result.returnValue.op_status === 0) {
       const { predict_status, uuid, guid, cropped_face_height, cropped_face_width, cropped_doc_width, cropped_doc_height } =
         result.returnValue;
@@ -134,7 +135,8 @@ const useScanFrontDocument = (onSuccess) => {
     inputImage,
     croppedDocumentImage,
     croppedMugshotImage,
-    confidenceValue,
+    resultResponse,
+    scanDocumentFrontMessage,
   };
 };
 
