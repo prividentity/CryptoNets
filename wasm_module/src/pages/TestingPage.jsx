@@ -76,7 +76,7 @@ const Ready = () => {
     setContinuousPredictUUID(null);
     setContinuousPredictGUID(null);
   };
-  const { faceDetected: continuousFaceDetected, predictUser: continuousPredictUser } = useContinuousPredict(
+  const { faceDetected: continuousFaceDetected, predictUser: continuousPredictUser, continuousPredictMessage } = useContinuousPredict(
     "userVideo",
     continuousPredictSuccess,
     continuousOnNotFoundAndFailure,
@@ -400,6 +400,7 @@ const Ready = () => {
           {currentAction === "useContinuousPredict" && (
             <div>
               <div>{`Face Valid: ${continuousFaceDetected ? "Face Detected" : "Face not detected"}`}</div>
+              <div>{`Messege: ${continuousPredictMessage}`}</div>
               <div>{`Predicted GUID: ${continuousPredictGUID ? continuousPredictGUID : ""}`}</div>
               <div>{`Predicted UUID: ${continuousPredictUUID ? continuousPredictUUID : ""}`}</div>
             </div>
@@ -423,7 +424,6 @@ const Ready = () => {
 
           {currentAction === "useScanDocumentFront" && (
             <div>
-              <h2> {`Confidence Value: ${confidenceValue}`}</h2>
               <div>{`Scan Document Result: ${resultStatus === 0 ? "success" : "not found"}`}</div>
               <div>{`Has found valid document: ${isFound}`}</div>
               <div>{`Document GUID: ${documentGUID}`} </div>
@@ -456,7 +456,6 @@ const Ready = () => {
           {currentAction === "privid_face_iso" && (
             <div style={{ display: "flex", gap: "30px", flexWrap: "wrap", flexDirection: "column" }}>
               <div> FACE ISO STATUS: {faceISOStatus} </div>
-              <div> FACE ISO Error: {faceISOError} </div>
               <div>
                 <h2>Input Image:</h2>
                 {inputImage && <img style={{ maxWidth: "400px" }} src={inputImage} />}
