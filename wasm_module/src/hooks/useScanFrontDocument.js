@@ -37,7 +37,7 @@ const useScanFrontDocument = (onSuccess) => {
     if (result.returnValue.predict_status === 0 && result.returnValue.op_status === 0) {
       const { predict_status, uuid, guid, cropped_face_height, cropped_face_width, cropped_doc_width, cropped_doc_height } =
         result.returnValue;
-
+      
       setIsFound(true);
       setResultStatus(predict_status);
       setDocumentUUID(uuid);
@@ -96,9 +96,9 @@ const useScanFrontDocument = (onSuccess) => {
 
   // Printing images
   useEffect(() => {
-    //if (croppedDocumentImage && croppedMugshotImage && inputImage) {
+    if (croppedDocumentImage && croppedMugshotImage && inputImage) {
       console.log("FRONT DL SCAN IMAGES:", { croppedDocumentImage, croppedMugshotImage, inputImage });
-    // }
+    }
   }, [croppedDocumentImage, croppedMugshotImage, inputImage]);
 
   const scanFrontDocument = async (canvasSize, initializeCanvas) => {
@@ -113,7 +113,6 @@ const useScanFrontDocument = (onSuccess) => {
       undefined,
       {
         input_image_format: "rgba",
-        blur_threshold_doc: 55.0
       },
       canvasObj
     );
@@ -121,7 +120,7 @@ const useScanFrontDocument = (onSuccess) => {
     setCroppedDocumentImageData(croppedDocument);
     setCroppedMugshotImageData(croppedMugshot);
 
-    onSuccess({ result, imageData, croppedDocument, croppedMugshot });
+    // onSuccess({ result, imageData, croppedDocument, croppedMugshot });
   };
 
   return {

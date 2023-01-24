@@ -138,7 +138,7 @@ const Ready = () => {
   const handlePreidctSuccess = (result) => {
     console.log("======PREDICT SUCCESS========");
   };
-  const { predictOneFaData, predictOneFaStatus, predictOneFaaceDetected, predictOneFaprogress, predictUserOneFa } =
+  const { predictOneFaData, predictOneFaaceDetected, predictMessage, predictUserOneFa } =
     usePredictOneFa("userVideo", handlePreidctSuccess);
   const handlePredictOneFa = async () => {
     setCurrentAction("usePredictOneFa");
@@ -408,6 +408,7 @@ const Ready = () => {
           {currentAction === "usePredictOneFa" && (
             <div>
               <div>{`Face Valid: ${predictOneFaaceDetected ? "Face Detected" : "Face not detected"}`}</div>
+              <div>{`Messege: ${predictMessage}`}</div>
               <div>{`Predicted GUID: ${predictOneFaData ? predictOneFaData.PI.guid : ""}`}</div>
               <div>{`Predicted UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
             </div>
