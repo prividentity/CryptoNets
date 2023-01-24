@@ -34,29 +34,21 @@ const useContinuousPredict = (
   const callback = async (result) => {
     console.log("CONTINUOUS AUTH CALLBACK", result);
     switch (result.status) {
-      case "VALID_FACE":
-        setFaceDetected(true);
-        break;
-      case "INVALID_FACE":
-        setFaceDetected(false);
-        if (failureTries === retryTimes) {
-          onNotFound();
-        } else {
-          failureTries += 1;
-        }
-        break;
       case "WASM_RESPONSE":
       case -1:
       case -100:
         if (result.returnValue.status === 0) {
           // stopTracks();
+          setFaceDetected(true);
           if (successCallback) {
             successCallback(
               result.returnValue.PI.uuid,
               result.returnValue.PI.guid
             );
+            
           } else {
             onSuccess(result.returnValue.PI.uuid,result.returnValue.PI.guid);
+            setFaceDetected(true);
           }
           successCallback = null;
         }
@@ -68,6 +60,15 @@ const useContinuousPredict = (
             tries += 1;
             // await predictUser();
           }
+          const {validation_status, message}  = result.returnValue;
+          let hasValidFace =false;
+          for (let i = 0; validation_status.length > i; i++){
+            if(validation_status[i].status ===0){
+              hasValidFace = true
+              i = validation_status.length;
+            }
+          }
+          setFaceDetected(hasValidFace);
         }
         break;
       default:

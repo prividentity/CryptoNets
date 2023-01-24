@@ -7,8 +7,8 @@ const useIsValid = (element = 'userVideo', deviceId = null) => {
   const isValidCall = async () => {
       // eslint-disable-next-line no-unused-vars
      const result = await isValid(callback);
-
      console.log("NEW IS VALID RETURNED DATA:", result);
+     // result = undefined;
   };
 
   const callback = async (result) => {
