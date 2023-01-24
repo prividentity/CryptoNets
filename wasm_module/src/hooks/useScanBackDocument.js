@@ -4,7 +4,6 @@ import { CANVAS_SIZE } from "../utils";
 
 let internalCanvasSize;
 const useScanBackDocument = (onSuccess) => {
-  const [scanResult, setScanResult] = useState(null);
   const [scannedCodeData, setScannedCodeData] = useState(null);
   const [isFound, setIsFound] = useState(false);
 
@@ -130,10 +129,9 @@ const useScanBackDocument = (onSuccess) => {
     setCroppedBarcodeImageData(croppedBarcode);
     setInputImageData(imageData);
 
-    onSuccess({ result, croppedBarcode, croppedDocument, imageData });
   };
 
-  return { scanBackDocument, scannedCodeData, scanResult, isFound, croppedDocumentImage, croppedBarcodeImage, barcodeStatusCode };
+  return { scanBackDocument, scannedCodeData, isFound, croppedDocumentImage, croppedBarcodeImage, barcodeStatusCode };
 };
 
 export default useScanBackDocument;
