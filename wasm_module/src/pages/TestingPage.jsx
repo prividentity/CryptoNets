@@ -458,11 +458,11 @@ const Ready = () => {
 
           {currentAction === "privid_face_iso" && (
             <div style={{ display: "flex", gap: "30px", flexWrap: "wrap", flexDirection: "column" }}>
-              <div> FACE ISO STATUS: {faceISOStatus} </div>
+              {/* <div> FACE ISO STATUS: {faceISOStatus} </div>
               <div>
                 <h2>Input Image:</h2>
                 {inputImage && <img style={{ maxWidth: "400px" }} src={inputImage} />}
-              </div>
+              </div> */}
               <div>
                 <h2>Output Image:</h2>
                 {faceISOImageData && <img style={{ maxWidth: "400px" }} src={faceISOImageData} />}

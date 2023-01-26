@@ -26,8 +26,9 @@ const usePrividFaceISO = () => {
         setFaceISOError(response.returnValue.error);
         setFaceISOHeight(response.returnValue.iso_image_height);
         setFaceISOWidth(response.returnValue.iso_image_width);
-        setInputImage(response.portrait);
+        // setInputImage(response.portrait);
         setIsSuccess(true);
+        doFaceISO();
       } else {
         setFaceISOHeight(null);
         setFaceISOWidth(null);
@@ -64,7 +65,7 @@ const usePrividFaceISO = () => {
   }, [faceISOImageData]);
 
   const doFaceISO = async () => {
-    const { result, imageOutput } = await faceISO(faceISOCallback, {
+    const { imageOutput } = await faceISO(faceISOCallback, {
       input_image_format: "rgba",
     });
     // console.log("FACE ISO RESULT:", { result, imageOutput });
