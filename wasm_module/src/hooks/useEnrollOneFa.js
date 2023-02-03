@@ -24,7 +24,7 @@ const useEnrollOneFa = (
       callback,
       {
         input_image_format: "rgba",
-        send_original_images: true,
+        send_original_images: false,
         original_image_width: 600,
         original_image_height: 600,
       },
