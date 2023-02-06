@@ -409,7 +409,7 @@ const Ready = () => {
           {currentAction === "useContinuousPredict" && (
             <div>
               <div>{`Face Valid: ${continuousFaceDetected ? "Face Detected" : "Face not detected"}`}</div>
-              <div>{`Messege: ${continuousPredictMessage || ""}`}</div>
+              <div>{`Message: ${continuousPredictMessage || ""}`}</div>
               <div>{`Predicted GUID: ${continuousPredictGUID ? continuousPredictGUID : ""}`}</div>
               <div>{`Predicted UUID: ${continuousPredictUUID ? continuousPredictUUID : ""}`}</div>
             </div>
@@ -418,7 +418,7 @@ const Ready = () => {
           {currentAction === "usePredictOneFa" && (
             <div>
               <div>{`Face Valid: ${predictOneFaaceDetected ? "Face Detected" : "Face not detected"}`}</div>
-              <div>{`Messege: ${predictMessage || ""}`}</div>
+              <div>{`Message: ${predictMessage || ""}`}</div>
               <div>{`Predicted GUID: ${predictOneFaData ? predictOneFaData.PI.guid : ""}`}</div>
               <div>{`Predicted UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
             </div>

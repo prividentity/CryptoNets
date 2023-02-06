@@ -16,9 +16,7 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
       callback,
       {
         input_image_format: "rgba",
-        send_original_images: true,
-        original_image_width: 500,
-        original_image_height: 500,
+        send_original_images: false,
       },
       element,
       deviceId
