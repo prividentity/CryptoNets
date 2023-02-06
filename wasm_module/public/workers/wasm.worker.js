@@ -180,7 +180,7 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) => {
   const [croppedDocumentBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedDocumentBufferLenPtr, 1);
   let croppedDocumentBufferSecPtr = null;
   if (croppedDocumentBufferSize > 0) {
-    [croppedDocumentBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedDocumentBufferLenPtr, 1);
+    [croppedDocumentBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedDocumentBufferFirstPtr, 1);
   }
 
   const croppedDocumentBufferPtr = new Uint8Array(
@@ -194,7 +194,7 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) => {
   const [croppedBarcodeBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedBarcodeBufferLenPtr, 1);
   let croppedBarcodeBufferSecPtr = null;
   if (croppedBarcodeBufferSize > 0) {
-    [croppedBarcodeBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedDocumentBufferLenPtr, 1);
+    [croppedBarcodeBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, croppedBarcodeBufferFirstPtr, 1);
   }
 
   const croppedBarcodeBufferPtr = new Uint8Array(
@@ -262,12 +262,14 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
   const croppedMugshotBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   const croppedMugshotBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
-  console.log('-----------------GOING TO WASM---------------');
+
 
   // Initialize Session
   await initializeWasmSession();
 
   let result = null;
+  
+  console.log('-----------------GOING TO WASM---------------');
   try {
     result = wasmPrivModule._privid_doc_scan_face(
       wasmSession,
@@ -314,6 +316,7 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
     croppedMugshotBufferSize,
   );
   const croppedMugshotData = Uint8ClampedArray.from(croppedMugshotBufferPtr);
+
   // console.log('MODULE LIST: ', wasmPrivModule);
   wasmPrivModule._privid_free_char_buffer(croppedMugshotBufferSecPtr);
   wasmPrivModule._privid_free_char_buffer(croppedDocumentBufferSecPtr);
@@ -800,7 +803,7 @@ async function initializeAPIUrl(url) {
   const urlInputtPtr = wasmPrivModule._malloc(urlInputSize);
   wasmPrivModule.HEAP8.set(url_bytes, urlInputtPtr / url_bytes.BYTES_PER_ELEMENT);
 
-  wasmPrivModule.ccall('FHE_configure_url', 'int', [], [42, urlInputtPtr, url ? url.length + 1 : 0]);
+  wasmPrivModule.ccall('FHE_configure_url', 'int', [], [42, urlInputtPtr, url ? url.length : 0]);
   wasmPrivModule._free(urlInputtPtr);
 }
 
