@@ -23,6 +23,7 @@ const useContinuousPredict = (
       callback,
       {
         input_image_format: "rgba",
+        send_original_image: false,
       },
       element
     );
