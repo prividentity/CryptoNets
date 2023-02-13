@@ -23,13 +23,8 @@ const useEnrollOneFa = (
     await enroll1FA(
       callback,
       {
-        input_image_format: "rgba",
         send_original_images: false,
-        original_image_width: 600,
-        original_image_height: 600,
       },
-      element,
-      deviceId
     );
   };
 
@@ -102,7 +97,7 @@ const useEnrollOneFa = (
           setEnrollData(result.returnValue);
           onSuccess(result.returnValue);
         }
-        if (result.returnValue?.status === -1) {
+        if (result.returnValue?.status === -1 || result.returnValue?.status === -100) {
           if (tries === retryTimes) {
             // onFailure();
           } else {

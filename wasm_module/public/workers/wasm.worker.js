@@ -23,6 +23,12 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
     wasmModule = module;
     debugType = debug_type;
     setCache = cacheConfig;
+
+    if (wasmSession) {
+      wasmPrivModule._privid_deinitialize_session(wasmSession);
+      wasmSession = null;
+    }
+
     if (module === 'voice') {
       importScripts('../wasm/voice/simd/privid_fhe.js');
 
@@ -213,7 +219,7 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) => {
   wasmPrivModule._free(croppedBarcodeBufferFirstPtr);
   wasmPrivModule._free(croppedBarcodeBufferLenPtr);
   wasmPrivModule._free(configInputPtr);
-  
+
   const croppedDocument = croppedDocumentBufferSize > 0 ? croppedDocumentData : null;
   const croppedBarcode = croppedBarcodeBufferSize > 0 ? croppedBarcodeData : null;
 
@@ -262,13 +268,11 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
   const croppedMugshotBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   const croppedMugshotBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
-
-
   // Initialize Session
   await initializeWasmSession();
 
   let result = null;
-  
+
   console.log('-----------------GOING TO WASM---------------');
   try {
     result = wasmPrivModule._privid_doc_scan_face(
@@ -339,6 +343,7 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
 const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) =>
   new Promise(async (resolve) => {
     privid_wasm_result = cb;
+
     if (!wasmPrivModule) {
       console.log('loaded for first wsm wrkr', simd, action);
       await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
@@ -442,7 +447,6 @@ const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) 
     // wasmPrivModule._free(outputBufferPtr);
     // wasmPrivModule._free(augmBufferPtr);
     wasmPrivModule._free(resultFirstPtr);
-
     resolve({ result });
   });
 
@@ -768,14 +772,15 @@ async function setCacheConfiguration() {
   const cacheInputPtr = wasmPrivModule._malloc(cacheInputSize);
 
   wasmPrivModule.HEAP8.set(cache_config_bytes, cacheInputPtr / cache_config_bytes.BYTES_PER_ELEMENT);
-  await wasmPrivModule._privid_set_configuration(wasmSession, cacheInputPtr, cacheInputSize);
-
+  // await wasmPrivModule._privid_set_configuration(wasmSession, cacheInputPtr, cacheInputSize);
+  await wasmPrivModule._privid_set_default_configuration(wasmSession, 1);
   wasmPrivModule._free(cacheInputPtr);
 }
 
 async function initializeWasmSession() {
   console.log('initializing wasm session');
   if (!wasmSession) {
+    console.log('Wasm session not available creating session');
     const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
 
@@ -790,6 +795,9 @@ async function initializeWasmSession() {
     if (setCache) {
       await setCacheConfiguration();
     }
+  } else {
+    console.log('wasm Session', wasmSession);
+    console.log('Wasm session is available. Skipping creating session');
   }
   return wasmSession;
 }
