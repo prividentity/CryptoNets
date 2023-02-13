@@ -1,11 +1,7 @@
 /* eslint-disable */
 import { useEffect, useMemo, useState } from "react";
-import {
-  isValid,
-  switchCamera,
-  setStopLoopContinuousAuthentication,
-  closeCamera,
-} from "@privateid/cryptonets-web-sdk";
+import { switchCamera, setStopLoopContinuousAuthentication, closeCamera } from "@privateid/cryptonets-web-sdk";
+
 
 import {
   useCamera,
@@ -38,8 +34,7 @@ import usePrividFaceISO from "../hooks/usePrividFaceISO";
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
-  const { ready, init, device, devices, settings, capabilities } = useCamera("userVideo");
-  // Scan Document Front
+  const { ready, init, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
 
   const handleFrontSuccess = (result) => {
     console.log("FRONT SCAN DATA: ", result);
@@ -211,6 +206,7 @@ const Ready = () => {
     }
   }, [currentAction, predictOneFaData]);
 
+  // handleDLfront
   const handleScanDLFront = async () => {
     setCurrentAction("useScanDocumentFront");
     // hack to initialize canvas with large memory, so it doesn't cause an issue.
@@ -224,6 +220,28 @@ const Ready = () => {
     }
   };
 
+  // const doFrontScan = async () => {
+  //   if (canvasSize) {
+  //     await scanFrontDocument(canvasSize);
+  //   } else {
+  //     if (!isMobile) {
+  //       await scanFrontDocument(canvasSizeOptions[3].value, () => {});
+  //     }
+  //     await scanFrontDocument(initialCanvasSize);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   console.log("Called????");
+  //   if (!ready && currentAction === "useScanDocumentFront") {
+  //     console.log("initializing camera?");
+  //     init(true);
+  //   }
+  //   if (currentAction === "useScanDocumentFront" && ready) {
+  //     doFrontScan();
+  //   }
+  // }, [currentAction, ready]);
+
   // Scan Document Back
   const handleBackSuccess = (result) => {
     console.log("BACK SCAN DATA: ", result);
@@ -231,8 +249,21 @@ const Ready = () => {
   const { scanBackDocument, scannedCodeData, barcodeStatusCode } = useScanBackDocument(handleBackSuccess);
   const handleScanDocumentBack = async () => {
     setCurrentAction("useScanDocumentBack");
-    await scanBackDocument();
+    await  scanBackDocument();
+    // await closeCamera();
+    // setReady(false);
   };
+
+  // useEffect(() => {
+  //   console.log("Called????");
+  //   if (!ready && currentAction === "useScanDocumentBack") {
+  //     console.log("initializing camera?");
+  //     init(true);
+  //   }
+  //   if (currentAction === "useScanDocumentBack" && ready) {
+  //     scanBackDocument();
+  //   }
+  // }, [currentAction, ready]);
 
   const isDocumentOrBackCamera =
     ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) || isBack;
@@ -306,6 +337,8 @@ const Ready = () => {
   };
 
   const handleReopenCamera = async () => {
+    setReady(false);
+    await closeCamera();
     await init();
   };
 
@@ -372,7 +405,19 @@ const Ready = () => {
           )}
         </div>
         <div className="cameraContainer">
-          <video id="userVideo" className={`cameraDisplay`} muted autoPlay playsInline />
+          <video
+            id="userVideo"
+            className={
+              currentAction === "useScanDocumentFront" ||
+              currentAction === "useScanDocumentBack" ||
+              currentAction === "useScanDocumentFrontValidity"
+                ? `cameraDisplay`
+                : `cameraDisplay mirrored`
+            }
+            muted
+            autoPlay
+            playsInline
+          />
           {currentAction === "usePredictAge" && age > 0 && (
             <div className="age-box">
               <div>{Math.round(age)}</div>
