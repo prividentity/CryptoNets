@@ -10,7 +10,7 @@ const useCamera = (element = "userVideo", resolution = null) => {
   const [device, setDevice] = useState("");
   const [faceMode, setFaceMode] = useState(false);
   const [cameraFeatures, setCameraFeatures] = useState({});
-  const init = async () => {
+  const init = async (requireHd = false) => {
     if (ready) return;
     try {
       const {
@@ -21,7 +21,7 @@ const useCamera = (element = "userVideo", resolution = null) => {
         stream,
         errorMessage,
         capabilities,
-      } = await openCamera(element, false, null, "front", resolution);
+      } = await openCamera(element, requireHd, null, "front", resolution);
       setCameraFeatures({ settings, capabilities });
       setFaceMode(faceMode);
       console.log({ devices, faceMode, settings, status, stream, errorMessage, capabilities });
@@ -59,7 +59,7 @@ const useCamera = (element = "userVideo", resolution = null) => {
     await setCameraFocus();
   };
 
-  return { ready, init, devices, device, setDevice, faceMode, ...cameraFeatures };
+  return { ready, init, devices, device, setDevice, faceMode, ...cameraFeatures, setReady };
 };
 
 export default useCamera;

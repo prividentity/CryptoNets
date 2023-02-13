@@ -1,11 +1,6 @@
 /* eslint-disable */
 import { useEffect, useMemo, useState } from "react";
-import {
-  isValid,
-  switchCamera,
-  setStopLoopContinuousAuthentication,
-  closeCamera,
-} from "@privateid/cryptonets-web-sdk-alpha";
+import { switchCamera, setStopLoopContinuousAuthentication, closeCamera } from "@privateid/cryptonets-web-sdk-alpha";
 
 import {
   useCamera,
@@ -38,8 +33,7 @@ import usePrividFaceISO from "../hooks/usePrividFaceISO";
 
 const Ready = () => {
   const { ready: wasmReady } = useWasm();
-  const { ready, init, device, devices, settings, capabilities } = useCamera("userVideo");
-  // Scan Document Front
+  const { ready, init, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
 
   const handleFrontSuccess = (result) => {
     console.log("FRONT SCAN DATA: ", result);
@@ -101,14 +95,14 @@ const Ready = () => {
 
   useEffect(() => {
     if (!wasmReady) return;
-    if (!ready) init();
+    if (!ready && currentAction !== "useScanDocumentFront" && currentAction !== "useScanDocumentBack") init();
     if (isIOS && osVersion < 15) {
       console.log("Does not support old version of iOS os version 15 below.");
     } else if (isAndroid && osVersion < 11) {
       console.log("Does not support old version of Android os version 11 below.");
     }
     console.log("--- wasm status ", wasmReady, ready);
-  }, [wasmReady, ready]);
+  }, [wasmReady, ready, currentAction]);
 
   const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");
   // isValid
@@ -211,9 +205,24 @@ const Ready = () => {
     }
   }, [currentAction, predictOneFaData]);
 
+
+  // handleDLfront
   const handleScanDLFront = async () => {
     setCurrentAction("useScanDocumentFront");
     // hack to initialize canvas with large memory, so it doesn't cause an issue.
+    if (canvasSize) {
+      await scanFrontDocument(canvasSize);
+    } else {
+      await closeCamera();
+      setReady(false);
+      // if (!isMobile) {
+      //   await scanFrontDocument(canvasSizeOptions[3].value, () => {});
+      // }
+      // await scanFrontDocument(initialCanvasSize);
+    }
+  };
+
+  const doFrontScan = async () => {
     if (canvasSize) {
       await scanFrontDocument(canvasSize);
     } else {
@@ -222,7 +231,18 @@ const Ready = () => {
       }
       await scanFrontDocument(initialCanvasSize);
     }
-  };
+  }
+
+  useEffect(() => {
+    console.log("Called????")
+    if (!ready && currentAction === "useScanDocumentFront") {
+      console.log("initializing camera?");
+      init(true);
+    }
+    if(currentAction === "useScanDocumentFront" && ready){
+      doFrontScan();
+    }
+  }, [currentAction, ready]);
 
   // Scan Document Back
   const handleBackSuccess = (result) => {
@@ -231,8 +251,20 @@ const Ready = () => {
   const { scanBackDocument, scannedCodeData, barcodeStatusCode } = useScanBackDocument(handleBackSuccess);
   const handleScanDocumentBack = async () => {
     setCurrentAction("useScanDocumentBack");
-    await scanBackDocument();
+    await closeCamera();
+    setReady(false);
   };
+
+  useEffect(() => {
+    console.log("Called????")
+    if (!ready && currentAction === "useScanDocumentBack") {
+      console.log("initializing camera?");
+      init(true);
+    }
+    if(currentAction === "useScanDocumentBack" && ready){
+      scanBackDocument();
+    }
+  }, [currentAction, ready]);
 
   const isDocumentOrBackCamera =
     ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) || isBack;
