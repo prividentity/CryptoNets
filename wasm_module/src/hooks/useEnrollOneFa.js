@@ -24,6 +24,8 @@ const useEnrollOneFa = (
       callback,
       {
         send_original_images: false,
+        threshold_high_vertical_enroll:-0.05,
+        threshold_down_vertical_enroll:0.15,
       },
     );
   };
