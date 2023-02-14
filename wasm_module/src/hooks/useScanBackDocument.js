@@ -3,7 +3,7 @@ import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-s
 import { CANVAS_SIZE } from "../utils";
 
 let internalCanvasSize;
-const useScanBackDocument = (onSuccess) => {
+const useScanBackDocument = (setShowSuccess) => {
   const [scannedCodeData, setScannedCodeData] = useState(null);
   const [isFound, setIsFound] = useState(false);
 
@@ -67,6 +67,7 @@ const useScanBackDocument = (onSuccess) => {
         setCroppedBarcodeHeight(crop_barcode_height);
         setIsFound(true);
         setScannedCodeData(finalResult);
+        setShowSuccess(true);
         return finalResult;
       } else {
         setCropedDocumentWidth(null);

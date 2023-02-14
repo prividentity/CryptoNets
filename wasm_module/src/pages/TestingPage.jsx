@@ -35,9 +35,8 @@ const Ready = () => {
   const { ready: wasmReady } = useWasm();
   const { ready, init, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
 
-  const handleFrontSuccess = (result) => {
-    console.log("FRONT SCAN DATA: ", result);
-  };
+  const [showSuccess, setShowSuccess] = useState(false);
+
   const {
     scanFrontDocument,
     isFound,
@@ -47,7 +46,8 @@ const Ready = () => {
     setShouldTriggerCallback,
     scanDocumentFrontMessage,
     resultResponse,
-  } = useScanFrontDocument(handleFrontSuccess);
+  } = useScanFrontDocument(setShowSuccess);
+
   const [deviceCapabilities, setDeviceCapabilities] = useState(capabilities);
   const canvasSizeList = useMemo(() => {
     let canvasList = [...canvasSizeOptions];
@@ -129,14 +129,17 @@ const Ready = () => {
   }, [currentAction, hasFinished]);
 
   // Enroll ONEFA
-  const useEnrollSuccess = () => console.log("=======ENROLL SUCCESS=======");
+  const useEnrollSuccess = () => {
+    console.log("=======ENROLL SUCCESS=======");
+    setShowSuccess(true);
+  };
   const {
     faceDetected: enrollOneFaFaceDetected,
     enrollStatus: enrollOneFaStatus,
     enrollData: enrollOneFaData,
     enrollUserOneFa,
     progress: enrollOneFaProgress,
-  } = useEnrollOneFa("userVideo", useEnrollSuccess, null, deviceId);
+  } = useEnrollOneFa("userVideo", useEnrollSuccess, null, deviceId, setShowSuccess);
   const handleEnrollOneFa = async () => {
     setCurrentAction("useEnrollOneFa");
     enrollUserOneFa();
@@ -147,14 +150,19 @@ const Ready = () => {
   };
   const { predictOneFaData, predictOneFaaceDetected, predictMessage, predictUserOneFa } = usePredictOneFa(
     "userVideo",
-    handlePreidctSuccess
+    handlePreidctSuccess,
+    4,
+    null,
+    setShowSuccess
   );
   const handlePredictOneFa = async () => {
+    setShowSuccess(false);
     setCurrentAction("usePredictOneFa");
     predictUserOneFa();
   };
 
   const handleContinuousPredict = async () => {
+    setShowSuccess(false);
     setCurrentAction("useContinuousPredict");
     continuousPredictUser();
   };
@@ -191,6 +199,7 @@ const Ready = () => {
   const { loading, onDeleteUser } = useDelete(useDeleteCallback, ready);
 
   const handleDelete = async () => {
+    setShowSuccess(false);
     setDeletionStatus(null);
     setCurrentAction("useDelete");
     predictUserOneFa();
@@ -212,6 +221,7 @@ const Ready = () => {
     if (canvasSize) {
       await scanFrontDocument(canvasSize);
     } else {
+      setShowSuccess(false);
       if (!isMobile) {
         await scanFrontDocument(canvasSizeOptions[3].value, () => {});
       }
@@ -219,50 +229,13 @@ const Ready = () => {
     }
   };
 
-  // const doFrontScan = async () => {
-  //   if (canvasSize) {
-  //     await scanFrontDocument(canvasSize);
-  //   } else {
-  //     if (!isMobile) {
-  //       await scanFrontDocument(canvasSizeOptions[3].value, () => {});
-  //     }
-  //     await scanFrontDocument(initialCanvasSize);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   console.log("Called????");
-  //   if (!ready && currentAction === "useScanDocumentFront") {
-  //     console.log("initializing camera?");
-  //     init(true);
-  //   }
-  //   if (currentAction === "useScanDocumentFront" && ready) {
-  //     doFrontScan();
-  //   }
-  // }, [currentAction, ready]);
-
   // Scan Document Back
-  const handleBackSuccess = (result) => {
-    console.log("BACK SCAN DATA: ", result);
-  };
-  const { scanBackDocument, scannedCodeData, barcodeStatusCode } = useScanBackDocument(handleBackSuccess);
+  const { scanBackDocument, scannedCodeData, barcodeStatusCode } = useScanBackDocument(setShowSuccess);
   const handleScanDocumentBack = async () => {
+    setShowSuccess(false);
     setCurrentAction("useScanDocumentBack");
-    await  scanBackDocument();
-    // await closeCamera();
-    // setReady(false);
+    await scanBackDocument();
   };
-
-  // useEffect(() => {
-  //   console.log("Called????");
-  //   if (!ready && currentAction === "useScanDocumentBack") {
-  //     console.log("initializing camera?");
-  //     init(true);
-  //   }
-  //   if (currentAction === "useScanDocumentBack" && ready) {
-  //     scanBackDocument();
-  //   }
-  // }, [currentAction, ready]);
 
   const isDocumentOrBackCamera =
     ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) || isBack;
@@ -271,6 +244,7 @@ const Ready = () => {
   const { doPredictAge, age, predictAgeHasFinished, setPredictAgeHasFinished } = usePredictAge();
 
   const handlePredictAge = async () => {
+    setShowSuccess(false);
     setCurrentAction("usePredictAge");
     await doPredictAge();
   };
@@ -297,7 +271,7 @@ const Ready = () => {
     isFound: isfoundValidity,
     scanFrontDocument: scanFrontValidity,
     confidenceValue,
-  } = useScanFrontDocumentWithoutPredict();
+  } = useScanFrontDocumentWithoutPredict(setShowSuccess);
 
   const handleFrontDLValidity = async () => {
     setCurrentAction("useScanDocumentFrontValidity");
@@ -403,15 +377,22 @@ const Ready = () => {
             <></>
           )}
         </div>
-        <div className="cameraContainer">
+        <div className={"cameraContainer"}>
+          {currentAction === "useEnrollOneFa" && !enrollOneFaFaceDetected && (
+            <div className="enrollDisplay">
+              <span> {enrollOneFaStatus} </span>
+            </div>
+          )}
           <video
             id="userVideo"
             className={
-              currentAction === "useScanDocumentFront" ||
+              (currentAction === "useScanDocumentFront" ||
               currentAction === "useScanDocumentBack" ||
               currentAction === "useScanDocumentFrontValidity"
                 ? `cameraDisplay`
-                : `cameraDisplay mirrored`
+                : `cameraDisplay mirrored`) +
+              " " +
+              (showSuccess ? "cameraDisplaySuccess" : "")
             }
             muted
             autoPlay
