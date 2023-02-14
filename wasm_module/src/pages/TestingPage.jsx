@@ -107,6 +107,7 @@ const Ready = () => {
   const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
+    setShowSuccess(false);
     setCurrentAction("isValid");
     await isValidCall();
   };
@@ -141,6 +142,7 @@ const Ready = () => {
     progress: enrollOneFaProgress,
   } = useEnrollOneFa("userVideo", useEnrollSuccess, null, deviceId, setShowSuccess);
   const handleEnrollOneFa = async () => {
+    setShowSuccess(false);
     setCurrentAction("useEnrollOneFa");
     enrollUserOneFa();
   };
