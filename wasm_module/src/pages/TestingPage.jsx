@@ -2,7 +2,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { switchCamera, setStopLoopContinuousAuthentication, closeCamera } from "@privateid/cryptonets-web-sdk";
 
-
 import {
   useCamera,
   useWasm,

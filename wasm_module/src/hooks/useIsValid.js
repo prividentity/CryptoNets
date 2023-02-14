@@ -1,29 +1,33 @@
-import { useState } from 'react';
-import { isValid } from '@privateid/cryptonets-web-sdk';
+import { useState } from "react";
+import { isValid } from "@privateid/cryptonets-web-sdk";
 
-const useIsValid = (element = 'userVideo', deviceId = null) => {
+
+const useIsValid = (element = "userVideo", deviceId = null) => {
   const [faceDetected, setFaceDetected] = useState(false);
   const [hasFinished, setHasFinished] = useState(false);
   const isValidCall = async () => {
-      // eslint-disable-next-line no-unused-vars
-     const result = await isValid(callback);
-     console.log("NEW IS VALID RETURNED DATA:", result);
-     // result = undefined;
+    // eslint-disable-next-line no-unused-vars
+    const result = await isValid(callback);
+    console.log("NEW IS VALID RETURNED DATA:", result);
+    // result = undefined;
   };
 
   const callback = async (result) => {
-    console.log("callback hook result isValid:", result)
+    console.log("callback hook result isValid:", result);
     switch (result.status) {
-      case 'WASM_RESPONSE':
-        if(result.returnValue.faces.length === 0){
-          setFaceDetected(false)
-        }
-        else{
-          if (result.returnValue.faces[0].status === 0) {
+      case "WASM_RESPONSE":
+        if (result.returnValue.faces.length === 0) {
+          setFaceDetected(false);
+        } else {
+          if (
+            result.returnValue.faces[0].status === 0 ||
+            result.returnValue.faces[0].status === 11 ||
+            result.returnValue.faces[0].status === 10
+          ) {
             setFaceDetected(true);
           }
           if (result.returnValue.faces[0].status === -1) {
-            setFaceDetected(false)
+            setFaceDetected(false);
           }
         }
         setHasFinished(true);
