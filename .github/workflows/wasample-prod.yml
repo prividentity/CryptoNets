@@ -15,7 +15,7 @@ jobs:
       SKIP_PREFLIGHT_CHECK: true
       REACT_APP_API_URL: https://api.cryptonets.ai/node
       REACT_APP_API_URL_WASM: https://api.cryptonets.ai/node
-      REACT_APP_API_KEY: 00000000000000001962
+      REACT_APP_API_KEY: "00000000000000001962"
       REACT_APP_WASM_MODULE: face_mask
       CI: false
 
