@@ -28,6 +28,24 @@ body{
     object-fit: cover;
 }
 
+.enrollDisplay{
+  position: absolute;
+  top: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+}
+
+.enrollDisplay span{
+  background-color: #000000;
+  color: #ffffff;
+  padding: 5px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
 .age-box {
   position: absolute;
   width: 100%;
@@ -47,6 +65,14 @@ body{
     border: 2px solid white;
     border-radius: 10px;
     object-fit: cover;
+}
+
+.cameraDisplaySuccess{
+  border: 2px solid rgb(33, 196, 106);
+}
+
+.cameraDisplayError{
+  border: 2px solid rgb(187, 53, 53);
 }
 
 .mirrored {

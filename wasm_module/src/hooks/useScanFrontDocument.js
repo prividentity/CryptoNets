@@ -4,7 +4,7 @@ import { CANVAS_SIZE } from "../utils";
 
 let internalCanvasSize;
 let triggerValue;
-const useScanFrontDocument = (onSuccess) => {
+const useScanFrontDocument = (setShowSuccess) => {
   const [isFound, setIsFound] = useState(false);
   const [resultStatus, setResultStatus] = useState(null);
   const [documentUUID, setDocumentUUID] = useState(null);
@@ -49,6 +49,7 @@ const useScanFrontDocument = (onSuccess) => {
 
       setCroppedDocumentHeight(cropped_doc_height);
       setCroppedDocumentWidth(cropped_doc_width);
+      setShowSuccess(true);
     } else if (triggerValue) {
       setInputImageData(null);
       setCroppedDocumentImageData(null);

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { isValidPhotoID } from "@privateid/cryptonets-web-sdk";
 
-const useScanFrontDocumentWithoutPredict = () => {
+const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
   const [scanResult, setScanResult] = useState(null);
   const [scannedIdData, setScannedIdData] = useState(null);
   const [isFound, setIsFound] = useState(false);
@@ -10,6 +10,7 @@ const useScanFrontDocumentWithoutPredict = () => {
     console.log("Front scan callback result:", result);
     if (result.returnValue.op_status === 0) {
       setIsFound(true);
+      setShowSuccess(true);
     }
     else {
       setIsFound(false);
