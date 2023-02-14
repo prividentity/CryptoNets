@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { predict1FA } from "@privateid/cryptonets-web-sdk-alpha";
 
-const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null) => {
+const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null,setShowSuccess) => {
   const [predictOneFaaceDetected, setFaceDetected] = useState(false);
   const [predictOneFaStatus, setPredictStatus] = useState(null);
   const [predictOneFaData, setPredictData] = useState(null);
@@ -18,8 +18,6 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
         input_image_format: "rgba",
         send_original_images: false,
       },
-      element,
-      deviceId
     );
   };
 
@@ -33,6 +31,7 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
           setPredictData(result.returnValue);
           onSuccess(result.returnValue);
           setFaceDetected(true);
+          setShowSuccess(true);
         }
         if (result.returnValue?.status !== 0) {
           if (tries === retryTimes) {

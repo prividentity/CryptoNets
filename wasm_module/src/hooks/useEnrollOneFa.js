@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { enroll1FA } from "@privateid/cryptonets-web-sdk-alpha";
 
-const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null) => {
+const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess) => {
   const [faceDetected, setFaceDetected] = useState(false);
   const [enrollStatus, setEnrollStatus] = useState(null);
   const [progress, setProgress] = useState(0);
   const [enrollData, setEnrollData] = useState(null);
 
-  let tries = 0;
+  let showError = false;
 
   const enrollUserOneFa = async () => {
     setFaceDetected(false);
@@ -31,8 +31,14 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
         break;
       case "INVALID_FACE":
         console.log("INVALID FACE: ", result);
-        setEnrollStatus(result.message);
-        setFaceDetected(false);
+        if (!showError){
+          showError= true;
+          setEnrollStatus(result.message);
+          setFaceDetected(false);
+          setTimeout(()=>{
+            showError = false;
+          },500)
+        }
         break;
       case "ENROLLING":
         setEnrollStatus("ENROLLING");
@@ -43,6 +49,7 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
           setEnrollStatus("ENROLL SUCCESS");
           setEnrollData(result.returnValue);
           onSuccess(result.returnValue);
+          setShowSuccess(true);
         }
         if (result.returnValue?.status === -1 || result.returnValue?.status === -100) {
           setEnrollStatus("ENROLL FAILED, PLEASE TRY AGAIN");
