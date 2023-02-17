@@ -34,7 +34,7 @@ gcloud functions deploy <function_name> \
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
 | `api_key` | `string` | **Required**. Your API key |
-| `image_b64`| `string` | **Required**. Base_64 facial imgae |
+| `image_b64`| `string` | **Required**. Base_64 facial image |
 
 
 
