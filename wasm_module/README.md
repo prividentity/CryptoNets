@@ -24,6 +24,8 @@ To see logs from the Node Module add debug_type to the url parameter.
 - 3- all logs will be displayed from the package
 
 #### NPM Package and Demo
-NPM package: https://www.npmjs.com/package/@privateid/cryptonets-web-sdk<br>
+NPM package: https://www.npmjs.com/package/@privateid/cryptonets-web-sdk-alpha<br>
 Loom video for walkthrough: https://www.loom.com/share/88ac85da026b433788eaa2473717c07f
 
+#### WASM NextJS Repo
+https://github.com/prividentity/wasm-sample-nextjs
