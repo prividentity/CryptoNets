@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { useEffect, useMemo, useState } from "react";
-import { switchCamera, setStopLoopContinuousAuthentication, closeCamera } from "@privateid/cryptonets-web-sdk-alpha";
+import { switchCamera, setStopLoopContinuousAuthentication, closeCamera } from "@privateid/cryptonets-web-sdk";
 
 import {
   useCamera,
@@ -95,14 +95,14 @@ const Ready = () => {
 
   useEffect(() => {
     if (!wasmReady) return;
-    if (!ready && currentAction !== "useScanDocumentFront" && currentAction !== "useScanDocumentBack") init();
+    if (!ready) init();
     if (isIOS && osVersion < 15) {
       console.log("Does not support old version of iOS os version 15 below.");
     } else if (isAndroid && osVersion < 11) {
       console.log("Does not support old version of Android os version 11 below.");
     }
     console.log("--- wasm status ", wasmReady, ready);
-  }, [wasmReady, ready, currentAction]);
+  }, [wasmReady, ready]);
 
   const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");
   // isValid
