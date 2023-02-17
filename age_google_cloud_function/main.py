@@ -86,7 +86,7 @@ def estimate_age(request):
                       PARAMETERS.ESTIMATE_AGE_RESERVATION_CALLS: 1
                       })
         
-        face_factor = FaceFactor(logging_level=LoggingLevel.off, config=config_object, cache_type=CacheType.OFF)
+        face_factor = FaceFactor(server_url=server_url, api_key=api_key,logging_level=LoggingLevel.off, config=config_object, cache_type=CacheType.OFF)
         age_handle = face_factor.estimate_age(image_data=image_data)
         response = []
 
