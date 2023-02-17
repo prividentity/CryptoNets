@@ -12,6 +12,23 @@ Face cropping: It is best to provide the original image to isValid without prepr
 
 ## Deployment
 
+### Prerequisites
+
+Install google cloud sdk cli if it is not present in the system and integrate with the google acccount
+
+For detailed instructions, please clink on this link [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
+
+### Step 1: Clone the project
+
+```bash
+
+git clone git@github.com:prividentity/CryptoNets.git
+cd age_google_cloud_function
+
+```
+
+### Step 2: Deploy the function
+
 To deploy this project in google cloud function run
 
 ```bash
@@ -22,6 +39,7 @@ gcloud functions deploy <function_name> \
 --trigger-http
 ```
 
+This will deploy the function in the google cloud and will give an API Endpoint URL for triggering the function
 
 ## API Reference
 
