@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { predict1FA } from "@privateid/cryptonets-web-sdk";
+import { predict1FA } from "@privateid/cryptonets-web-sdk-alpha";
 
 const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null,setShowSuccess) => {
   const [predictOneFaaceDetected, setFaceDetected] = useState(false);
@@ -16,7 +16,7 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
       callback,
       {
         input_image_format: "rgba",
-        send_original_images: false,
+        send_original_images: true,
       },
     );
   };
@@ -34,12 +34,6 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
           setShowSuccess(true);
         }
         if (result.returnValue?.status !== 0) {
-          if (tries === retryTimes) {
-            // onFailure();
-          } else {
-            tries += 1;
-            // enrollUserOneFa();
-          }
           const {validation_status, message}  = result.returnValue;
           setPredictMessage(message);
           let hasValidFace =false;
@@ -51,6 +45,7 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
           }
           setFaceDetected(hasValidFace);
           setPredictStatus(null);
+          predictUserOneFa();
         }
         break;
       default:

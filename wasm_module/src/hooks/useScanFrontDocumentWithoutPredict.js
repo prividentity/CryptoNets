@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { isValidPhotoID } from "@privateid/cryptonets-web-sdk";
+import { isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
 
 const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
   const [scanResult, setScanResult] = useState(null);

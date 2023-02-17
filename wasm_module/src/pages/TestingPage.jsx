@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { useEffect, useMemo, useState } from "react";
-import { switchCamera, setStopLoopContinuousAuthentication, closeCamera } from "@privateid/cryptonets-web-sdk";
+import { switchCamera, setStopLoopContinuousAuthentication, closeCamera } from "@privateid/cryptonets-web-sdk-alpha";
 
 import {
   useCamera,

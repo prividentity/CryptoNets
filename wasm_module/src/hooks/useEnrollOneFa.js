@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { enroll1FA } from "@privateid/cryptonets-web-sdk";
+import { enroll1FA } from "@privateid/cryptonets-web-sdk-alpha";
 
 const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess) => {
   const [faceDetected, setFaceDetected] = useState(false);

@@ -2,7 +2,8 @@
 /* eslint-disable default-param-last */
 /* eslint-disable no-undef */
 /* eslint-disable no-underscore-dangle */
-importScripts('https://unpkg.com/comlink/dist/umd/comlink.js');
+// importScripts('https://unpkg.com/comlink/dist/umd/comlink.js');
+importScripts('./unpkg.js');
 
 let wasmPrivModule;
 let apiUrl;
