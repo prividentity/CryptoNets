@@ -8,6 +8,8 @@ import functions_framework
 import numpy as np
 import requests
 from PIL import Image
+from cryptonets_python_sdk.settings.configuration import ConfigObject, PARAMETERS
+from cryptonets_python_sdk.settings.cacheType import CacheType
 from cryptonets_python_sdk.factor import FaceFactor
 from cryptonets_python_sdk.settings.loggingLevel import LoggingLevel
 
@@ -79,7 +81,12 @@ def estimate_age(request):
             return (json.dumps({"status ": -1,
                                 "message ": "Invalid Apikey",
                                 "faces": []}), 200, headers)
-        face_factor = FaceFactor(server_url=server_url, api_key=api_key, logging_level=LoggingLevel.off)
+        
+        config_object = ConfigObject(config_param={
+                      PARAMETERS.ESTIMATE_AGE_RESERVATION_CALLS: 1
+                      })
+        
+        face_factor = FaceFactor(logging_level=LoggingLevel.off, config=config_object, cache_type=CacheType.OFF)
         age_handle = face_factor.estimate_age(image_data=image_data)
         response = []
 
