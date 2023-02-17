@@ -62,24 +62,43 @@ This will deploy the function in the google cloud and will give an API Endpoint 
 Payload :  { "api_key" : <API_KEY>,  "image_b64" :  <BASE64_Image>}
 
 Response :  {
- "status " : 0 or -1, 0 for success and -1 for failure  
+  "status " : 0 or -1, //0 for success and -1 for failure  
   "message” : “OK” or error message,
- "faces":  list of face json
+  "faces":  list of face json
  }
 
 ```
 ```
 Sample Response : 
-{  "status ": 0, "message ": "Ok", "faces": [{"return_code": 0, "message": "ValidBiometric", "age": 9.578746795654297,
-"BBox_top_left": "Point(298.0,465.0)", "BBox_bottom_right": "Point(554.0,739.0)"}, {"return_code": 0, "message":
-"ValidBiometric", "age": 11.385629653930664, "BBox_top_left": "Point(699.0,334.0)", "BBox_bottom_right":
-"Point(949.0,590.0)"}]}
+{  
+  "status ": 0, 
+  "message ": "Ok",
+  "faces": 
+  [
+    {
+      "return_code": 0,
+     "message": "ValidBiometric",
+     "age": 9.578746795654297,
+     "BBox_top_left": "Point(298.0,465.0)",
+     "BBox_bottom_right": "Point(554.0,739.0)"
+    },
+    {
+      "return_code": 0,
+      "message": "ValidBiometric",
+      "age": 11.385629653930664,
+      "BBox_top_left": "Point(699.0,334.0)",
+      "BBox_bottom_right": "Point(949.0,590.0)"
+    }
+  ]
+}
 
 ```
 
 
 
 ## Documentation
+
+To know more about the response and error code, below documentation gives a detailed interpretation of the response object
 
 [Face json documentation](https://docs.private.id/cryptonets-python-sdk/ResultObjects/FaceObjectResult.html#cryptonets_python_sdk.helper.result_objects.faceObjectResult.FaceObjectResult)
 
