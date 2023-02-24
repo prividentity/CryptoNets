@@ -150,10 +150,6 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) => {
   const croppedBarcodeBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   const croppedBarcodeBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
-  // // create a pointer to interger to hold the length of the output buffer
-  // const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-  // const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-
   const encoder = new TextEncoder();
   const config_bytes = encoder.encode(`${config}\0`);
 
@@ -330,6 +326,8 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
   wasmPrivModule._free(croppedMugshotBufferFirstPtr);
   wasmPrivModule._free(croppedMugshotBufferLenPtr);
   wasmPrivModule._free(configInputPtr);
+  wasmPrivModule._free(inputPtr);
+  inputPtr = null;
 
   const croppedDocument = croppedDocumentBufferSize > 0 ? croppedDocumentData : null;
 
@@ -370,15 +368,6 @@ const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) 
 
     wasmPrivModule.HEAP8.set(imageInput, imageInputPtr / imageInput.BYTES_PER_ELEMENT);
 
-    // const BufferSize = wasmPrivModule._spl_image_embedding_length();
-
-    // outupt  ptr
-    // const outputBufferSize = BufferSize * 4 * 80;
-    // const outputBufferPtr = wasmPrivModule._malloc(outputBufferSize);
-
-    // const augmBufferSize = 224 * 224 * 4 * 100;
-    // const augmBufferPtr = wasmPrivModule._malloc(augmBufferSize);
-
     const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     // create a pointer to interger to hold the length of the output buffer
     const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
@@ -387,17 +376,6 @@ const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) 
 
     // Initialize Session
     await initializeWasmSession();
-    // if (!wasmSession) {
-    //   const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    //   const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-    //   if (s_result) {
-    //     console.log('[FAR_DEBUG] : session initialized successfully');
-    //   } else {
-    //     console.log('[FAR_DEBUG] : session initialized failed');
-    //   }
-    //   const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
-    //   wasmSession = sessionSecPtr;
-    // }
 
     try {
       result = await wasmPrivModule._privid_enroll_onefa(
@@ -420,34 +398,11 @@ const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) 
     } catch (e) {
       console.error('---------__E__-------', e);
     }
-    // console.log('[FAR_DEBUG] : enroll_onefa done')
 
-    /*
-    const href = [];
-    if (['900', '901', '902', '903'].includes(debug_type)) {
-      const num = action ? 80 : 1;
-      const AugmputArray = new Uint8Array(wasmPrivModule.HEAPU8.buffer, augmBufferPtr, 224 * 224 * 4 * num);
-
-      const img_width = 224;
-      const img_height = 224;
-      const dataLength = 200704;
-
-      const numImages = AugmputArray.length / dataLength;
-
-      for (let i = 0; i < numImages; i++) {
-        const img = AugmputArray.slice(i * dataLength, (i + 1) * dataLength);
-        const img_data = Uint8ClampedArray.from(img);
-
-        const image = new ImageData(img_data, img_width, img_height);
-
-        href.push(image);
-      }
-    }
-    */
     wasmPrivModule._free(imageInputPtr);
-    // wasmPrivModule._free(outputBufferPtr);
-    // wasmPrivModule._free(augmBufferPtr);
     wasmPrivModule._free(resultFirstPtr);
+    wasmPrivModule._free(configInputPtr);
+
     resolve({ result });
   });
 
@@ -478,14 +433,6 @@ const FHE_predictOnefa = async (originalImages, simd, debug_type = 0, cb, config
 
   wasmPrivModule.HEAP8.set(imageInput, imageInputPtr / imageInput.BYTES_PER_ELEMENT);
 
-  // // const BufferSize = wasmPrivModule._spl_image_embedding_length();
-
-  // // // outupt  ptr
-  // // const outputBufferSize = BufferSize * 4 * 80;
-  // // const outputBufferPtr = wasmPrivModule._malloc(outputBufferSize);
-
-  // // const augmBufferSize = 224 * 224 * 4 * 100;
-  // // const augmBufferPtr = wasmPrivModule._malloc(augmBufferSize);
 
   const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   // create a pointer to interger to hold the length of the output buffer
@@ -518,7 +465,6 @@ const FHE_predictOnefa = async (originalImages, simd, debug_type = 0, cb, config
 
   wasmPrivModule._free(imageInputPtr);
   wasmPrivModule._free(configInputPtr);
-  // // wasmPrivModule._free(augmBufferPtr);
   wasmPrivModule._free(resultFirstPtr);
   wasmPrivModule._free(resultLenPtr);
 };
@@ -589,7 +535,7 @@ const prividAgePredict = async (
   privid_wasm_result = cb;
 
   if (!wasmPrivModule) {
-    console.log('loaded for first wsm wrkr', simd, action);
+    console.log('loaded for first wsm wrkr', simd);
     await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
   }
   // Initialize Session
