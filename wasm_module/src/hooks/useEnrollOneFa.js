@@ -17,6 +17,7 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
     // eslint-disable-next-line no-unused-vars
     await enroll1FA(callback, {
       send_original_images: false,
+      // face_thresholds_rem_bad_emb: 0.96,
     });
   };
 
@@ -51,7 +52,7 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
           onSuccess(result.returnValue);
           setShowSuccess(true);
         }
-        if (result.returnValue?.status === -1 || result.returnValue?.status === -100) {
+        if (result.returnValue?.status === -1 || result.returnValue?.status === -100 || result.returnValue?.error === -1) {
           setEnrollStatus("ENROLL FAILED, PLEASE TRY AGAIN");
         }
         break;
