@@ -23,9 +23,7 @@ const useContinuousPredict = (
       callback,
       {
         input_image_format: "rgba",
-        send_original_image: false,
       },
-      element
     );
   };
 
@@ -66,16 +64,16 @@ const useContinuousPredict = (
             tries += 1;
             // await predictUser();
           }
-          const {validation_status, message}  = result.returnValue;
-          setContinuousPredictMessage(message);
-          let hasValidFace =false;
-          for (let i = 0; validation_status.length > i; i++){
-            if(validation_status[i].status ===0){
-              hasValidFace = true
-              i = validation_status.length;
-            }
-          }
-          setFaceDetected(hasValidFace);
+          // const {validation_status, message}  = result.returnValue;
+          // setContinuousPredictMessage(message);
+          // let hasValidFace =false;
+          // for (let i = 0; validation_status.length > i; i++){
+          //   if(validation_status[i].status ===0){
+          //     hasValidFace = true
+          //     i = validation_status.length;
+          //   }
+          // }
+          // setFaceDetected(hasValidFace);
         }
         break;
       default:
