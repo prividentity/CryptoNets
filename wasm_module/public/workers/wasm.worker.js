@@ -103,7 +103,7 @@ async function deleteUUID(uuid, cb) {
   const uuid_bytes = encoder.encode(`${uuid}\0`);
 
   // Initialize Session
-  await initializeWasmSession(apiUrl,apiKey);
+  await initializeWasmSession(apiUrl, apiKey);
   // if (!wasmSession) {
   //   const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   //   const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
@@ -158,7 +158,7 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) => {
   wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
 
   // Initialize Session
-  await initializeWasmSession(apiUrl,apiKey);
+  await initializeWasmSession(apiUrl, apiKey);
 
   let result = null;
   try {
@@ -266,7 +266,7 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
   const croppedMugshotBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
   // Initialize Session
-  await initializeWasmSession(apiUrl,apiKey);
+  await initializeWasmSession(apiUrl, apiKey);
 
   let result = null;
 
@@ -375,7 +375,7 @@ const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) 
     console.log('wasmPrivModule', wasmPrivModule);
 
     // Initialize Session
-    await initializeWasmSession(apiUrl,apiKey);
+    await initializeWasmSession(apiUrl, apiKey);
 
     try {
       result = await wasmPrivModule._privid_enroll_onefa(
@@ -433,16 +433,14 @@ const FHE_predictOnefa = async (originalImages, simd, debug_type = 0, cb, config
 
   wasmPrivModule.HEAP8.set(imageInput, imageInputPtr / imageInput.BYTES_PER_ELEMENT);
 
-
   const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   // create a pointer to interger to hold the length of the output buffer
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
   // Initialize Session
-  await initializeWasmSession(apiUrl,apiKey);
-
+  await initializeWasmSession(apiUrl, apiKey);
   try {
-    wasmPrivModule._privid_face_predict_onefa(
+     wasmPrivModule._privid_face_predict_onefa(
       wasmSession /* session pointer */,
       configInputPtr,
       configInputSize,
@@ -467,6 +465,7 @@ const FHE_predictOnefa = async (originalImages, simd, debug_type = 0, cb, config
   wasmPrivModule._free(configInputPtr);
   wasmPrivModule._free(resultFirstPtr);
   wasmPrivModule._free(resultLenPtr);
+
 };
 
 const isValidInternal = async (
@@ -485,7 +484,7 @@ const isValidInternal = async (
     await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
   }
   // Initialize Session
-  await initializeWasmSession(apiUrl,apiKey);
+  await initializeWasmSession(apiUrl, apiKey);
 
   const imageSize = data.length * data.BYTES_PER_ELEMENT;
 
@@ -539,7 +538,7 @@ const prividAgePredict = async (
     await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
   }
   // Initialize Session
-  await initializeWasmSession(apiUrl,apiKey);
+  await initializeWasmSession(apiUrl, apiKey);
 
   const imageSize = data.length * data.BYTES_PER_ELEMENT;
 
@@ -719,13 +718,13 @@ async function setCacheConfiguration() {
   const cacheInputPtr = wasmPrivModule._malloc(cacheInputSize);
 
   wasmPrivModule.HEAP8.set(cache_config_bytes, cacheInputPtr / cache_config_bytes.BYTES_PER_ELEMENT);
-  // await wasmPrivModule._privid_set_configuration(wasmSession, cacheInputPtr, cacheInputSize);
+  await wasmPrivModule._privid_set_configuration(wasmSession, cacheInputPtr, cacheInputSize);
   // await wasmPrivModule._privid_set_default_configuration(wasmSession, 1);
   wasmPrivModule._free(cacheInputPtr);
 }
 
 async function initializeWasmSession(url, key) {
-  console.log('initializing wasm session');
+  console.log('checking session if available:');
   if (!wasmSession) {
     const encoder = new TextEncoder();
     const url_bytes = encoder.encode(`${url}0`);
@@ -733,12 +732,11 @@ async function initializeWasmSession(url, key) {
 
     const key_bytes = encoder.encode(`${key}0`);
     key_bytes[key_bytes.length - 1] = 0;
-    
+
     // URL
     const urlInputSize = url_bytes.length * url_bytes.BYTES_PER_ELEMENT;
     const urlInputtPtr = wasmPrivModule._malloc(urlInputSize);
     wasmPrivModule.HEAP8.set(url_bytes, urlInputtPtr / url_bytes.BYTES_PER_ELEMENT);
-    
 
     // API KEY
     const keyInputSize = key_bytes.length * key_bytes.BYTES_PER_ELEMENT;
@@ -748,7 +746,7 @@ async function initializeWasmSession(url, key) {
     // SESSION
     console.log('Wasm session not available creating session');
     const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    
+
     // const s_result = wasmPrivModule._privid_initialize_session(
     //   sessionFirstPtr,
     //   3,
@@ -842,7 +840,7 @@ const prividFaceISO = (imageInput, simd, debug_type = 0, cb, config = {}) =>
     const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
     // Initialize Session
-    await initializeWasmSession(apiUrl,apiKey);
+    await initializeWasmSession(apiUrl, apiKey);
 
     let result = null;
     try {
