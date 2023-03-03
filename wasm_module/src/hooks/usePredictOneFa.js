@@ -24,6 +24,11 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
     console.log("predict callback hook result:", result);
     switch (result.status) {
       case "WASM_RESPONSE":
+        if(result?.returnValue?.error) {
+          setFaceDetected(false);
+          setPredictMessage("Invalid Image");
+          return
+        }
         if (result.returnValue?.status === 0) {
           const { message }  = result.returnValue;
           setPredictMessage(message);
