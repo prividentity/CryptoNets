@@ -38,6 +38,11 @@ const useContinuousPredict = (
       case "WASM_RESPONSE":
       case -1:
       case -100:
+        if(result?.returnValue?.error) {
+          setFaceDetected(false);
+          setContinuousPredictMessage("Invalid Image");
+          return
+        }
         if (result.returnValue.status === 0) {
           const { message }  = result.returnValue;
           setContinuousPredictMessage(message);
@@ -64,16 +69,16 @@ const useContinuousPredict = (
             tries += 1;
             // await predictUser();
           }
-          // const {validation_status, message}  = result.returnValue;
-          // setContinuousPredictMessage(message);
-          // let hasValidFace =false;
-          // for (let i = 0; validation_status.length > i; i++){
-          //   if(validation_status[i].status ===0){
-          //     hasValidFace = true
-          //     i = validation_status.length;
-          //   }
-          // }
-          // setFaceDetected(hasValidFace);
+          const {validation_status, message}  = result.returnValue;
+          setContinuousPredictMessage(message);
+          let hasValidFace =false;
+          for (let i = 0; validation_status.length > i; i++){
+            if(validation_status[i].status ===0){
+              hasValidFace = true
+              i = validation_status.length;
+            }
+          }
+          setFaceDetected(hasValidFace);
         }
         break;
       default:
