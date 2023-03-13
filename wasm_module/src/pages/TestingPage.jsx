@@ -1,6 +1,11 @@
 /* eslint-disable */
 import { useEffect, useMemo, useState } from "react";
-import { switchCamera, setStopLoopContinuousAuthentication, closeCamera } from "@privateid/cryptonets-web-sdk-alpha";
+import {
+  switchCamera,
+  setStopLoopContinuousAuthentication,
+  closeCamera,
+  faceCompareLocal,
+} from "@privateid/cryptonets-web-sdk-alpha";
 
 import {
   useCamera,
@@ -140,6 +145,8 @@ const Ready = () => {
     enrollData: enrollOneFaData,
     enrollUserOneFa,
     progress: enrollOneFaProgress,
+    enrollPortrait,
+    enrollImageData,
   } = useEnrollOneFa("userVideo", useEnrollSuccess, null, deviceId, setShowSuccess);
   const handleEnrollOneFa = async () => {
     setShowSuccess(false);
@@ -150,13 +157,8 @@ const Ready = () => {
   const handlePreidctSuccess = (result) => {
     console.log("======PREDICT SUCCESS========");
   };
-  const { predictOneFaData, predictOneFaaceDetected, predictMessage, predictUserOneFa } = usePredictOneFa(
-    "userVideo",
-    handlePreidctSuccess,
-    4,
-    null,
-    setShowSuccess
-  );
+  const { predictOneFaData, predictOneFaaceDetected, predictMessage, predictUserOneFa, predictImageData } =
+    usePredictOneFa("userVideo", handlePreidctSuccess, 4, null, setShowSuccess);
   const handlePredictOneFa = async () => {
     setShowSuccess(false);
     setCurrentAction("usePredictOneFa");
@@ -273,6 +275,7 @@ const Ready = () => {
     isFound: isfoundValidity,
     scanFrontDocument: scanFrontValidity,
     confidenceValue,
+    predictMugshotImageData,
   } = useScanFrontDocumentWithoutPredict(setShowSuccess);
 
   const handleFrontDLValidity = async () => {
@@ -319,6 +322,18 @@ const Ready = () => {
 
   const handleCloseCamera = async () => {
     await closeCamera();
+  };
+
+  const handleCompareImages = async () => {
+    const callback = (result) => {
+      console.log("COMPARE RESULT: ", result);
+    };
+
+
+    console.log("Image Data:", {enrollImageData, predictMugshotImageData})
+    if (enrollImageData && predictMugshotImageData) {
+      await faceCompareLocal(callback, enrollImageData, predictMugshotImageData, {input_image_format:"rgba"});
+    }
   };
 
   return (
@@ -537,6 +552,9 @@ const Ready = () => {
           </button>
           <button className="button" onClick={handlePrividFaceISO}>
             Face ISO
+          </button>
+          <button className="button" onClick={handleCompareImages}>
+            Compare Front DL image
           </button>
         </div>
       </div>
