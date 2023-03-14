@@ -104,7 +104,7 @@ const Ready = () => {
     if (!ready && !deviceSupported.isChecking) {
       init();
     }
-    if(!ready) return
+    if (!ready) return;
     if (isIOS && osVersion < 15) {
       console.log("Does not support old version of iOS os version 15 below.");
     } else if (isAndroid && osVersion < 11) {
@@ -339,13 +339,123 @@ const Ready = () => {
     }
   };
 
+  const [picure1ImageData, setPicture1ImageData] = useState(null);
+  const [picture2ImageData, setPicture2ImageData] = useState(null);
+
+  const handleUploadPicture1 = async (e) => {
+    console.log(e.target.files);
+    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
+    if (e.target.files.length > 0) {
+      if (imageRegex.test(e.target.files[0].type)) {
+        const imageUrl = URL.createObjectURL(e.target.files[0]);
+
+        console.log(e.target.files[0]);
+
+        const getBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+
+            reader.onload = function () {
+              resolve(reader.result);
+            };
+            reader.onerror = function (error) {
+              reject(error);
+            };
+          });
+        };
+
+        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
+        var newImg = new Image();
+        newImg.src = base64;
+        newImg.onload = async () => {
+          var imgSize = {
+            w: newImg.width,
+            h: newImg.height,
+          };
+          alert(imgSize.w + " " + imgSize.h);
+          const canvas = document.createElement("canvas");
+          canvas.setAttribute("height", `${imgSize.h}`);
+          canvas.setAttribute("width", `${imgSize.w}`);
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(newImg, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
+          console.log("imageData", imageData);
+          setPicture1ImageData(imageData);
+        };
+      } else {
+        console.log("INVALID IMAGE TYPE");
+      }
+    }
+  };
+
+  const handleUploadPicture2 = async (e) => {
+    console.log(e.target.files);
+    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
+    if (e.target.files.length > 0) {
+      if (imageRegex.test(e.target.files[0].type)) {
+        const imageUrl = URL.createObjectURL(e.target.files[0]);
+
+        console.log(e.target.files[0]);
+
+        const getBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+
+            reader.onload = function () {
+              resolve(reader.result);
+            };
+            reader.onerror = function (error) {
+              reject(error);
+            };
+          });
+        };
+
+        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
+        var newImg = new Image();
+        newImg.src = base64;
+        newImg.onload = async () => {
+          var imgSize = {
+            w: newImg.width,
+            h: newImg.height,
+          };
+          alert(imgSize.w + " " + imgSize.h);
+          const canvas = document.createElement("canvas");
+          canvas.setAttribute("height", `${imgSize.h}`);
+          canvas.setAttribute("width", `${imgSize.w}`);
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(newImg, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
+          console.log("imageData", imageData);
+          setPicture2ImageData(imageData);
+        };
+      } else {
+        console.log("INVALID IMAGE TYPE");
+      }
+    }
+  };
+
+  const handleCompareUploaded = async () => {
+    const callback = (result) => {
+      console.log("COMPARE RESULT: ", result);
+    };
+
+    console.log("Image Data:", { picure1ImageData, picture2ImageData });
+    if (picure1ImageData && picture2ImageData) {
+      await faceCompareLocal(callback, picure1ImageData, picture2ImageData, { input_image_format: "rgba" });
+    }
+  };
+
   return (
     <>
       {deviceSupported.isChecking ? (
         <div>
           <h1> Loading . . . </h1>
         </div>
-      ) : !deviceSupported.isChecking && deviceSupported.support ? (
+      ) : !deviceSupported.isChecking && deviceSupported.supported ? (
         <div id="canvasInput" className="container">
           <div
             style={{
@@ -565,10 +675,35 @@ const Ready = () => {
               <button className="button" onClick={handleCompareImages}>
                 Compare Front DL image
               </button>
+              <label>
+                <input
+                  type="file"
+                  name="upload"
+                  accept="image/png, image/gif, image/jpeg"
+                  onChange={handleUploadPicture1}
+                  style={{ display: "none" }}
+                />
+                <span>
+                  Upload pic1
+                  </span>
+              </label>
+              <label>
+                <input
+                  type="file"
+                  name="upload"
+                  accept="image/png, image/gif, image/jpeg"
+                  onChange={handleUploadPicture2}
+                  style={{ display: "none" }}
+                />
+                <span>
+                  Upload pic2
+                  </span>
+              </label>
+              <button onClick={handleCompareUploaded}>Compare uploaded pictures</button>
             </div>
           </div>
         </div>
-      ) : !deviceSupported.isChecking && !deviceSupported.support ? (
+      ) : !deviceSupported.isChecking && !deviceSupported.supported ? (
         <div>
           <h1> Not Supported. </h1>
           <h4> Please use a different device or updated device. </h4>
