@@ -6,6 +6,9 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
   const [enrollStatus, setEnrollStatus] = useState(null);
   const [progress, setProgress] = useState(0);
   const [enrollData, setEnrollData] = useState(null);
+  const [enrollPortrait, setEnrollPortrait] = useState(null);
+
+  const [enrollImageData, setEnrollImageData] = useState(null);
 
   let showError = false;
 
@@ -15,10 +18,11 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
     setProgress(0);
     setEnrollData(null);
     // eslint-disable-next-line no-unused-vars
-    await enroll1FA(callback, {
+    const {imageData} = await enroll1FA(callback, {
       send_original_images: false,
       // face_thresholds_rem_bad_emb: 0.96,
     });
+    setEnrollImageData(imageData)
   };
 
 
@@ -50,6 +54,7 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
           setEnrollStatus("ENROLL SUCCESS");
           setEnrollData(result.returnValue);
           onSuccess(result.returnValue);
+          setEnrollPortrait(result.portrait);
           setShowSuccess(true);
         }
         if (result.returnValue?.status === -1 || result.returnValue?.status === -100 || result.returnValue?.error === -1) {
@@ -60,7 +65,7 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
     }
   };
 
-  return { faceDetected, enrollStatus, enrollData, enrollUserOneFa, progress };
+  return { faceDetected, enrollStatus, enrollData, enrollUserOneFa, progress, enrollPortrait, enrollImageData };
 };
 
 export default useEnrollOneFa;

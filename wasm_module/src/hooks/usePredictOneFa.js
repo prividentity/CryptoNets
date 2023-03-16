@@ -6,13 +6,12 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
   const [predictOneFaStatus, setPredictStatus] = useState(null);
   const [predictOneFaData, setPredictData] = useState(null);
   const [predictMessage, setPredictMessage] = useState('');
-  let tries = 0;
 
   const predictUserOneFa = async () => {
     setFaceDetected(false);
     setPredictData(null);
     // eslint-disable-next-line no-unused-vars
-    await predict1FA(
+ await predict1FA(
       callback,
       {
         input_image_format: "rgba",

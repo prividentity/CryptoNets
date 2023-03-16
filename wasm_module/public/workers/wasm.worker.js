@@ -44,22 +44,21 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
     } else if (['face', 'face_mask'].includes(module)) {
       const moduleName = 'privid_fhe';
       const modulePath = simd ? 'simd' : 'noSimd';
-
       const cachedModule = await readKey(module);
       const fetchdWasmVersion = await fetch(`../wasm/${module}/${modulePath}/version.json`);
       const fetchdVersion = await fetchdWasmVersion.json();
-      console.log(cachedModule?.version, Number(fetchdVersion?.version));
-      if (cachedModule?.version === Number(fetchdVersion?.version)) {
-        const { cachedWasm, cachedScript } = cachedModule;
-        eval(cachedScript);
 
-        wasmPrivModule = await createTFLiteModule({ wasmBinary: cachedWasm });
-        await wasmPrivModule._FHE_init(parseInt(debug_type, 10));
-        // Initialize API URL
-        await initializeAPIUrl(url);
-        // Initialize API Key
-        await initializeAPIKey(key);
-
+        // eslint-disable-next-line prefer-template, no-unsafe-optional-chaining
+        console.log("---Wasm Version: ", cachedModule?.version + " " + fetchdVersion?.version )
+      if (cachedModule?.version && (cachedModule?.version.toString() === fetchdVersion?.version.toString())) {
+         
+        if(!wasmPrivModule){
+          const { cachedWasm, cachedScript } = cachedModule;
+          eval(cachedScript);
+          wasmPrivModule = await createTFLiteModule({ wasmBinary: cachedWasm });
+          await initializeWasm(debug_type, url, key);
+        }
+        console.log("=== Using Cached Version!!");
         resolve('Cache Loaded');
       } else {
         const wasm = await fetch(`../wasm/${module}/${modulePath}/${moduleName}.wasm`);
@@ -68,18 +67,13 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
         const scriptBuffer = await script.text();
         const buffer = await wasm.arrayBuffer();
         eval(scriptBuffer);
-
         wasmPrivModule = await createTFLiteModule({ wasmBinary: buffer });
+        await initializeWasm(debug_type, url, key);
 
-        await wasmPrivModule._FHE_init(parseInt(debug_type, 10));
-        const version = wasmPrivModule._get_version();
-
+        const version = wasmPrivModule.UTF8ToString(wasmPrivModule._get_version());
+        console.log("WASM Version:",version);
         await putKey(module, buffer, scriptBuffer, version);
-        // Initialize API URL
-        await initializeAPIUrl(url);
-        // Initialize API Key
-        await initializeAPIKey(key);
-
+        console.log("=== Loaded Version!!");
         resolve('Loaded');
       }
     } else {
@@ -238,8 +232,8 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
     await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
   }
   configGlobal = config;
-  const version = wasmPrivModule._get_version();
-  console.log('Version = ', version);
+  // const version = wasmPrivModule._get_version();
+  // console.log('Version = ', version);
 
   const encoder = new TextEncoder();
   const config_bytes = encoder.encode(`${config}\0`);
@@ -353,8 +347,8 @@ const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) 
       originalImages.map((x) => x.data),
       Uint8Array,
     );
-    const version = wasmPrivModule._get_version();
-    console.log('Version = ', version);
+    // const version = wasmPrivModule._get_version();
+    // console.log('Version = ', version);
 
     const encoder = new TextEncoder();
     const config_bytes = encoder.encode(`${config}\0`);
@@ -418,8 +412,8 @@ const FHE_predictOnefa = async (originalImages, simd, debug_type = 0, cb, config
     originalImages.map((x) => x.data),
     Uint8Array,
   );
-  const version = wasmPrivModule._get_version();
-  console.log('Version = ', version);
+  // const version = wasmPrivModule._get_version();
+  // console.log('Version = ', version);
 
   const encoder = new TextEncoder();
   const config_bytes = encoder.encode(`${config}\0`);
@@ -671,6 +665,7 @@ function readKey(key) {
       };
     };
   });
+  
 }
 
 function putKey(key, cachedWasm, cachedScript, version) {
@@ -726,22 +721,22 @@ async function setCacheConfiguration() {
 async function initializeWasmSession(url, key) {
   console.log('checking session if available:');
   if (!wasmSession) {
-    const encoder = new TextEncoder();
-    const url_bytes = encoder.encode(`${url}0`);
-    url_bytes[url_bytes.length - 1] = 0;
+    // const encoder = new TextEncoder();
+    // const url_bytes = encoder.encode(`${url}0`);
+    // url_bytes[url_bytes.length - 1] = 0;
 
-    const key_bytes = encoder.encode(`${key}0`);
-    key_bytes[key_bytes.length - 1] = 0;
+    // const key_bytes = encoder.encode(`${key}0`);
+    // key_bytes[key_bytes.length - 1] = 0;
 
-    // URL
-    const urlInputSize = url_bytes.length * url_bytes.BYTES_PER_ELEMENT;
-    const urlInputtPtr = wasmPrivModule._malloc(urlInputSize);
-    wasmPrivModule.HEAP8.set(url_bytes, urlInputtPtr / url_bytes.BYTES_PER_ELEMENT);
+    // // URL
+    // const urlInputSize = url_bytes.length * url_bytes.BYTES_PER_ELEMENT;
+    // const urlInputtPtr = wasmPrivModule._malloc(urlInputSize);
+    // wasmPrivModule.HEAP8.set(url_bytes, urlInputtPtr / url_bytes.BYTES_PER_ELEMENT);
 
-    // API KEY
-    const keyInputSize = key_bytes.length * key_bytes.BYTES_PER_ELEMENT;
-    const keyInputtPtr = wasmPrivModule._malloc(keyInputSize);
-    wasmPrivModule.HEAP8.set(key_bytes, keyInputtPtr / key_bytes.BYTES_PER_ELEMENT);
+    // // API KEY
+    // const keyInputSize = key_bytes.length * key_bytes.BYTES_PER_ELEMENT;
+    // const keyInputtPtr = wasmPrivModule._malloc(keyInputSize);
+    // wasmPrivModule.HEAP8.set(key_bytes, keyInputtPtr / key_bytes.BYTES_PER_ELEMENT);
 
     // SESSION
     console.log('Wasm session not available creating session');
@@ -770,8 +765,8 @@ async function initializeWasmSession(url, key) {
     if (setCache) {
       await setCacheConfiguration();
     }
-    wasmPrivModule._free(urlInputtPtr);
-    wasmPrivModule._free(keyInputtPtr);
+    // wasmPrivModule._free(urlInputtPtr);
+    // wasmPrivModule._free(keyInputtPtr);
   } else {
     console.log('wasm Session', wasmSession);
     console.log('Wasm session is available. Skipping creating session');
@@ -779,7 +774,16 @@ async function initializeWasmSession(url, key) {
   return wasmSession;
 }
 
+async function initializeWasm(debug_type, url, key) {
+  await wasmPrivModule._FHE_init(parseInt(debug_type, 10));
+  // Initialize API URL
+  await initializeAPIUrl(url);
+  // Initialize API Key
+  await initializeAPIKey(key);
+}
+
 async function initializeAPIUrl(url) {
+  console.log("initialize API URL called");
   const encoder = new TextEncoder();
   const url_bytes = encoder.encode(`${url}0`);
   url_bytes[url_bytes.length - 1] = 0;
@@ -793,6 +797,7 @@ async function initializeAPIUrl(url) {
 }
 
 async function initializeAPIKey(key) {
+  console.log("initialize API key called");
   const encoder = new TextEncoder();
   const key_bytes = encoder.encode(`${key}0`);
   key_bytes[key_bytes.length - 1] = 0;
@@ -816,8 +821,8 @@ const prividFaceISO = (imageInput, simd, debug_type = 0, cb, config = {}) =>
     const { data: imageData } = imageInput;
 
     const imageInputSize = imageData.length * imageData.BYTES_PER_ELEMENT;
-    const version = wasmPrivModule._get_version();
-    console.log('Version = ', version);
+    // const version = wasmPrivModule._get_version();
+    // console.log('Version = ', version);
 
     const encoder = new TextEncoder();
     const config_bytes = encoder.encode(`${config}\0`);
@@ -884,6 +889,73 @@ const prividFaceISO = (imageInput, simd, debug_type = 0, cb, config = {}) =>
     resolve({ result, imageOutput });
   });
 
+  const prividFaceCompareLocal = (imageInputA, imageInputB, simd, debug_type = 0, cb, config = {}) =>
+    new Promise(async (resolve) => {
+      privid_wasm_result = cb;
+      if (!wasmPrivModule) {
+        console.log('loaded for first wsm wrkr', simd, action);
+        await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
+      }
+  
+      // First Image A
+      const {data:imageDataA } = imageInputA;
+      const imageInputSizeA = imageDataA.length * imageDataA.BYTES_PER_ELEMENT;
+      const imageInputPtrA = wasmPrivModule._malloc(imageInputSizeA);
+      wasmPrivModule.HEAP8.set(imageDataA, imageInputPtrA / imageDataA.BYTES_PER_ELEMENT);
+  
+      // Second Image B
+      const {data:imageDataB } = imageInputB;
+      const imageInputSizeB = imageDataB.length * imageDataB.BYTES_PER_ELEMENT;
+      const imageInputPtrB = wasmPrivModule._malloc(imageInputSizeB);
+      wasmPrivModule.HEAP8.set(imageDataB, imageInputPtrB / imageDataB.BYTES_PER_ELEMENT);
+  
+      const encoder = new TextEncoder();
+      const config_bytes = encoder.encode(`${config}\0`);
+
+      console.log('CONFIG STRING:', config);
+      const configInputSize = config.length;
+      const configInputPtr = wasmPrivModule._malloc(configInputSize);
+      wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
+  
+      const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+      // create a pointer to interger to hold the length of the output buffer
+      const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+  
+      // Initialize Session
+      await initializeWasmSession(apiUrl, apiKey);
+  
+      let result = null;
+      try {
+        result = wasmPrivModule._privid_face_compare_local(
+          wasmSession, 
+          configInputPtr, 
+          configInputSize,
+          imageInputPtrA, 
+          imageInputA.data.length,
+          imageInputA.width, 
+          imageInputA.height,
+          imageInputPtrB, 
+          imageInputB.data.length,
+          imageInputB.width, 
+          imageInputB.height,
+          resultFirstPtr,
+          resultLenPtr
+          );
+      } catch (e) {
+        console.log('________ face compare local _______', e);
+      }
+  
+      wasmPrivModule._privid_free_char_buffer(configInputPtr);
+      wasmPrivModule._free(imageInputPtrA);
+      wasmPrivModule._free(imageInputPtrB);
+      wasmPrivModule._free(resultFirstPtr);
+      wasmPrivModule._free(resultLenPtr);
+  
+      resolve({ result });
+    });
+
+
+
 Comlink.expose({
   FHE_enrollOnefa,
   FHE_predictOnefa,
@@ -897,4 +969,5 @@ Comlink.expose({
   deleteUUID,
   configureBlur,
   prividFaceISO,
+  prividFaceCompareLocal,
 });

@@ -6,19 +6,26 @@ import {getUrlParameter} from '../utils';
 const useWasm = () => {
   // Initialize the state
   const [ready, setReady] = useState(false);
-
+  const [deviceSupported, setDeviceSupported] = useState({isChecking:true});
   const init = async () => {
     const apiKey = getUrlParameter("api_key", null);
     const apiUrl = getUrlParameter("api_url", null);
-    await loadPrivIdModule(apiUrl, apiKey);
-    setReady(true);
+    const isSupported = await loadPrivIdModule(apiUrl, apiKey);
+    if (isSupported.support){
+      setReady(true);
+      setDeviceSupported({supported: true, isChecking:false});
+    }
+    else{
+      setDeviceSupported({supported: false, isChecking:false, messege: isSupported.message})
+    }
+
   };
 
   useEffect(() => {
     init();
   }, []);
 
-  return { ready };
+  return { ready, deviceSupported };
 };
 
 export default useWasm;
