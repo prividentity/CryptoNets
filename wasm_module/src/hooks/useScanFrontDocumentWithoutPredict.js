@@ -53,9 +53,6 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
     console.log(croppedDocument, croppedMugshot);
 
     console.log("Validate DL", resultData);
-    // if (resultData.result === 0) {
-    //     setIsFound(true);
-    // }
   };
 
   return {
