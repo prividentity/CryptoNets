@@ -37,6 +37,8 @@ import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocumentWit
 import usePrividFaceISO from "../hooks/usePrividFaceISO";
 import { useNavigate } from "react-router-dom";
 
+
+let isLoading =false;
 const Ready = () => {
   const { ready: wasmReady, deviceSupported } = useWasm();
   const { ready, init, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
@@ -103,7 +105,10 @@ const Ready = () => {
     console.log("device supported", deviceSupported);
     if (!wasmReady) return;
     if (!ready && !deviceSupported.isChecking) {
-      init();
+      if(!isLoading){
+        init();
+        isLoading = true;
+      }
     }
     if (!ready) return;
     if (isIOS && osVersion < 15) {

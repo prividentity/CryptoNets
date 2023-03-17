@@ -17,18 +17,23 @@ let privid_wasm_result = null;
 let wasmSession = null;
 let setCache = true;
 
-const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
-  new Promise(async (resolve, reject) => {
+const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) => {
+  console.log('params before promise:', { simd, url, key, module, debug_type, cacheConfig });
+  return new Promise(async (resolve, reject) => {
     apiUrl = url;
     apiKey = key;
     wasmModule = module;
     debugType = debug_type;
     setCache = cacheConfig;
+    // isLoadHit++;
+    // console.log('isLoadHit ', isLoadHit);
 
-    if (wasmSession) {
-      wasmPrivModule._privid_deinitialize_session(wasmSession);
-      wasmSession = null;
-    }
+    console.log('params inside isload: ', { simd, url, key, module, debug_type, cacheConfig });
+
+    // if (wasmSession) {
+    //   wasmPrivModule._privid_deinitialize_session(wasmSession);
+    //   wasmSession = null;
+    // }
 
     if (module === 'voice') {
       importScripts('../wasm/voice/simd/privid_fhe.js');
@@ -44,21 +49,18 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
     } else if (['face', 'face_mask'].includes(module)) {
       const moduleName = 'privid_fhe';
       const modulePath = simd ? 'simd' : 'noSimd';
+
       const cachedModule = await readKey(module);
       const fetchdWasmVersion = await fetch(`../wasm/${module}/${modulePath}/version.json`);
       const fetchdVersion = await fetchdWasmVersion.json();
-
-        // eslint-disable-next-line prefer-template, no-unsafe-optional-chaining
-        console.log("---Wasm Version: ", cachedModule?.version + " " + fetchdVersion?.version )
-      if (cachedModule?.version && (cachedModule?.version.toString() === fetchdVersion?.version.toString())) {
-         
-        if(!wasmPrivModule){
+      if (cachedModule?.version && cachedModule?.version.toString() === fetchdVersion?.version.toString()) {
+        if (!wasmPrivModule) {
           const { cachedWasm, cachedScript } = cachedModule;
           eval(cachedScript);
           wasmPrivModule = await createTFLiteModule({ wasmBinary: cachedWasm });
-          await initializeWasm(debug_type, url, key);
+          await initializeWasmSession(url, key, debug_type);
         }
-        console.log("=== Using Cached Version!!");
+
         resolve('Cache Loaded');
       } else {
         const wasm = await fetch(`../wasm/${module}/${modulePath}/${moduleName}.wasm`);
@@ -68,18 +70,18 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
         const buffer = await wasm.arrayBuffer();
         eval(scriptBuffer);
         wasmPrivModule = await createTFLiteModule({ wasmBinary: buffer });
-        await initializeWasm(debug_type, url, key);
+        await initializeWasmSession(url, key, debug_type);
 
         const version = wasmPrivModule.UTF8ToString(wasmPrivModule._get_version());
-        console.log("WASM Version:",version);
+
         await putKey(module, buffer, scriptBuffer, version);
-        console.log("=== Loaded Version!!");
         resolve('Loaded');
       }
     } else {
       reject(new Error('Incorrect WASM'));
     }
   });
+};
 
 function flatten(arrays, TypedArray) {
   const arr = new TypedArray(arrays.reduce((n, a) => n + a.length, 0));
@@ -97,7 +99,7 @@ async function deleteUUID(uuid, cb) {
   const uuid_bytes = encoder.encode(`${uuid}\0`);
 
   // Initialize Session
-  await initializeWasmSession(apiUrl, apiKey);
+  // await initializeWasmSession(apiUrl, apiKey);
   // if (!wasmSession) {
   //   const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   //   const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
@@ -152,7 +154,7 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) => {
   wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
 
   // Initialize Session
-  await initializeWasmSession(apiUrl, apiKey);
+  // await initializeWasmSession(apiUrl, apiKey);
 
   let result = null;
   try {
@@ -217,14 +219,6 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) => {
   return { result, croppedDocument, croppedBarcode };
 };
 
-const configureBlur = async (paramID, param) => {
-  if (!wasmPrivModule) {
-    console.log('loaded for first wsm wrkr', simd, action);
-    isValidInternal;
-  }
-  return wasmPrivModule._FHE_configure(paramID, param);
-};
-
 const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type = 0) => {
   privid_wasm_result = cb;
   if (!wasmPrivModule) {
@@ -260,7 +254,7 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
   const croppedMugshotBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
   // Initialize Session
-  await initializeWasmSession(apiUrl, apiKey);
+  // await initializeWasmSession(apiUrl, apiKey);
 
   let result = null;
 
@@ -369,7 +363,7 @@ const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) 
     console.log('wasmPrivModule', wasmPrivModule);
 
     // Initialize Session
-    await initializeWasmSession(apiUrl, apiKey);
+    // await initializeWasmSession(apiUrl, apiKey);
 
     try {
       result = await wasmPrivModule._privid_enroll_onefa(
@@ -432,7 +426,7 @@ const FHE_predictOnefa = async (originalImages, simd, debug_type = 0, cb, config
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
   // Initialize Session
-  await initializeWasmSession(apiUrl, apiKey);
+  // await initializeWasmSession(apiUrl, apiKey);
   try {
      wasmPrivModule._privid_face_predict_onefa(
       wasmSession /* session pointer */,
@@ -478,7 +472,7 @@ const isValidInternal = async (
     await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
   }
   // Initialize Session
-  await initializeWasmSession(apiUrl, apiKey);
+  // await initializeWasmSession(apiUrl, apiKey);
 
   const imageSize = data.length * data.BYTES_PER_ELEMENT;
 
@@ -532,7 +526,7 @@ const prividAgePredict = async (
     await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
   }
   // Initialize Session
-  await initializeWasmSession(apiUrl, apiKey);
+  // await initializeWasmSession(apiUrl, apiKey);
 
   const imageSize = data.length * data.BYTES_PER_ELEMENT;
 
@@ -718,61 +712,151 @@ async function setCacheConfiguration() {
   wasmPrivModule._free(cacheInputPtr);
 }
 
-async function initializeWasmSession(url, key) {
-  console.log('checking session if available:');
-  if (!wasmSession) {
-    // const encoder = new TextEncoder();
-    // const url_bytes = encoder.encode(`${url}0`);
-    // url_bytes[url_bytes.length - 1] = 0;
-
-    // const key_bytes = encoder.encode(`${key}0`);
-    // key_bytes[key_bytes.length - 1] = 0;
-
-    // // URL
-    // const urlInputSize = url_bytes.length * url_bytes.BYTES_PER_ELEMENT;
-    // const urlInputtPtr = wasmPrivModule._malloc(urlInputSize);
-    // wasmPrivModule.HEAP8.set(url_bytes, urlInputtPtr / url_bytes.BYTES_PER_ELEMENT);
-
-    // // API KEY
-    // const keyInputSize = key_bytes.length * key_bytes.BYTES_PER_ELEMENT;
-    // const keyInputtPtr = wasmPrivModule._malloc(keyInputSize);
-    // wasmPrivModule.HEAP8.set(key_bytes, keyInputtPtr / key_bytes.BYTES_PER_ELEMENT);
-
-    // SESSION
-    console.log('Wasm session not available creating session');
-    const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-
-    // const s_result = wasmPrivModule._privid_initialize_session(
-    //   sessionFirstPtr,
-    //   3,
-    //   keyInputtPtr,
-    //   keyInputSize,
-    //   urlInputtPtr,
-    //   urlInputSize,
-    //   );
-
-    const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-
-    if (s_result) {
-      console.log('[FAR_DEBUG] : session initialized successfully');
-    } else {
-      console.log('[FAR_DEBUG] : session initialized failed');
+/**
+ * @brief A closure to create a string buffer arguments that can be used with wasm calls
+ * for a given javascript value. 
+ * This is suitable for native calls that have string input arguments represented with contigious 
+ * string_buffer,sizeofbuffer arguments.
+ * If the 'text' argument is null or undefined or NaN then the arguments generated  are [null,0]
+ * @usage 
+ * 
+ var url_args= buffer_args(url);
+ var key_args= buffer_args(key);
+ var session_out_ptr = output_ptr();
+ const s_result = wasmPrivModule._privid_initialize_session(
+      ...key_args.args(),
+      ...url_args.args(),
+      debug_type,
+      session_out_ptr.outer_ptr(),
+    );
+    url_args.free();
+    key_args.free(); 
+    //get 
+    var session = session_out_ptr.inner_ptr();
+ * 
+ *  when .free() is called the closure can be reused to create a buffer for the same string with which, it was created with 
+ *  over and over again.
+ */
+    const buffer_args= (function (text) {   
+      let  strInputtPtr = null; 
+      let  strInputSize = 0;
+      let  argsv =[]; 
+      return {    
+        args : () => {    
+          do{
+            if (argsv.length>0) break;
+            argsv =  [null, 0];
+            if (text === null)  break;
+            if (text === undefined)  break;
+            // eslint-disable-next-line use-isnan
+            if (text === NaN)  break;
+            const str = `${text}`;
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(str);
+            strInputSize = (bytes.length) * bytes.BYTES_PER_ELEMENT; 
+            strInputtPtr = wasmPrivModule._malloc(strInputSize);    
+            wasmPrivModule.HEAP8.set(bytes, strInputtPtr / bytes.BYTES_PER_ELEMENT);
+            argsv= [strInputtPtr,strInputSize];
+          }
+          while(false);
+          return argsv;
+        },    
+        free: () => {
+          if (strInputtPtr) 
+            {
+              wasmPrivModule._free(strInputtPtr);
+              strInputtPtr = null;
+              strInputSize =0;
+              argsv=[];
+            }
+       }
+      };    
+    });
+    
+    /**
+     * @brief A closure to create an output 32bits pointer closure.
+     * This is usefull for allocating a native address and pass it to the 
+     * 'wasmPrivModule' so it can return in the address of a buffer (or an object like session)
+     * that was allocated inside the wasm. This typically, correspond to 
+     * an argument of type void** (marked output argument) to pass to a native wasm
+     * call.
+     * @usage var myoutput_ptr = output_ptr();
+     * when passing the output pointer to the 'wasmPrivModule' module use 
+     * wasmPrivModule.nativecall(myoutput_ptr.outer_ptr());
+     * Then pull out the the allocated buffer by the wasm call this way:
+     * @code
+     * my_buffer_or_structure = myoutput_ptr.inner_ptr();
+     * @note It is the responsability of the caller to free the pointer returned by this inner_ptr()
+     */
+    const output_ptr =(function () {  
+      let  outer_ptr = null;
+      let  inner_ptr = null;
+      const free_ptr = (ptr) => {    
+        if (ptr){
+          wasmPrivModule._free(ptr);
+          // eslint-disable-next-line no-param-reassign
+          ptr = null;
+        }
+      }; 
+      return {
+        /**  
+         * @brief  Allocates a pointer to contain the result and return it,  
+         * if the container is already created it will be returned
+        */
+        outer_ptr : () => {    
+          if (!outer_ptr) outer_ptr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+          return outer_ptr;
+        },    
+        /**  
+         * @brief Creates a javascript Uint32Array pointer to contain the result pointed by outer_ptr and return it,  
+         * It is the responsability of the caller to free the pointer returned by this function
+        */
+        inner_ptr: () => {
+          if (!outer_ptr) return null;      
+          if (inner_ptr) return inner_ptr;
+          inner_ptr = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outer_ptr, 1);
+          return inner_ptr;
+       }
+      };    
+      });
+    
+    async function initializeWasmSession(url, key, debug_type) {
+      console.log('checking session if available:', wasmSession);
+      if (!wasmSession) {
+        console.log("URL & KEY: ", {url, key})
+    
+         const url_args= buffer_args(url);
+         const key_args= buffer_args(key);
+         const session_out_ptr = output_ptr();
+    
+        const s_result = wasmPrivModule._privid_initialize_session(
+          ...key_args.args(),
+          ...url_args.args(),
+          debug_type,
+          session_out_ptr.outer_ptr(),
+        );
+        url_args.free();
+        key_args.free();
+       
+        
+        if (s_result) {
+          console.log('[FAR_DEBUG] : session initialized successfully');
+        } else {
+          console.log('[FAR_DEBUG] : session initialized failed');
+          return; 
+        }
+    
+        // get our inner session created by wasm and free the outer container ptr
+        wasmSession = session_out_ptr.inner_ptr();
+        await wasmPrivModule._privid_set_default_configuration(wasmSession, 1);
+        if (setCache) {
+          await setCacheConfiguration();
+        }
+      } else {
+        console.log('wasm Session', wasmSession);
+        console.log('Wasm session is available. Skipping creating session');
+      }
     }
-
-    const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
-    wasmSession = sessionSecPtr;
-    await wasmPrivModule._privid_set_default_configuration(wasmSession, 1);
-    if (setCache) {
-      await setCacheConfiguration();
-    }
-    // wasmPrivModule._free(urlInputtPtr);
-    // wasmPrivModule._free(keyInputtPtr);
-  } else {
-    console.log('wasm Session', wasmSession);
-    console.log('Wasm session is available. Skipping creating session');
-  }
-  return wasmSession;
-}
 
 async function initializeWasm(debug_type, url, key) {
   await wasmPrivModule._FHE_init(parseInt(debug_type, 10));
@@ -782,33 +866,33 @@ async function initializeWasm(debug_type, url, key) {
   await initializeAPIKey(key);
 }
 
-async function initializeAPIUrl(url) {
-  console.log("initialize API URL called");
-  const encoder = new TextEncoder();
-  const url_bytes = encoder.encode(`${url}0`);
-  url_bytes[url_bytes.length - 1] = 0;
+// async function initializeAPIUrl(url) {
+//   console.log("initialize API URL called");
+//   const encoder = new TextEncoder();
+//   const url_bytes = encoder.encode(`${url}0`);
+//   url_bytes[url_bytes.length - 1] = 0;
 
-  const urlInputSize = url_bytes.length * url_bytes.BYTES_PER_ELEMENT;
-  const urlInputtPtr = wasmPrivModule._malloc(urlInputSize);
-  wasmPrivModule.HEAP8.set(url_bytes, urlInputtPtr / url_bytes.BYTES_PER_ELEMENT);
+//   const urlInputSize = url_bytes.length * url_bytes.BYTES_PER_ELEMENT;
+//   const urlInputtPtr = wasmPrivModule._malloc(urlInputSize);
+//   wasmPrivModule.HEAP8.set(url_bytes, urlInputtPtr / url_bytes.BYTES_PER_ELEMENT);
 
-  wasmPrivModule.ccall('FHE_configure_url', 'int', [], [42, urlInputtPtr, url ? url.length : 0]);
-  wasmPrivModule._free(urlInputtPtr);
-}
+//   wasmPrivModule.ccall('FHE_configure_url', 'int', [], [42, urlInputtPtr, url ? url.length : 0]);
+//   wasmPrivModule._free(urlInputtPtr);
+// }
 
-async function initializeAPIKey(key) {
-  console.log("initialize API key called");
-  const encoder = new TextEncoder();
-  const key_bytes = encoder.encode(`${key}0`);
-  key_bytes[key_bytes.length - 1] = 0;
+// async function initializeAPIKey(key) {
+//   console.log("initialize API key called");
+//   const encoder = new TextEncoder();
+//   const key_bytes = encoder.encode(`${key}0`);
+//   key_bytes[key_bytes.length - 1] = 0;
 
-  const keyInputSize = key_bytes.length * key_bytes.BYTES_PER_ELEMENT;
-  const keyInputtPtr = wasmPrivModule._malloc(keyInputSize);
-  wasmPrivModule.HEAP8.set(key_bytes, keyInputtPtr / key_bytes.BYTES_PER_ELEMENT);
+//   const keyInputSize = key_bytes.length * key_bytes.BYTES_PER_ELEMENT;
+//   const keyInputtPtr = wasmPrivModule._malloc(keyInputSize);
+//   wasmPrivModule.HEAP8.set(key_bytes, keyInputtPtr / key_bytes.BYTES_PER_ELEMENT);
 
-  wasmPrivModule.ccall('FHE_configure_url', 'int', [], [46, keyInputtPtr, key.length]);
-  wasmPrivModule._free(keyInputtPtr);
-}
+//   wasmPrivModule.ccall('FHE_configure_url', 'int', [], [46, keyInputtPtr, key.length]);
+//   wasmPrivModule._free(keyInputtPtr);
+// }
 
 const prividFaceISO = (imageInput, simd, debug_type = 0, cb, config = {}) =>
   new Promise(async (resolve) => {
@@ -821,8 +905,6 @@ const prividFaceISO = (imageInput, simd, debug_type = 0, cb, config = {}) =>
     const { data: imageData } = imageInput;
 
     const imageInputSize = imageData.length * imageData.BYTES_PER_ELEMENT;
-    // const version = wasmPrivModule._get_version();
-    // console.log('Version = ', version);
 
     const encoder = new TextEncoder();
     const config_bytes = encoder.encode(`${config}\0`);
@@ -845,7 +927,7 @@ const prividFaceISO = (imageInput, simd, debug_type = 0, cb, config = {}) =>
     const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
     // Initialize Session
-    await initializeWasmSession(apiUrl, apiKey);
+    // await initializeWasmSession(apiUrl, apiKey);
 
     let result = null;
     try {
@@ -922,7 +1004,7 @@ const prividFaceISO = (imageInput, simd, debug_type = 0, cb, config = {}) =>
       const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   
       // Initialize Session
-      await initializeWasmSession(apiUrl, apiKey);
+      // await initializeWasmSession(apiUrl, apiKey);
   
       let result = null;
       try {
@@ -967,7 +1049,6 @@ Comlink.expose({
   scanDocument,
   isValidBarCode,
   deleteUUID,
-  configureBlur,
   prividFaceISO,
   prividFaceCompareLocal,
 });

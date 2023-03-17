@@ -23,6 +23,7 @@ import "./styles.css";
 import useScanFrontDocumentWithoutPredictGetMugShot from "../hooks/useScanFrontDocumentWithoutPredictGetMugshot";
 import { useNavigate } from "react-router-dom";
 
+let isLoading = false;
 const CompareFlow = () => {
   const { ready: wasmReady, deviceSupported } = useWasm();
   const { ready, init, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
@@ -53,7 +54,10 @@ const CompareFlow = () => {
     console.log("device supported", deviceSupported);
     if (!wasmReady) return;
     if (!ready && !deviceSupported.isChecking) {
-      init();
+      if(!isLoading){
+        init();
+        isLoading = true;
+      }
     }
     if (!ready) return;
     console.log("--- wasm status ", wasmReady, ready);
