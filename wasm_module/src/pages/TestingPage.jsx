@@ -110,13 +110,8 @@ const Ready = () => {
         isLoading = true;
       }
     }
-    if (!ready) return;
-    if (isIOS && osVersion < 15) {
-      console.log("Does not support old version of iOS os version 15 below.");
-    } else if (isAndroid && osVersion < 11) {
-      console.log("Does not support old version of Android os version 11 below.");
-    }
     console.log("--- wasm status ", wasmReady, ready);
+    if (!ready) return;
   }, [wasmReady, ready, deviceSupported]);
 
   const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");

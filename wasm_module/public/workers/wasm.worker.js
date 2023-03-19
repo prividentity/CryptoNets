@@ -56,7 +56,7 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
       if (cachedModule?.version && cachedModule?.version.toString() === fetchdVersion?.version.toString()) {
         if (!wasmPrivModule) {
           const { cachedWasm, cachedScript } = cachedModule;
-          eval(cachedScript);
+          await eval(cachedScript);
           wasmPrivModule = await createTFLiteModule({ wasmBinary: cachedWasm });
           await initializeWasmSession(url, key, debug_type);
         }
@@ -68,7 +68,7 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
 
         const scriptBuffer = await script.text();
         const buffer = await wasm.arrayBuffer();
-        eval(scriptBuffer);
+        await eval(scriptBuffer);
         wasmPrivModule = await createTFLiteModule({ wasmBinary: buffer });
         await initializeWasmSession(url, key, debug_type);
 
