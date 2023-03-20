@@ -16,6 +16,7 @@ let barCodePtr;
 let privid_wasm_result = null;
 let wasmSession = null;
 let setCache = true;
+let checkWasmLoaded = false;
 
 const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) => {
   console.log('params before promise:', { simd, url, key, module, debug_type, cacheConfig });
@@ -25,15 +26,8 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
     wasmModule = module;
     debugType = debug_type;
     setCache = cacheConfig;
-    // isLoadHit++;
-    // console.log('isLoadHit ', isLoadHit);
 
     console.log('params inside isload: ', { simd, url, key, module, debug_type, cacheConfig });
-
-    // if (wasmSession) {
-    //   wasmPrivModule._privid_deinitialize_session(wasmSession);
-    //   wasmSession = null;
-    // }
 
     if (module === 'voice') {
       importScripts('../wasm/voice/simd/privid_fhe.js');
@@ -56,9 +50,13 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
       if (cachedModule?.version && cachedModule?.version.toString() === fetchdVersion?.version.toString()) {
         if (!wasmPrivModule) {
           const { cachedWasm, cachedScript } = cachedModule;
-          eval(cachedScript);
+          await eval(cachedScript);
           wasmPrivModule = await createTFLiteModule({ wasmBinary: cachedWasm });
-          await initializeWasmSession(url, key, debug_type);
+          if(!checkWasmLoaded){
+            await initializeWasmSession(url, key, debug_type);
+            checkWasmLoaded = true;
+          }
+          
         }
 
         resolve('Cache Loaded');
@@ -68,9 +66,12 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
 
         const scriptBuffer = await script.text();
         const buffer = await wasm.arrayBuffer();
-        eval(scriptBuffer);
+        await eval(scriptBuffer);
         wasmPrivModule = await createTFLiteModule({ wasmBinary: buffer });
-        await initializeWasmSession(url, key, debug_type);
+        if(!checkWasmLoaded){
+          await initializeWasmSession(url, key, debug_type);
+          checkWasmLoaded=true
+        }
 
         const version = wasmPrivModule.UTF8ToString(wasmPrivModule._get_version());
 
@@ -97,20 +98,6 @@ async function deleteUUID(uuid, cb) {
   privid_wasm_result = cb;
   const encoder = new TextEncoder();
   const uuid_bytes = encoder.encode(`${uuid}\0`);
-
-  // Initialize Session
-  // await initializeWasmSession(apiUrl, apiKey);
-  // if (!wasmSession) {
-  //   const sessionFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-  //   const s_result = wasmPrivModule._privid_initialize_session_join(sessionFirstPtr, null);
-  //   if (s_result) {
-  //     console.log('[FAR_DEBUG] : session initialized successfully');
-  //   } else {
-  //     console.log('[FAR_DEBUG] : session initialized failed');
-  //   }
-  //   const [sessionSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, sessionFirstPtr, 1);
-  //   wasmSession = sessionSecPtr;
-  // }
 
   const uuidInputSize = uuid.length;
   const uuidInputPtr = wasmPrivModule._malloc(uuidInputSize);
@@ -428,7 +415,7 @@ const FHE_predictOnefa = async (originalImages, simd, debug_type = 0, cb, config
   // Initialize Session
   // await initializeWasmSession(apiUrl, apiKey);
   try {
-     wasmPrivModule._privid_face_predict_onefa(
+    wasmPrivModule._privid_face_predict_onefa(
       wasmSession /* session pointer */,
       configInputPtr,
       configInputSize,
@@ -453,7 +440,6 @@ const FHE_predictOnefa = async (originalImages, simd, debug_type = 0, cb, config
   wasmPrivModule._free(configInputPtr);
   wasmPrivModule._free(resultFirstPtr);
   wasmPrivModule._free(resultLenPtr);
-
 };
 
 const isValidInternal = async (
@@ -659,7 +645,6 @@ function readKey(key) {
       };
     };
   });
-  
 }
 
 function putKey(key, cachedWasm, cachedScript, version) {
@@ -737,162 +722,123 @@ async function setCacheConfiguration() {
  *  when .free() is called the closure can be reused to create a buffer for the same string with which, it was created with 
  *  over and over again.
  */
-    const buffer_args= (function (text) {   
-      let  strInputtPtr = null; 
-      let  strInputSize = 0;
-      let  argsv =[]; 
-      return {    
-        args : () => {    
-          do{
-            if (argsv.length>0) break;
-            argsv =  [null, 0];
-            if (text === null)  break;
-            if (text === undefined)  break;
-            // eslint-disable-next-line use-isnan
-            if (text === NaN)  break;
-            const str = `${text}`;
-            const encoder = new TextEncoder();
-            const bytes = encoder.encode(str);
-            strInputSize = (bytes.length) * bytes.BYTES_PER_ELEMENT; 
-            strInputtPtr = wasmPrivModule._malloc(strInputSize);    
-            wasmPrivModule.HEAP8.set(bytes, strInputtPtr / bytes.BYTES_PER_ELEMENT);
-            argsv= [strInputtPtr,strInputSize];
-          }
-          while(false);
-          return argsv;
-        },    
-        free: () => {
-          if (strInputtPtr) 
-            {
-              wasmPrivModule._free(strInputtPtr);
-              strInputtPtr = null;
-              strInputSize =0;
-              argsv=[];
-            }
-       }
-      };    
-    });
-    
-    /**
-     * @brief A closure to create an output 32bits pointer closure.
-     * This is usefull for allocating a native address and pass it to the 
-     * 'wasmPrivModule' so it can return in the address of a buffer (or an object like session)
-     * that was allocated inside the wasm. This typically, correspond to 
-     * an argument of type void** (marked output argument) to pass to a native wasm
-     * call.
-     * @usage var myoutput_ptr = output_ptr();
-     * when passing the output pointer to the 'wasmPrivModule' module use 
-     * wasmPrivModule.nativecall(myoutput_ptr.outer_ptr());
-     * Then pull out the the allocated buffer by the wasm call this way:
-     * @code
-     * my_buffer_or_structure = myoutput_ptr.inner_ptr();
-     * @note It is the responsability of the caller to free the pointer returned by this inner_ptr()
-     */
-    const output_ptr =(function () {  
-      let  outer_ptr = null;
-      let  inner_ptr = null;
-      const free_ptr = (ptr) => {    
-        if (ptr){
-          wasmPrivModule._free(ptr);
-          // eslint-disable-next-line no-param-reassign
-          ptr = null;
-        }
-      }; 
-      return {
-        /**  
-         * @brief  Allocates a pointer to contain the result and return it,  
-         * if the container is already created it will be returned
-        */
-        outer_ptr : () => {    
-          if (!outer_ptr) outer_ptr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-          return outer_ptr;
-        },    
-        /**  
-         * @brief Creates a javascript Uint32Array pointer to contain the result pointed by outer_ptr and return it,  
-         * It is the responsability of the caller to free the pointer returned by this function
-        */
-        inner_ptr: () => {
-          if (!outer_ptr) return null;      
-          if (inner_ptr) return inner_ptr;
-          inner_ptr = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outer_ptr, 1);
-          return inner_ptr;
-       }
-      };    
-      });
-    
-    async function initializeWasmSession(url, key, debug_type) {
-      console.log('checking session if available:', wasmSession);
-      if (!wasmSession) {
-        console.log("URL & KEY: ", {url, key})
-    
-         const url_args= buffer_args(url);
-         const key_args= buffer_args(key);
-         const session_out_ptr = output_ptr();
-    
-        const s_result = wasmPrivModule._privid_initialize_session(
-          ...key_args.args(),
-          ...url_args.args(),
-          debug_type,
-          session_out_ptr.outer_ptr(),
-        );
-        url_args.free();
-        key_args.free();
-       
-        
-        if (s_result) {
-          console.log('[FAR_DEBUG] : session initialized successfully');
-        } else {
-          console.log('[FAR_DEBUG] : session initialized failed');
-          return; 
-        }
-    
-        // get our inner session created by wasm and free the outer container ptr
-        wasmSession = session_out_ptr.inner_ptr();
-        await wasmPrivModule._privid_set_default_configuration(wasmSession, 1);
-        if (setCache) {
-          await setCacheConfiguration();
-        }
-      } else {
-        console.log('wasm Session', wasmSession);
-        console.log('Wasm session is available. Skipping creating session');
+const buffer_args = function (text) {
+  let strInputtPtr = null;
+  let strInputSize = 0;
+  let argsv = [];
+  return {
+    args: () => {
+      do {
+        if (argsv.length > 0) break;
+        argsv = [null, 0];
+        if (text === null) break;
+        if (text === undefined) break;
+        // eslint-disable-next-line use-isnan
+        if (text === NaN) break;
+        const str = `${text}`;
+        const encoder = new TextEncoder();
+        const bytes = encoder.encode(str);
+        strInputSize = bytes.length * bytes.BYTES_PER_ELEMENT;
+        strInputtPtr = wasmPrivModule._malloc(strInputSize);
+        wasmPrivModule.HEAP8.set(bytes, strInputtPtr / bytes.BYTES_PER_ELEMENT);
+        argsv = [strInputtPtr, strInputSize];
+      } while (false);
+      return argsv;
+    },
+    free: () => {
+      if (strInputtPtr) {
+        wasmPrivModule._free(strInputtPtr);
+        strInputtPtr = null;
+        strInputSize = 0;
+        argsv = [];
       }
+    },
+  };
+};
+
+/**
+ * @brief A closure to create an output 32bits pointer closure.
+ * This is usefull for allocating a native address and pass it to the
+ * 'wasmPrivModule' so it can return in the address of a buffer (or an object like session)
+ * that was allocated inside the wasm. This typically, correspond to
+ * an argument of type void** (marked output argument) to pass to a native wasm
+ * call.
+ * @usage var myoutput_ptr = output_ptr();
+ * when passing the output pointer to the 'wasmPrivModule' module use
+ * wasmPrivModule.nativecall(myoutput_ptr.outer_ptr());
+ * Then pull out the the allocated buffer by the wasm call this way:
+ * @code
+ * my_buffer_or_structure = myoutput_ptr.inner_ptr();
+ * @note It is the responsability of the caller to free the pointer returned by this inner_ptr()
+ */
+const output_ptr = function () {
+  let outer_ptr = null;
+  let inner_ptr = null;
+  const free_ptr = (ptr) => {
+    if (ptr) {
+      wasmPrivModule._free(ptr);
+      // eslint-disable-next-line no-param-reassign
+      ptr = null;
+    }
+  };
+  return {
+    /**
+     * @brief  Allocates a pointer to contain the result and return it,
+     * if the container is already created it will be returned
+     */
+    outer_ptr: () => {
+      if (!outer_ptr) outer_ptr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+      return outer_ptr;
+    },
+    /**
+     * @brief Creates a javascript Uint32Array pointer to contain the result pointed by outer_ptr and return it,
+     * It is the responsability of the caller to free the pointer returned by this function
+     */
+    inner_ptr: () => {
+      if (!outer_ptr) return null;
+      if (inner_ptr) return inner_ptr;
+      inner_ptr = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outer_ptr, 1);
+      return inner_ptr;
+    },
+  };
+};
+
+async function initializeWasmSession(url, key, debug_type) {
+  console.log('checking session if available:', wasmSession);
+  if (!wasmSession) {
+    console.log('URL & KEY: ', { url, key });
+
+    const url_args = buffer_args(url);
+    const key_args = buffer_args(key);
+    const session_out_ptr = output_ptr();
+
+    const s_result = wasmPrivModule._privid_initialize_session(
+      ...key_args.args(),
+      ...url_args.args(),
+      debug_type,
+      session_out_ptr.outer_ptr(),
+    );
+    url_args.free();
+    key_args.free();
+
+    if (s_result) {
+      console.log('[FAR_DEBUG] : session initialized successfully');
+    } else {
+      console.log('[FAR_DEBUG] : session initialized failed');
+      return;
     }
 
-async function initializeWasm(debug_type, url, key) {
-  await wasmPrivModule._FHE_init(parseInt(debug_type, 10));
-  // Initialize API URL
-  await initializeAPIUrl(url);
-  // Initialize API Key
-  await initializeAPIKey(key);
+    // get our inner session created by wasm and free the outer container ptr
+    wasmSession = session_out_ptr.inner_ptr();
+    await wasmPrivModule._privid_set_default_configuration(wasmSession, 1);
+    if (setCache) {
+      await setCacheConfiguration();
+    }
+  } else {
+    console.log('wasm Session', wasmSession);
+    console.log('Wasm session is available. Skipping creating session');
+  }
 }
-
-// async function initializeAPIUrl(url) {
-//   console.log("initialize API URL called");
-//   const encoder = new TextEncoder();
-//   const url_bytes = encoder.encode(`${url}0`);
-//   url_bytes[url_bytes.length - 1] = 0;
-
-//   const urlInputSize = url_bytes.length * url_bytes.BYTES_PER_ELEMENT;
-//   const urlInputtPtr = wasmPrivModule._malloc(urlInputSize);
-//   wasmPrivModule.HEAP8.set(url_bytes, urlInputtPtr / url_bytes.BYTES_PER_ELEMENT);
-
-//   wasmPrivModule.ccall('FHE_configure_url', 'int', [], [42, urlInputtPtr, url ? url.length : 0]);
-//   wasmPrivModule._free(urlInputtPtr);
-// }
-
-// async function initializeAPIKey(key) {
-//   console.log("initialize API key called");
-//   const encoder = new TextEncoder();
-//   const key_bytes = encoder.encode(`${key}0`);
-//   key_bytes[key_bytes.length - 1] = 0;
-
-//   const keyInputSize = key_bytes.length * key_bytes.BYTES_PER_ELEMENT;
-//   const keyInputtPtr = wasmPrivModule._malloc(keyInputSize);
-//   wasmPrivModule.HEAP8.set(key_bytes, keyInputtPtr / key_bytes.BYTES_PER_ELEMENT);
-
-//   wasmPrivModule.ccall('FHE_configure_url', 'int', [], [46, keyInputtPtr, key.length]);
-//   wasmPrivModule._free(keyInputtPtr);
-// }
 
 const prividFaceISO = (imageInput, simd, debug_type = 0, cb, config = {}) =>
   new Promise(async (resolve) => {
@@ -971,72 +917,70 @@ const prividFaceISO = (imageInput, simd, debug_type = 0, cb, config = {}) =>
     resolve({ result, imageOutput });
   });
 
-  const prividFaceCompareLocal = (imageInputA, imageInputB, simd, debug_type = 0, cb, config = {}) =>
-    new Promise(async (resolve) => {
-      privid_wasm_result = cb;
-      if (!wasmPrivModule) {
-        console.log('loaded for first wsm wrkr', simd, action);
-        await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
-      }
-  
-      // First Image A
-      const {data:imageDataA } = imageInputA;
-      const imageInputSizeA = imageDataA.length * imageDataA.BYTES_PER_ELEMENT;
-      const imageInputPtrA = wasmPrivModule._malloc(imageInputSizeA);
-      wasmPrivModule.HEAP8.set(imageDataA, imageInputPtrA / imageDataA.BYTES_PER_ELEMENT);
-  
-      // Second Image B
-      const {data:imageDataB } = imageInputB;
-      const imageInputSizeB = imageDataB.length * imageDataB.BYTES_PER_ELEMENT;
-      const imageInputPtrB = wasmPrivModule._malloc(imageInputSizeB);
-      wasmPrivModule.HEAP8.set(imageDataB, imageInputPtrB / imageDataB.BYTES_PER_ELEMENT);
-  
-      const encoder = new TextEncoder();
-      const config_bytes = encoder.encode(`${config}\0`);
+const prividFaceCompareLocal = (imageInputA, imageInputB, simd, debug_type = 0, cb, config = {}) =>
+  new Promise(async (resolve) => {
+    privid_wasm_result = cb;
+    if (!wasmPrivModule) {
+      console.log('loaded for first wsm wrkr', simd, action);
+      await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
+    }
 
-      console.log('CONFIG STRING:', config);
-      const configInputSize = config.length;
-      const configInputPtr = wasmPrivModule._malloc(configInputSize);
-      wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
-  
-      const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-      // create a pointer to interger to hold the length of the output buffer
-      const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-  
-      // Initialize Session
-      // await initializeWasmSession(apiUrl, apiKey);
-  
-      let result = null;
-      try {
-        result = wasmPrivModule._privid_face_compare_local(
-          wasmSession, 
-          configInputPtr, 
-          configInputSize,
-          imageInputPtrA, 
-          imageInputA.data.length,
-          imageInputA.width, 
-          imageInputA.height,
-          imageInputPtrB, 
-          imageInputB.data.length,
-          imageInputB.width, 
-          imageInputB.height,
-          resultFirstPtr,
-          resultLenPtr
-          );
-      } catch (e) {
-        console.log('________ face compare local _______', e);
-      }
-  
-      wasmPrivModule._privid_free_char_buffer(configInputPtr);
-      wasmPrivModule._free(imageInputPtrA);
-      wasmPrivModule._free(imageInputPtrB);
-      wasmPrivModule._free(resultFirstPtr);
-      wasmPrivModule._free(resultLenPtr);
-  
-      resolve({ result });
-    });
+    // First Image A
+    const { data: imageDataA } = imageInputA;
+    const imageInputSizeA = imageDataA.length * imageDataA.BYTES_PER_ELEMENT;
+    const imageInputPtrA = wasmPrivModule._malloc(imageInputSizeA);
+    wasmPrivModule.HEAP8.set(imageDataA, imageInputPtrA / imageDataA.BYTES_PER_ELEMENT);
 
+    // Second Image B
+    const { data: imageDataB } = imageInputB;
+    const imageInputSizeB = imageDataB.length * imageDataB.BYTES_PER_ELEMENT;
+    const imageInputPtrB = wasmPrivModule._malloc(imageInputSizeB);
+    wasmPrivModule.HEAP8.set(imageDataB, imageInputPtrB / imageDataB.BYTES_PER_ELEMENT);
 
+    const encoder = new TextEncoder();
+    const config_bytes = encoder.encode(`${config}\0`);
+
+    console.log('CONFIG STRING:', config);
+    const configInputSize = config.length;
+    const configInputPtr = wasmPrivModule._malloc(configInputSize);
+    wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
+
+    const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // create a pointer to interger to hold the length of the output buffer
+    const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+
+    // Initialize Session
+    // await initializeWasmSession(apiUrl, apiKey);
+
+    let result = null;
+    try {
+      result = wasmPrivModule._privid_face_compare_local(
+        wasmSession,
+        configInputPtr,
+        configInputSize,
+        imageInputPtrA,
+        imageInputA.data.length,
+        imageInputA.width,
+        imageInputA.height,
+        imageInputPtrB,
+        imageInputB.data.length,
+        imageInputB.width,
+        imageInputB.height,
+        resultFirstPtr,
+        resultLenPtr,
+      );
+    } catch (e) {
+      console.log('________ face compare local _______', e);
+    }
+
+    wasmPrivModule._privid_free_char_buffer(configInputPtr);
+    wasmPrivModule._free(imageInputPtrA);
+    wasmPrivModule._free(imageInputPtrB);
+    wasmPrivModule._free(resultFirstPtr);
+    wasmPrivModule._free(resultLenPtr);
+
+    resolve({ result });
+  });
 
 Comlink.expose({
   FHE_enrollOnefa,

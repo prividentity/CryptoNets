@@ -38,10 +38,11 @@ import usePrividFaceISO from "../hooks/usePrividFaceISO";
 import { useNavigate } from "react-router-dom";
 
 
-let isLoading =false;
+let isLoading = false;
+let callingWasm = false;
 const Ready = () => {
-  const { ready: wasmReady, deviceSupported } = useWasm();
-  const { ready, init, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
+  const { ready: wasmReady, deviceSupported, init:initWasm } = useWasm();
+  const { ready: cameraReady, init:initCamera, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
 
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -102,22 +103,23 @@ const Ready = () => {
   const [currentAction, setCurrentAction] = useState(null);
 
   useEffect(() => {
-    console.log("device supported", deviceSupported);
-    if (!wasmReady) return;
-    if (!ready && !deviceSupported.isChecking) {
-      if(!isLoading){
-        init();
-        isLoading = true;
+    console.log("useEffect starting wasm and camera");
+    console.log("--- wasm status ", wasmReady, cameraReady);
+    if (wasmReady && cameraReady) return;
+    if (!wasmReady) { 
+      if(!callingWasm){
+        console.log("init wasm called:");
+        initWasm();
+        callingWasm = true;
       }
+      return;
     }
-    if (!ready) return;
-    if (isIOS && osVersion < 15) {
-      console.log("Does not support old version of iOS os version 15 below.");
-    } else if (isAndroid && osVersion < 11) {
-      console.log("Does not support old version of Android os version 11 below.");
+    if (!cameraReady) {
+      console.log("calling camera");
+      initCamera();
     }
-    console.log("--- wasm status ", wasmReady, ready);
-  }, [wasmReady, ready, deviceSupported]);
+  }, [wasmReady, cameraReady]);
+
 
   const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");
   // isValid
@@ -210,7 +212,7 @@ const Ready = () => {
   const useDeleteCallback = (deleteStatus) => {
     setDeletionStatus(deleteStatus);
   };
-  const { loading, onDeleteUser } = useDelete(useDeleteCallback, ready);
+  const { loading, onDeleteUser } = useDelete(useDeleteCallback, wasmReady);
 
   const handleDelete = async () => {
     setShowSuccess(false);
@@ -286,6 +288,7 @@ const Ready = () => {
     scanFrontDocument: scanFrontValidity,
     confidenceValue,
     predictMugshotImageData,
+    isMugshotFound,
   } = useScanFrontDocumentWithoutPredict(setShowSuccess);
 
   const handleFrontDLValidity = async () => {
@@ -294,20 +297,19 @@ const Ready = () => {
   };
 
   const handleCanvasSize = async (e, skipSwitchCamera = false) => {
-    if (currentAction === "useScanDocumentFront" || currentAction === "useScanDocumentBack") {
+    if (currentAction === "useScanFrontValidity" || currentAction === "useScanDocumentBack") {
       setShouldTriggerCallback(false);
       setCanvasSize(e.target.value);
       const canvasSize = CANVAS_SIZE[e.target.value];
       if (!skipSwitchCamera) {
         const { capabilities = {} } = await switchCamera(null, deviceId || device, canvasSize);
         setDeviceCapabilities(capabilities);
-        // setDevicesList(devices.map(mapDevices));
       }
       setShouldTriggerCallback(true);
 
-      if (currentAction === "useScanDocumentFront") {
+      if (currentAction === "useScanFrontValidity") {
         setTimeout(async () => {
-          await scanFrontDocument(e.target.value);
+          await  useScanFrontDocumentWithoutPredict(e.target.value);
         }, 1000);
       } else {
         setTimeout(async () => {
@@ -483,18 +485,6 @@ const Ready = () => {
                 </div>
               )}
 
-              {currentAction === "useScanDocumentFront" && (
-                <div>
-                  {/* <div>{`Scan Document Result: ${resultStatus === 0 ? "success" : "not found"}`}</div> */}
-                  <div> {`Confidence Value: ${resultResponse?.conf_level || ""}`}</div>
-                  <div>{`Predict Status: ${resultResponse?.predict_message || ""}`}</div>
-                  <div>{`Scan Document Result: ${resultResponse?.op_message || ""}`}</div>
-                  <div>{`Has found valid document: ${isFound || ""}`}</div>
-                  <div>{`Document GUID: ${documentGUID || ""}`} </div>
-                  <div>{`Document UUID: ${documentUUID || ""}`} </div>
-                </div>
-              )}
-
               {currentAction === "useScanDocumentBack" && (
                 <div>
                   <h2> {`Barcode Status Code: ${barcodeStatusCode}`}</h2>
@@ -513,7 +503,8 @@ const Ready = () => {
 
               {currentAction === "useScanDocumentFrontValidity" && (
                 <div>
-                  <div>{`Scan Document Result: ${isfoundValidity ? "Valid Front Document found" : "not found"}`}</div>
+                  <div>{`Document 4 corners found: ${isfoundValidity ? "Document 4 corners available" : "not found"}`}</div>
+                  <div>{`Mugshot found: ${isMugshotFound ? "Mugshot Available" : "not found"}`}</div>
                 </div>
               )}
 
@@ -551,11 +542,8 @@ const Ready = () => {
               <button className="button" onClick={handleDelete}>
                 Delete
               </button>
-              <button className="button" onClick={handleScanDLFront}>
-                Scan Front Document
-              </button>
               <button className="button" onClick={handleFrontDLValidity}>
-                Scan Front Document Validity (No identity)
+                Scan Front Document Validity
               </button>
               <button className="button" onClick={handleScanDocumentBack}>
                 Scan Back Document
