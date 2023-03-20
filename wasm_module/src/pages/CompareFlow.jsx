@@ -52,7 +52,7 @@ const CompareFlow = () => {
 
   useEffect(() => {
     console.log("useEffect starting wasm and camera");
-    console.log("--- wasm status ", wasmReady, cameraReady);
+    console.log("--- wasm status ", wasmReady, ready);
     if (!wasmReady) { 
       if(!callingWasm){
         console.log("init wasm called:");
