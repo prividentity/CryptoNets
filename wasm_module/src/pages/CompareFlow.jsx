@@ -25,8 +25,8 @@ import { useNavigate } from "react-router-dom";
 
 let callingWasm = false;
 const CompareFlow = () => {
-  const { ready: wasmReady, deviceSupported } = useWasm();
-  const { ready, init, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
+  const { ready: wasmReady, deviceSupported, init:initWasm } = useWasm();
+  const { ready, init:initCamera, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [deviceCapabilities, setDeviceCapabilities] = useState(capabilities);
