@@ -38,10 +38,11 @@ import usePrividFaceISO from "../hooks/usePrividFaceISO";
 import { useNavigate } from "react-router-dom";
 
 
-let isLoading =false;
+let isLoading = false;
+let callingWasm = false;
 const Ready = () => {
-  const { ready: wasmReady, deviceSupported } = useWasm();
-  const { ready, init, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
+  const { ready: wasmReady, deviceSupported, init:initWasm } = useWasm();
+  const { ready: cameraReady, init:initCamera, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
 
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -101,18 +102,43 @@ const Ready = () => {
 
   const [currentAction, setCurrentAction] = useState(null);
 
+  // useEffect(() => {
+  //   console.log("device supported", deviceSupported);
+  //   if (!wasmReady) return;
+  //   if (!ready && !deviceSupported.isChecking) {
+  //     if(!isLoading){
+  //       init();
+  //       isLoading = true;
+  //     }
+  //   }
+  //   console.log("--- wasm status ", wasmReady, ready);
+  //   if (!ready) return;
+  // }, [wasmReady, ready, deviceSupported]);
+
   useEffect(() => {
-    console.log("device supported", deviceSupported);
-    if (!wasmReady) return;
-    if (!ready && !deviceSupported.isChecking) {
-      if(!isLoading){
-        init();
-        isLoading = true;
-      }
+    console.log("useEffect starting wasm and camera");
+    console.log("--- wasm status ", wasmReady, cameraReady);
+    if (isIOS && osVersion < 15) {
+      console.log("Does not support old version of iOS os version 15 below.");
+    } 
+    if (isAndroid && osVersion < 11) {
+      console.log("Does not support old version of Android os version 11 below.");
     }
-    console.log("--- wasm status ", wasmReady, ready);
-    if (!ready) return;
-  }, [wasmReady, ready, deviceSupported]);
+    if (wasmReady && cameraReady) return;
+    if (!wasmReady) { 
+      if(!callingWasm){
+        console.log("init wasm called:");
+        initWasm();
+        callingWasm = true;
+      }
+      return;
+    }
+    if (!cameraReady) {
+      console.log("calling camera");
+      initCamera();
+    }
+  }, [wasmReady, cameraReady]);
+
 
   const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");
   // isValid
@@ -205,7 +231,7 @@ const Ready = () => {
   const useDeleteCallback = (deleteStatus) => {
     setDeletionStatus(deleteStatus);
   };
-  const { loading, onDeleteUser } = useDelete(useDeleteCallback, ready);
+  const { loading, onDeleteUser } = useDelete(useDeleteCallback, wasmReady);
 
   const handleDelete = async () => {
     setShowSuccess(false);

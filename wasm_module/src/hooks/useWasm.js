@@ -21,11 +21,7 @@ const useWasm = () => {
 
   };
 
-  useEffect(() => {
-    init();
-  }, []);
-
-  return { ready, deviceSupported };
+  return { ready, deviceSupported, init };
 };
 
 export default useWasm;

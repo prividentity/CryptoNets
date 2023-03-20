@@ -16,12 +16,6 @@ const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotS
     // console.log("Front scan callback result:", result);
     console.log("TIMESTAMP-Callback: ", new Date());
     console.timeEnd("frontDocument");
-    // if (result.returnValue.op_status === 0) {
-    //   setScanResult(result.returnValue);
-    // }
-    // else{
-    //   setScanResult(null);
-    // }
     if (result.returnValue.op_status === 0 && result.returnValue.cropped_face_height) {
       setIsFound(true);
       setShowSuccess(true);
