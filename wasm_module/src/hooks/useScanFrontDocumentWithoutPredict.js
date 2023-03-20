@@ -5,6 +5,7 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
   const [scanResult, setScanResult] = useState(null);
   const [scannedIdData, setScannedIdData] = useState(null);
   const [isFound, setIsFound] = useState(false);
+  const [isMugshotFound, setIsMugshotFound] = useState(null);
 
   // Getting mugshot from document scan
   const [predictMugshotRaw, setPredictMugshotRaw ] = useState(null);
@@ -37,6 +38,7 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
     if( isFound && predictMugshotRaw && predictMugshotWidth && predictMugshotHeight ){
       const image = new ImageData(predictMugshotRaw, predictMugshotWidth, predictMugshotHeight);
       setPredictMugshotImageData(image);
+      setIsMugshotFound(true);
       doConvert();
     }
   },[isFound, predictMugshotRaw, predictMugshotWidth, predictMugshotHeight])
@@ -59,6 +61,7 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
     scanResult,
     scanFrontDocument,
     isFound,
+    isMugshotFound,
     scannedIdData,
     predictMugshotImageData,
   };

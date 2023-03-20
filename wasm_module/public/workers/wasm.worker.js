@@ -16,6 +16,7 @@ let barCodePtr;
 let privid_wasm_result = null;
 let wasmSession = null;
 let setCache = true;
+let checkWasmLoaded = false;
 
 const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) => {
   console.log('params before promise:', { simd, url, key, module, debug_type, cacheConfig });
@@ -51,7 +52,11 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
           const { cachedWasm, cachedScript } = cachedModule;
           await eval(cachedScript);
           wasmPrivModule = await createTFLiteModule({ wasmBinary: cachedWasm });
-          await initializeWasmSession(url, key, debug_type);
+          if(!checkWasmLoaded){
+            await initializeWasmSession(url, key, debug_type);
+            checkWasmLoaded = true;
+          }
+          
         }
 
         resolve('Cache Loaded');
@@ -63,7 +68,10 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
         const buffer = await wasm.arrayBuffer();
         await eval(scriptBuffer);
         wasmPrivModule = await createTFLiteModule({ wasmBinary: buffer });
-        await initializeWasmSession(url, key, debug_type);
+        if(!checkWasmLoaded){
+          await initializeWasmSession(url, key, debug_type);
+          checkWasmLoaded=true
+        }
 
         const version = wasmPrivModule.UTF8ToString(wasmPrivModule._get_version());
 
