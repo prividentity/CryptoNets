@@ -14,7 +14,7 @@ import "./styles.css";
 import useScanFrontDocumentWithoutPredictGetMugShot from "../hooks/useScanFrontDocumentWithoutPredictGetMugshot";
 import { useNavigate } from "react-router-dom";
 
-let isLoading = false;
+let callingWasm = false;
 const ScanDocumentBoundingBox = () => {
   const { ready: wasmReady, deviceSupported } = useWasm();
   const { ready, init, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
@@ -41,21 +41,28 @@ const ScanDocumentBoundingBox = () => {
 
   const [currentAction, setCurrentAction] = useState("standby");
 
+
   useEffect(() => {
-    console.log("device supported", deviceSupported);
-    if (!wasmReady) return;
-    if (!ready && !deviceSupported.isChecking) {
-      if (!isLoading) {
-        init();
-        isLoading = true;
+    console.log("useEffect starting wasm and camera");
+    console.log("--- wasm status ", wasmReady, cameraReady);
+    if (!wasmReady) { 
+      if(!callingWasm){
+        console.log("init wasm called:");
+        initWasm();
+        callingWasm = true;
       }
+      return;
     }
-    if (!ready) return;
+    if (!ready) {
+      console.log("calling camera");
+      initCamera();
+    }
     if (wasmReady && ready) {
-      scanFrontValidity();
-    }
-    console.log("--- wasm status ", wasmReady, ready);
-  }, [wasmReady, ready, deviceSupported]);
+        scanFrontValidity();
+      }
+  }, [wasmReady, ready]);
+
+
 
   const handleSwitchCamera = async (e) => {
     setDeviceId(e.target.value);
