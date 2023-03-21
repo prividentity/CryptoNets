@@ -35,28 +35,28 @@ const useCamera = (element = "userVideo", resolution = null) => {
     } catch (e) {
       console.log("Error Message", e);
     }
-    const setCameraFocus = async () => {
-      try {
-        const video = document.getElementById("userVideo");
-        const mediaStream = video.srcObject;
-        const track = await mediaStream.getTracks()[0];
-        const capabilities = track.getCapabilities();
-        if (typeof capabilities.focusDistance !== "undefined") {
-          await track.applyConstraints({
-            advanced: [
-              {
-                focusMode: capabilities.focusMode.includes("continuous") ? "continuous" : "manual",
-                focusDistance: 100,
-              },
-            ],
-          });
-        }
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.log(e);
-      }
-    };
-    await setCameraFocus();
+    // const setCameraFocus = async () => {
+    //   try {
+    //     const video = document.getElementById("userVideo");
+    //     const mediaStream = video.srcObject;
+    //     const track = await mediaStream.getTracks()[0];
+    //     const capabilities = track.getCapabilities();
+    //     if (typeof capabilities.focusDistance !== "undefined") {
+    //       await track.applyConstraints({
+    //         advanced: [
+    //           {
+    //             focusMode: capabilities.focusMode.includes("continuous") ? "continuous" : "manual",
+    //             focusDistance: 100,
+    //           },
+    //         ],
+    //       });
+    //     }
+    //   } catch (e) {
+    //     // eslint-disable-next-line no-console
+    //     console.log(e);
+    //   }
+    // };
+    // await setCameraFocus();
   };
 
   return { ready, init, devices, device, setDevice, faceMode, ...cameraFeatures, setReady };

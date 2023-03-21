@@ -6,6 +6,9 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
   const [enrollStatus, setEnrollStatus] = useState(null);
   const [progress, setProgress] = useState(0);
   const [enrollData, setEnrollData] = useState(null);
+  const [enrollPortrait, setEnrollPortrait] = useState(null);
+
+  const [enrollImageData, setEnrollImageData] = useState(null);
 
   let showError = false;
 
@@ -21,7 +24,6 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
     });
   };
 
-
   const callback = async (result) => {
     console.log("enroll callback hook result:", result);
     switch (result.status) {
@@ -32,13 +34,13 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
         break;
       case "INVALID_FACE":
         console.log("INVALID FACE: ", result);
-        if (!showError){
-          showError= true;
+        if (!showError) {
+          showError = true;
           setEnrollStatus(result.message);
           setFaceDetected(false);
-          setTimeout(()=>{
+          setTimeout(() => {
             showError = false;
-          },500)
+          }, 500);
         }
         break;
       case "ENROLLING":
@@ -50,9 +52,15 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
           setEnrollStatus("ENROLL SUCCESS");
           setEnrollData(result.returnValue);
           onSuccess(result.returnValue);
+          setEnrollPortrait(result.portrait);
+          convertBase64ToImageData(result.portrait, setEnrollImageData);
           setShowSuccess(true);
         }
-        if (result.returnValue?.status === -1 || result.returnValue?.status === -100 || result.returnValue?.error === -1) {
+        if (
+          result.returnValue?.status === -1 ||
+          result.returnValue?.status === -100 ||
+          result.returnValue?.error === -1
+        ) {
           setEnrollStatus("ENROLL FAILED, PLEASE TRY AGAIN");
         }
         break;
@@ -60,7 +68,26 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
     }
   };
 
-  return { faceDetected, enrollStatus, enrollData, enrollUserOneFa, progress };
+  function convertBase64ToImageData(imageSrc, setImageData) {
+    const newImg = new Image();
+    newImg.src = imageSrc;
+    newImg.onload = async () => {
+      const imgSize = {
+        w: newImg.width,
+        h: newImg.height,
+      };
+      // alert(imgSize.w + " " + imgSize.h);
+      const canvas = document.createElement("canvas");
+      canvas.width = imgSize.w;
+      canvas.height = imgSize.h;
+      const ctx = canvas.getContext("2d");
+      ctx?.drawImage(newImg, 0, 0);
+      const imageData = ctx?.getImageData(0, 0, imgSize.w, imgSize.h);
+      setImageData(imageData);
+    };
+  }
+
+  return { faceDetected, enrollStatus, enrollData, enrollUserOneFa, progress, enrollPortrait, enrollImageData };
 };
 
 export default useEnrollOneFa;

@@ -1,6 +1,11 @@
 /* eslint-disable */
 import { useEffect, useMemo, useState } from "react";
-import { switchCamera, setStopLoopContinuousAuthentication, closeCamera } from "@privateid/cryptonets-web-sdk";
+import {
+  switchCamera,
+  setStopLoopContinuousAuthentication,
+  closeCamera,
+} from "@privateid/cryptonets-web-sdk";
+
 
 import {
   useCamera,
@@ -16,12 +21,8 @@ import {
 import {
   CANVAS_SIZE,
   canvasSizeOptions,
-  isAndroid,
   isBackCamera,
-  isIOS,
   isMobile,
-  mapDevices,
-  osVersion,
   setMax2KForMobile,
   WIDTH_TO_STANDARDS,
 } from "../utils";
@@ -30,10 +31,12 @@ import "./styles.css";
 import usePredictAge from "../hooks/usePredictAge";
 import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocumentWithoutPredict";
 import usePrividFaceISO from "../hooks/usePrividFaceISO";
+import { useNavigate } from "react-router-dom";
 
+let callingWasm = false;
 const Ready = () => {
-  const { ready: wasmReady } = useWasm();
-  const { ready, init, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
+  const { ready: wasmReady, deviceSupported, init:initWasm } = useWasm();
+  const { ready: cameraReady, init:initCamera, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
 
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -94,15 +97,22 @@ const Ready = () => {
   const [currentAction, setCurrentAction] = useState(null);
 
   useEffect(() => {
-    if (!wasmReady) return;
-    if (!ready) init();
-    if (isIOS && osVersion < 15) {
-      console.log("Does not support old version of iOS os version 15 below.");
-    } else if (isAndroid && osVersion < 11) {
-      console.log("Does not support old version of Android os version 11 below.");
+    console.log("useEffect starting wasm and camera");
+    console.log("--- wasm status ", wasmReady, cameraReady);
+    if (wasmReady && cameraReady) return;
+    if (!wasmReady) { 
+      if(!callingWasm){
+        // NOTE: MAKE SURE THAT WASM IS ONLY LOADED ONCE
+        initWasm();
+        callingWasm = true;
+      }
+      return;
     }
-    console.log("--- wasm status ", wasmReady, ready);
-  }, [wasmReady, ready]);
+    if (!cameraReady) {
+      initCamera();
+    }
+  }, [wasmReady, cameraReady]);
+
 
   const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");
   // isValid
@@ -150,13 +160,8 @@ const Ready = () => {
   const handlePreidctSuccess = (result) => {
     console.log("======PREDICT SUCCESS========");
   };
-  const { predictOneFaData, predictOneFaaceDetected, predictMessage, predictUserOneFa } = usePredictOneFa(
-    "userVideo",
-    handlePreidctSuccess,
-    4,
-    null,
-    setShowSuccess
-  );
+  const { predictOneFaData, predictOneFaaceDetected, predictMessage, predictUserOneFa } =
+    usePredictOneFa("userVideo", handlePreidctSuccess, 4, null, setShowSuccess);
   const handlePredictOneFa = async () => {
     setShowSuccess(false);
     setCurrentAction("usePredictOneFa");
@@ -198,7 +203,7 @@ const Ready = () => {
   const useDeleteCallback = (deleteStatus) => {
     setDeletionStatus(deleteStatus);
   };
-  const { loading, onDeleteUser } = useDelete(useDeleteCallback, ready);
+  const { loading, onDeleteUser } = useDelete(useDeleteCallback, wasmReady);
 
   const handleDelete = async () => {
     setShowSuccess(false);
@@ -273,6 +278,8 @@ const Ready = () => {
     isFound: isfoundValidity,
     scanFrontDocument: scanFrontValidity,
     confidenceValue,
+    predictMugshotImageData,
+    isMugshotFound,
   } = useScanFrontDocumentWithoutPredict(setShowSuccess);
 
   const handleFrontDLValidity = async () => {
@@ -281,20 +288,19 @@ const Ready = () => {
   };
 
   const handleCanvasSize = async (e, skipSwitchCamera = false) => {
-    if (currentAction === "useScanDocumentFront" || currentAction === "useScanDocumentBack") {
+    if (currentAction === "useScanFrontValidity" || currentAction === "useScanDocumentBack") {
       setShouldTriggerCallback(false);
       setCanvasSize(e.target.value);
       const canvasSize = CANVAS_SIZE[e.target.value];
       if (!skipSwitchCamera) {
         const { capabilities = {} } = await switchCamera(null, deviceId || device, canvasSize);
         setDeviceCapabilities(capabilities);
-        // setDevicesList(devices.map(mapDevices));
       }
       setShouldTriggerCallback(true);
 
-      if (currentAction === "useScanDocumentFront") {
+      if (currentAction === "useScanFrontValidity") {
         setTimeout(async () => {
-          await scanFrontDocument(e.target.value);
+          await  useScanFrontDocumentWithoutPredict(e.target.value);
         }, 1000);
       } else {
         setTimeout(async () => {
@@ -321,226 +327,232 @@ const Ready = () => {
     await closeCamera();
   };
 
+
+  const navigate = useNavigate();
+  const handleCompareImages = async () => {
+    navigate("/compare");
+  };
+
   return (
-    <div id="canvasInput" className="container">
-      <div
-        style={{
-          height: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          flexDirection: "column",
-          flexWrap: "wrap",
-          gap: "10px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: currentAction === "useScanDocumentFront" ? "space-between" : "center",
-            width: "47%",
-          }}
-        >
-          <div>
+    <>
+      {deviceSupported.isChecking ? (
+        <div>
+          <h1> Loading . . . </h1>
+        </div>
+      ) : !deviceSupported.isChecking && deviceSupported.supported ? (
+        <div id="canvasInput" className="container">
+          <div
+            style={{
+              height: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              flexDirection: "column",
+              flexWrap: "wrap",
+              gap: "10px",
+            }}
+          >
             <div
               style={{
                 display: "flex",
-                justifyContent: "center",
-                gap: "20px",
-                padding: "10px",
+                justifyContent: currentAction === "useScanDocumentFront" ? "space-between" : "center",
+                width: "47%",
               }}
             >
-              <button onClick={handleReopenCamera}> Open Camera</button>
-              <button onClick={handleCloseCamera}> Close Camera</button>
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: "20px",
+                    padding: "10px",
+                  }}
+                >
+                  <button onClick={handleReopenCamera}> Open Camera</button>
+                  <button onClick={handleCloseCamera}> Close Camera</button>
+                </div>
+                <label> Select Camera: </label>
+                <select value={deviceId || device} onChange={(e) => handleSwitchCamera(e)}>
+                  {(devicesList?.length ? devicesList : devices).map((e, index) => {
+                    return (
+                      <option id={e.value} value={e.value} key={index}>
+                        {e.label}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+              {currentAction === "useScanDocumentFront" || currentAction === "useScanDocumentBack" ? (
+                <div>
+                  <label> Canvas Size: </label>
+                  <select defaultValue={initialCanvasSize} value={canvasSize} onChange={(e) => handleCanvasSize(e)}>
+                    {canvasSizeList.map(({ label, value }) => (
+                      <option id={value} value={value} key={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <></>
+              )}
             </div>
-            <label> Select Camera: </label>
-            <select value={deviceId || device} onChange={(e) => handleSwitchCamera(e)}>
-              {(devicesList?.length ? devicesList : devices).map((e, index) => {
-                return (
-                  <option id={e.value} value={e.value} key={index}>
-                    {e.label}
-                  </option>
-                );
-              })}
-            </select>
+            <div className={"cameraContainer"}>
+              {currentAction === "useEnrollOneFa" && !enrollOneFaFaceDetected && (
+                <div className="enrollDisplay">
+                  <span> {enrollOneFaStatus} </span>
+                </div>
+              )}
+              <video
+                id="userVideo"
+                className={
+                  (currentAction === "useScanDocumentFront" ||
+                  currentAction === "useScanDocumentBack" ||
+                  currentAction === "useScanDocumentFrontValidity"
+                    ? `cameraDisplay`
+                    : `cameraDisplay mirrored`) +
+                  " " +
+                  (showSuccess ? "cameraDisplaySuccess" : "")
+                }
+                muted
+                autoPlay
+                playsInline
+              />
+              {currentAction === "usePredictAge" && age > 0 && (
+                <div className="age-box">
+                  <div>{Math.round(age)}</div>
+                </div>
+              )}
+            </div>
+
+            <div>
+              {currentAction === "useEnrollOneFa" && (
+                <div>
+                  <div>
+                    Enroll Face Detected:
+                    {enrollOneFaFaceDetected ? "Face Detected" : "No Face Detected"}
+                  </div>
+                  <div> Enroll Status: {enrollOneFaStatus} </div>
+                  <div> Progress: {`${enrollOneFaProgress} %`}</div>
+                  <div>
+                    Enroll GUID:&nbsp;
+                    {`${enrollOneFaData ? enrollOneFaData.PI.guid : ""}`}
+                  </div>
+                  <div>
+                    Enroll UUID:&nbsp;
+                    {`${enrollOneFaData ? enrollOneFaData.PI.uuid : ""}`}
+                  </div>
+                </div>
+              )}
+
+              {currentAction === "isValid" && (
+                <div>
+                  <div>{`Face Valid: ${isValidFaceDetected}`}</div>
+                </div>
+              )}
+
+              {currentAction === "useContinuousPredict" && (
+                <div>
+                  <div>{`Face Valid: ${continuousFaceDetected ? "Face Detected" : "Face not detected"}`}</div>
+                  <div>{`Message: ${continuousPredictMessage || ""}`}</div>
+                  <div>{`Predicted GUID: ${continuousPredictGUID ? continuousPredictGUID : ""}`}</div>
+                  <div>{`Predicted UUID: ${continuousPredictUUID ? continuousPredictUUID : ""}`}</div>
+                </div>
+              )}
+
+              {currentAction === "usePredictOneFa" && (
+                <div>
+                  <div>{`Face Valid: ${predictOneFaaceDetected ? "Face Detected" : "Face not detected"}`}</div>
+                  <div>{`Message: ${predictMessage || ""}`}</div>
+                  <div>{`Predicted GUID: ${predictOneFaData ? predictOneFaData.PI.guid : ""}`}</div>
+                  <div>{`Predicted UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
+                </div>
+              )}
+
+              {currentAction === "useDelete" && (
+                <div>
+                  <div>{`Deletion Status: ${deletionStatus}`}</div>
+                  <div>{`User UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
+                </div>
+              )}
+
+              {currentAction === "useScanDocumentBack" && (
+                <div>
+                  <h2> {`Barcode Status Code: ${barcodeStatusCode}`}</h2>
+                  <div>{`Scanned code data: ${scannedCodeData ? "success" : "not found"}`}</div>
+                  <div>{`First Name: ${scannedCodeData ? scannedCodeData.firstName : ""}`}</div>
+                  <div>{`Middle Name: ${scannedCodeData ? scannedCodeData.middleName : ""}`}</div>
+                  <div>{`Last Name: ${scannedCodeData ? scannedCodeData.lastName : ""}`}</div>
+                  <div>{`Date of Birth: ${scannedCodeData ? scannedCodeData.dateOfBirth : ""}`}</div>
+                  <div>{`Gender: ${scannedCodeData ? scannedCodeData.gender : ""}`}</div>
+                  <div>{`Street Address1: ${scannedCodeData ? scannedCodeData.streetAddress1 : ""}`}</div>
+                  <div>{`Street Address2: ${scannedCodeData ? scannedCodeData.streetAddress2 : ""}`}</div>
+                  <div>{`City: ${scannedCodeData ? scannedCodeData.city : ""}`}</div>
+                  <div>{`Postal Code: ${scannedCodeData ? scannedCodeData.postCode : ""}`}</div>
+                </div>
+              )}
+
+              {currentAction === "useScanDocumentFrontValidity" && (
+                <div>
+                  <div>{`Document 4 corners found: ${isfoundValidity ? "Document 4 corners available" : "not found"}`}</div>
+                  <div>{`Mugshot found: ${isMugshotFound ? "Mugshot Available" : "not found"}`}</div>
+                </div>
+              )}
+
+              {currentAction === "privid_face_iso" && (
+                <div style={{ display: "flex", gap: "30px", flexWrap: "wrap", flexDirection: "column" }}>
+                  <div>
+                    <h2>Output Image:</h2>
+                    {faceISOImageData && <img style={{ maxWidth: "400px" }} src={faceISOImageData} />}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div id="module_functions" className="buttonContainer">
+              <button className="button" onClick={handleIsValid}>
+                Is Valid
+              </button>
+              <button className="button" onClick={handlePredictAge}>
+                Predict Age
+              </button>
+              <button className="button" onClick={handleEnrollOneFa}>
+                Enroll
+              </button>
+              <button className="button" onClick={handlePredictOneFa}>
+                Predict
+              </button>
+              <button className="button" onClick={handleContinuousPredict}>
+                Continuous Authentication
+              </button>
+              <button className="button" onClick={handleDelete}>
+                Delete
+              </button>
+              <button className="button" onClick={handleFrontDLValidity}>
+                Scan Front Document Validity
+              </button>
+              <button className="button" onClick={handleScanDocumentBack}>
+                Scan Back Document
+              </button>
+              <button className="button" onClick={handlePrividFaceISO}>
+                Face ISO
+              </button>
+              <button className="button" onClick={handleCompareImages}>
+                Compare Flow
+              </button>
+            </div>
           </div>
-          {currentAction === "useScanDocumentFront" || currentAction === "useScanDocumentBack" ? (
-            <div>
-              <label> Canvas Size: </label>
-              <select defaultValue={initialCanvasSize} value={canvasSize} onChange={(e) => handleCanvasSize(e)}>
-                {canvasSizeList.map(({ label, value }) => (
-                  <option id={value} value={value} key={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ) : (
-            <></>
-          )}
         </div>
-        <div className={"cameraContainer"}>
-          {currentAction === "useEnrollOneFa" && !enrollOneFaFaceDetected && (
-            <div className="enrollDisplay">
-              <span> {enrollOneFaStatus} </span>
-            </div>
-          )}
-          <video
-            id="userVideo"
-            className={
-              (currentAction === "useScanDocumentFront" ||
-              currentAction === "useScanDocumentBack" ||
-              currentAction === "useScanDocumentFrontValidity"
-                ? `cameraDisplay`
-                : `cameraDisplay mirrored`) +
-              " " +
-              (showSuccess ? "cameraDisplaySuccess" : "")
-            }
-            muted
-            autoPlay
-            playsInline
-          />
-          {currentAction === "usePredictAge" && age > 0 && (
-            <div className="age-box">
-              <div>{Math.round(age)}</div>
-            </div>
-          )}
-        </div>
-
+      ) : !deviceSupported.isChecking && !deviceSupported.supported ? (
         <div>
-          {currentAction === "useEnrollOneFa" && (
-            <div>
-              <div>
-                Enroll Face Detected:
-                {enrollOneFaFaceDetected ? "Face Detected" : "No Face Detected"}
-              </div>
-              <div> Enroll Status: {enrollOneFaStatus} </div>
-              <div> Progress: {`${enrollOneFaProgress} %`}</div>
-              <div>
-                Enroll GUID:&nbsp;
-                {`${enrollOneFaData ? enrollOneFaData.PI.guid : ""}`}
-              </div>
-              <div>
-                Enroll UUID:&nbsp;
-                {`${enrollOneFaData ? enrollOneFaData.PI.uuid : ""}`}
-              </div>
-            </div>
-          )}
-
-          {currentAction === "isValid" && (
-            <div>
-              <div>{`Face Valid: ${isValidFaceDetected}`}</div>
-            </div>
-          )}
-
-          {currentAction === "useContinuousPredict" && (
-            <div>
-              <div>{`Face Valid: ${continuousFaceDetected ? "Face Detected" : "Face not detected"}`}</div>
-              <div>{`Message: ${continuousPredictMessage || ""}`}</div>
-              <div>{`Predicted GUID: ${continuousPredictGUID ? continuousPredictGUID : ""}`}</div>
-              <div>{`Predicted UUID: ${continuousPredictUUID ? continuousPredictUUID : ""}`}</div>
-            </div>
-          )}
-
-          {currentAction === "usePredictOneFa" && (
-            <div>
-              <div>{`Face Valid: ${predictOneFaaceDetected ? "Face Detected" : "Face not detected"}`}</div>
-              <div>{`Message: ${predictMessage || ""}`}</div>
-              <div>{`Predicted GUID: ${predictOneFaData ? predictOneFaData.PI.guid : ""}`}</div>
-              <div>{`Predicted UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
-            </div>
-          )}
-
-          {currentAction === "useDelete" && (
-            <div>
-              <div>{`Deletion Status: ${deletionStatus}`}</div>
-              <div>{`User UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
-            </div>
-          )}
-
-          {currentAction === "useScanDocumentFront" && (
-            <div>
-              {/* <div>{`Scan Document Result: ${resultStatus === 0 ? "success" : "not found"}`}</div> */}
-              <div> {`Confidence Value: ${resultResponse?.conf_level || ""}`}</div>
-              <div>{`Predict Status: ${resultResponse?.predict_message || ""}`}</div>
-              <div>{`Scan Document Result: ${resultResponse?.op_message || ""}`}</div>
-              <div>{`Has found valid document: ${isFound || ""}`}</div>
-              <div>{`Document GUID: ${documentGUID || ""}`} </div>
-              <div>{`Document UUID: ${documentUUID || ""}`} </div>
-            </div>
-          )}
-
-          {currentAction === "useScanDocumentBack" && (
-            <div>
-              <h2> {`Barcode Status Code: ${barcodeStatusCode}`}</h2>
-              <div>{`Scanned code data: ${scannedCodeData ? "success" : "not found"}`}</div>
-              <div>{`First Name: ${scannedCodeData ? scannedCodeData.firstName : ""}`}</div>
-              <div>{`Middle Name: ${scannedCodeData ? scannedCodeData.middleName : ""}`}</div>
-              <div>{`Last Name: ${scannedCodeData ? scannedCodeData.lastName : ""}`}</div>
-              <div>{`Date of Birth: ${scannedCodeData ? scannedCodeData.dateOfBirth : ""}`}</div>
-              <div>{`Gender: ${scannedCodeData ? scannedCodeData.gender : ""}`}</div>
-              <div>{`Street Address1: ${scannedCodeData ? scannedCodeData.streetAddress1 : ""}`}</div>
-              <div>{`Street Address2: ${scannedCodeData ? scannedCodeData.streetAddress2 : ""}`}</div>
-              <div>{`City: ${scannedCodeData ? scannedCodeData.city : ""}`}</div>
-              <div>{`Postal Code: ${scannedCodeData ? scannedCodeData.postCode : ""}`}</div>
-            </div>
-          )}
-
-          {currentAction === "useScanDocumentFrontValidity" && (
-            <div>
-              <div>{`Scan Document Result: ${isfoundValidity ? "Valid Front Document found" : "not found"}`}</div>
-            </div>
-          )}
-
-          {currentAction === "privid_face_iso" && (
-            <div style={{ display: "flex", gap: "30px", flexWrap: "wrap", flexDirection: "column" }}>
-              {/* <div> FACE ISO STATUS: {faceISOStatus} </div>
-              <div>
-                <h2>Input Image:</h2>
-                {inputImage && <img style={{ maxWidth: "400px" }} src={inputImage} />}
-              </div> */}
-              <div>
-                <h2>Output Image:</h2>
-                {faceISOImageData && <img style={{ maxWidth: "400px" }} src={faceISOImageData} />}
-              </div>
-            </div>
-          )}
+          <h1> Not Supported. </h1>
+          <h4> Please use a different device or updated device. </h4>
+          <p>{deviceSupported.message}</p>
         </div>
-
-        <div id="module_functions" className="buttonContainer">
-          <button className="button" onClick={handleIsValid}>
-            Is Valid
-          </button>
-          <button className="button" onClick={handlePredictAge}>
-            Predict Age
-          </button>
-          <button className="button" onClick={handleEnrollOneFa}>
-            Enroll
-          </button>
-          <button className="button" onClick={handlePredictOneFa}>
-            Predict
-          </button>
-          <button className="button" onClick={handleContinuousPredict}>
-            Continuous Authentication
-          </button>
-          <button className="button" onClick={handleDelete}>
-            Delete
-          </button>
-          <button className="button" onClick={handleScanDLFront}>
-            Scan Front Document
-          </button>
-          <button className="button" onClick={handleFrontDLValidity}>
-            Scan Front Document Validity (No identity)
-          </button>
-          <button className="button" onClick={handleScanDocumentBack}>
-            Scan Back Document
-          </button>
-          <button className="button" onClick={handlePrividFaceISO}>
-            Face ISO
-          </button>
-        </div>
-      </div>
-    </div>
+      ) : (
+        <></>
+      )}
+    </>
   );
 };
 
