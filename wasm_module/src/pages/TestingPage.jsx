@@ -4,7 +4,7 @@ import {
   switchCamera,
   setStopLoopContinuousAuthentication,
   closeCamera,
-} from "@privateid/cryptonets-web-sdk-alpha";
+} from "@privateid/cryptonets-web-sdk";
 
 import {
   useCamera,
