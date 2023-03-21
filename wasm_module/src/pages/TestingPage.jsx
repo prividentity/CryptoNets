@@ -4,7 +4,6 @@ import {
   switchCamera,
   setStopLoopContinuousAuthentication,
   closeCamera,
-  faceCompareLocal,
 } from "@privateid/cryptonets-web-sdk-alpha";
 
 import {
@@ -21,12 +20,8 @@ import {
 import {
   CANVAS_SIZE,
   canvasSizeOptions,
-  isAndroid,
   isBackCamera,
-  isIOS,
   isMobile,
-  mapDevices,
-  osVersion,
   setMax2KForMobile,
   WIDTH_TO_STANDARDS,
 } from "../utils";
@@ -37,8 +32,6 @@ import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocumentWit
 import usePrividFaceISO from "../hooks/usePrividFaceISO";
 import { useNavigate } from "react-router-dom";
 
-
-let isLoading = false;
 let callingWasm = false;
 const Ready = () => {
   const { ready: wasmReady, deviceSupported, init:initWasm } = useWasm();
@@ -108,14 +101,13 @@ const Ready = () => {
     if (wasmReady && cameraReady) return;
     if (!wasmReady) { 
       if(!callingWasm){
-        console.log("init wasm called:");
+        // NOTE: MAKE SURE THAT WASM IS ONLY LOADED ONCE
         initWasm();
         callingWasm = true;
       }
       return;
     }
     if (!cameraReady) {
-      console.log("calling camera");
       initCamera();
     }
   }, [wasmReady, cameraReady]);
@@ -157,8 +149,6 @@ const Ready = () => {
     enrollData: enrollOneFaData,
     enrollUserOneFa,
     progress: enrollOneFaProgress,
-    enrollPortrait,
-    enrollImageData,
   } = useEnrollOneFa("userVideo", useEnrollSuccess, null, deviceId, setShowSuccess);
   const handleEnrollOneFa = async () => {
     setShowSuccess(false);
@@ -510,11 +500,6 @@ const Ready = () => {
 
               {currentAction === "privid_face_iso" && (
                 <div style={{ display: "flex", gap: "30px", flexWrap: "wrap", flexDirection: "column" }}>
-                  {/* <div> FACE ISO STATUS: {faceISOStatus} </div>
-              <div>
-                <h2>Input Image:</h2>
-                {inputImage && <img style={{ maxWidth: "400px" }} src={inputImage} />}
-              </div> */}
                   <div>
                     <h2>Output Image:</h2>
                     {faceISOImageData && <img style={{ maxWidth: "400px" }} src={faceISOImageData} />}
