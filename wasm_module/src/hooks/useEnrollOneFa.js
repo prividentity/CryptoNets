@@ -18,13 +18,11 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
     setProgress(0);
     setEnrollData(null);
     // eslint-disable-next-line no-unused-vars
-    const {imageData} = await enroll1FA(callback, {
+    await enroll1FA(callback, {
       send_original_images: false,
       // face_thresholds_rem_bad_emb: 0.96,
     });
-    setEnrollImageData(imageData)
   };
-
 
   const callback = async (result) => {
     console.log("enroll callback hook result:", result);
@@ -36,13 +34,13 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
         break;
       case "INVALID_FACE":
         console.log("INVALID FACE: ", result);
-        if (!showError){
-          showError= true;
+        if (!showError) {
+          showError = true;
           setEnrollStatus(result.message);
           setFaceDetected(false);
-          setTimeout(()=>{
+          setTimeout(() => {
             showError = false;
-          },500)
+          }, 500);
         }
         break;
       case "ENROLLING":
@@ -55,15 +53,39 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
           setEnrollData(result.returnValue);
           onSuccess(result.returnValue);
           setEnrollPortrait(result.portrait);
+          convertBase64ToImageData(result.portrait, setEnrollImageData);
           setShowSuccess(true);
         }
-        if (result.returnValue?.status === -1 || result.returnValue?.status === -100 || result.returnValue?.error === -1) {
+        if (
+          result.returnValue?.status === -1 ||
+          result.returnValue?.status === -100 ||
+          result.returnValue?.error === -1
+        ) {
           setEnrollStatus("ENROLL FAILED, PLEASE TRY AGAIN");
         }
         break;
       default:
     }
   };
+
+  function convertBase64ToImageData(imageSrc, setImageData) {
+    const newImg = new Image();
+    newImg.src = imageSrc;
+    newImg.onload = async () => {
+      const imgSize = {
+        w: newImg.width,
+        h: newImg.height,
+      };
+      // alert(imgSize.w + " " + imgSize.h);
+      const canvas = document.createElement("canvas");
+      canvas.width = imgSize.w;
+      canvas.height = imgSize.h;
+      const ctx = canvas.getContext("2d");
+      ctx?.drawImage(newImg, 0, 0);
+      const imageData = ctx?.getImageData(0, 0, imgSize.w, imgSize.h);
+      setImageData(imageData);
+    };
+  }
 
   return { faceDetected, enrollStatus, enrollData, enrollUserOneFa, progress, enrollPortrait, enrollImageData };
 };
