@@ -18,16 +18,14 @@ let wasmSession = null;
 let setCache = true;
 let checkWasmLoaded = false;
 
-const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) => {
-  console.log('params before promise:', { simd, url, key, module, debug_type, cacheConfig });
-  return new Promise(async (resolve, reject) => {
+const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) => 
+  new Promise(async (resolve, reject) => {
     apiUrl = url;
     apiKey = key;
     wasmModule = module;
     debugType = debug_type;
     setCache = cacheConfig;
 
-    console.log('params inside isload: ', { simd, url, key, module, debug_type, cacheConfig });
 
     if (module === 'voice') {
       importScripts('../wasm/voice/simd/privid_fhe.js');
@@ -82,7 +80,6 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
       reject(new Error('Incorrect WASM'));
     }
   });
-};
 
 function flatten(arrays, TypedArray) {
   const arr = new TypedArray(arrays.reduce((n, a) => n + a.length, 0));
@@ -806,8 +803,6 @@ const output_ptr = function () {
 async function initializeWasmSession(url, key, debug_type) {
   console.log('checking session if available:', wasmSession);
   if (!wasmSession) {
-    console.log('URL & KEY: ', { url, key });
-
     const url_args = buffer_args(url);
     const key_args = buffer_args(key);
     const session_out_ptr = output_ptr();

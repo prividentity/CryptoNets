@@ -15,7 +15,17 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
 
   const documentCallback = (result) => {
     console.log("Front scan callback result:", result);
-    if (result.returnValue.op_status === 0) {
+    // if (result.returnValue.cropped_doc_width && !result.returnValue.cropped_face_width) {
+    //   setIsFound(true);
+    //   setShowSuccess(true);
+    // }
+    // else if(!result.returnValue.cropped_doc_width && result.returnValue.cropped_face_width){
+    //   setPredictMugshotHeight(result.returnValue.cropped_face_height);
+    //   setPredictMugshotWidth(result.returnValue.cropped_face_width);
+    //   setShowSuccess(true);
+    // }
+    // else 
+    if(result.returnValue.op_status === 0 && result.returnValue.cropped_doc_width && result.returnValue.cropped_face_width){
       setIsFound(true);
       setShowSuccess(true);
       setPredictMugshotHeight(result.returnValue.cropped_face_height);
