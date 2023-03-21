@@ -6,6 +6,7 @@ import {
   closeCamera,
 } from "@privateid/cryptonets-web-sdk";
 
+
 import {
   useCamera,
   useWasm,

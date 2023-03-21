@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk";
 
+
 const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
   const [scanResult, setScanResult] = useState(null);
   const [scannedIdData, setScannedIdData] = useState(null);
