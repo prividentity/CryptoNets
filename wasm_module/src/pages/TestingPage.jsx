@@ -1,10 +1,6 @@
 /* eslint-disable */
 import { useEffect, useMemo, useState } from "react";
-import {
-  switchCamera,
-  setStopLoopContinuousAuthentication,
-  closeCamera,
-} from "@privateid/cryptonets-web-sdk-alpha";
+import { switchCamera, setStopLoopContinuousAuthentication, closeCamera } from "@privateid/cryptonets-web-sdk-alpha";
 
 import {
   useCamera,
@@ -34,8 +30,16 @@ import { useNavigate } from "react-router-dom";
 
 let callingWasm = false;
 const Ready = () => {
-  const { ready: wasmReady, deviceSupported, init:initWasm } = useWasm();
-  const { ready: cameraReady, init:initCamera, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
+  const { ready: wasmReady, deviceSupported, init: initWasm } = useWasm();
+  const {
+    ready: cameraReady,
+    init: initCamera,
+    device,
+    devices,
+    settings,
+    capabilities,
+    setReady,
+  } = useCamera("userVideo");
 
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -99,8 +103,8 @@ const Ready = () => {
     console.log("useEffect starting wasm and camera");
     console.log("--- wasm status ", wasmReady, cameraReady);
     if (wasmReady && cameraReady) return;
-    if (!wasmReady) { 
-      if(!callingWasm){
+    if (!wasmReady) {
+      if (!callingWasm) {
         // NOTE: MAKE SURE THAT WASM IS ONLY LOADED ONCE
         initWasm();
         callingWasm = true;
@@ -111,7 +115,6 @@ const Ready = () => {
       initCamera();
     }
   }, [wasmReady, cameraReady]);
-
 
   const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");
   // isValid
@@ -159,8 +162,13 @@ const Ready = () => {
   const handlePreidctSuccess = (result) => {
     console.log("======PREDICT SUCCESS========");
   };
-  const { predictOneFaData, predictOneFaaceDetected, predictMessage, predictUserOneFa } =
-    usePredictOneFa("userVideo", handlePreidctSuccess, 4, null, setShowSuccess);
+  const { predictOneFaData, predictOneFaaceDetected, predictMessage, predictUserOneFa } = usePredictOneFa(
+    "userVideo",
+    handlePreidctSuccess,
+    4,
+    null,
+    setShowSuccess
+  );
   const handlePredictOneFa = async () => {
     setShowSuccess(false);
     setCurrentAction("usePredictOneFa");
@@ -279,6 +287,8 @@ const Ready = () => {
     confidenceValue,
     predictMugshotImageData,
     isMugshotFound,
+    croppedDocumentImage,
+    predictMugshotImage,
   } = useScanFrontDocumentWithoutPredict(setShowSuccess);
 
   const handleFrontDLValidity = async () => {
@@ -299,7 +309,7 @@ const Ready = () => {
 
       if (currentAction === "useScanFrontValidity") {
         setTimeout(async () => {
-          await  useScanFrontDocumentWithoutPredict(e.target.value);
+          await useScanFrontDocumentWithoutPredict(e.target.value);
         }, 1000);
       } else {
         setTimeout(async () => {
@@ -325,7 +335,6 @@ const Ready = () => {
   const handleCloseCamera = async () => {
     await closeCamera();
   };
-
 
   const navigate = useNavigate();
   const handleCompareImages = async () => {
@@ -493,8 +502,30 @@ const Ready = () => {
 
               {currentAction === "useScanDocumentFrontValidity" && (
                 <div>
-                  <div>{`Document 4 corners found: ${isfoundValidity ? "Document 4 corners available" : "not found"}`}</div>
+                  <div>{`Document 4 corners found: ${
+                    isfoundValidity ? "Document 4 corners available" : "not found"
+                  }`}</div>
                   <div>{`Mugshot found: ${isMugshotFound ? "Mugshot Available" : "not found"}`}</div>
+                  {predictMugshotImage && croppedDocumentImage && (
+                    <div style={{ display: "flex", gap: "10px", padding:"10px" }}>
+                      <button
+                        className="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(predictMugshotImage);
+                        }}
+                      >
+                        Copy Mugshot Image String
+                      </button>
+                      <button
+                        className="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(croppedDocumentImage);
+                        }}
+                      >
+                        Copy Document Image String
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 

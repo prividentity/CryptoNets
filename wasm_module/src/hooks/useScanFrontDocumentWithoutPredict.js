@@ -12,6 +12,7 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
   const [predictMugshotWidth, setPredictMugshotWidth] = useState(null);
   const [predictMugshotHeight, setPredictMugshotHeight] = useState(null);
   const [predictMugshotImageData, setPredictMugshotImageData] = useState(null);
+  const [predictMugshotImage, setPredictMugshotImage] = useState(null);
 
   // Cropped Front Document
   const [croppedDocumentImageData, setCroppedDocumentImageData] = useState(null);
@@ -41,12 +42,14 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
   const doConvert = async () => {
     const mugshotBase64 = await convertCroppedImage(predictMugshotRaw, predictMugshotWidth, predictMugshotHeight);
     console.log("Mugshot image:", mugshotBase64);
+    setPredictMugshotImage(mugshotBase64);
     return mugshotBase64;
   };
 
   const convertCroppedDocument = async () => {
     const mugshotBase64 = await convertCroppedImage(croppedDocumentImageData, croppedDocumentWidth, croppedDocumentHeight);
     console.log("Cropped Document:", mugshotBase64);
+    setCroppedDocumentImage(mugshotBase64);
     return mugshotBase64;
   }
 
@@ -95,6 +98,8 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
     isMugshotFound,
     scannedIdData,
     predictMugshotImageData,
+    predictMugshotImage,
+    croppedDocumentImage,
   };
 };
 
