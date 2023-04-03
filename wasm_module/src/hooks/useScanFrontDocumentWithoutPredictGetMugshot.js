@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
+import { getScaledBoundingBox } from "../utils";
 
 const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotSuccess) => {
+  const scaledBoundingBoxRef = useRef(null);
   const [scanResult, setScanResult] = useState(null);
   const [scannedIdData, setScannedIdData] = useState(null);
   const [isFound, setIsFound] = useState(false);
@@ -22,21 +24,39 @@ const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotS
     // console.log("Front scan callback result:", result);
     console.log("TIMESTAMP-Callback: ", new Date());
     console.timeEnd("frontDocument");
-    if (result.returnValue.op_status === 0 && result.returnValue.cropped_face_height) {
-      setIsFound(true);
-      setShowSuccess(true);
+    // if (result.returnValue.op_status === 0 && result.returnValue.cropped_face_height) {
+    //   setIsFound(true);
+    //   setShowSuccess(true);
+    //   setPredictMugshotHeight(result.returnValue.cropped_face_height);
+    //   setPredictMugshotWidth(result.returnValue.cropped_face_width);
+    //   setCroppedDocumentHeight(result.returnValue.cropped_doc_height);
+    //   setCroppedDocumentWidth(result.returnValue.cropped_doc_width);
+    // } else {
+    //   setIsFound(false);
+    //   setPredictMugshotHeight(null);
+    //   setPredictMugshotWidth(null);
+    //   setCroppedDocumentHeight(null);
+    //   setCroppedDocumentWidth(null);
+    //   scanFrontDocument();
+    // }
+
+    if (result.returnValue.cropped_doc_width) {
+      // setIsFound(true);
+      // setShowSuccess(true);
+      setScanResult(result.returnValue);
+      scaledBoundingBoxRef.current = getScaledBoundingBox(result.returnValue, document.getElementById("userVideo"));
+
       setPredictMugshotHeight(result.returnValue.cropped_face_height);
       setPredictMugshotWidth(result.returnValue.cropped_face_width);
       setCroppedDocumentHeight(result.returnValue.cropped_doc_height);
       setCroppedDocumentWidth(result.returnValue.cropped_doc_width);
+      scanFrontDocument();
     } else {
-      setIsFound(false);
-      setPredictMugshotHeight(null);
-      setPredictMugshotWidth(null);
-      setCroppedDocumentHeight(null);
-      setCroppedDocumentWidth(null);
+      setScanResult(null);
+      scaledBoundingBoxRef.current = null;
       scanFrontDocument();
     }
+
     // scanFrontDocument();
   };
 
@@ -104,6 +124,7 @@ const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotS
     isFound,
     scannedIdData,
     predictMugshotImageData,
+    scaledBoundingBoxRef,
   };
 };
 
