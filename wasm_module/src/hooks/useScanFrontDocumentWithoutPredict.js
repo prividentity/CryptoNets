@@ -80,7 +80,6 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
       croppedDocument,
       croppedMugshot,
     } = await isValidPhotoID("PHOTO_ID_FRONT", documentCallback, false, undefined, {
-      blur_threshold_doc: 2000,
     });
 
     setPredictMugshotRaw(croppedMugshot);

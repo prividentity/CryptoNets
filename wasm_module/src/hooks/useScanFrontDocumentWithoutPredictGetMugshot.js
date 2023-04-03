@@ -12,19 +12,29 @@ const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotS
   const [predictMugshotHeight, setPredictMugshotHeight] = useState(null);
   const [predictMugshotImageData, setPredictMugshotImageData] = useState(null);
 
+  // Cropped Front Document
+  const [croppedDocumentImageData, setCroppedDocumentImageData] = useState(null);
+  const [croppedDocumentWidth, setCroppedDocumentWidth] = useState(null);
+  const [croppedDocumentHeight, setCroppedDocumentHeight] = useState(null);
+  const [croppedDocumentImage, setCroppedDocumentImage] = useState(null);
+
   const documentCallback = (result) => {
     // console.log("Front scan callback result:", result);
     console.log("TIMESTAMP-Callback: ", new Date());
     console.timeEnd("frontDocument");
-    if ( result.returnValue.op_status === 0 && result.returnValue.cropped_face_height) {
+    if (result.returnValue.op_status === 0 && result.returnValue.cropped_face_height) {
       setIsFound(true);
       setShowSuccess(true);
       setPredictMugshotHeight(result.returnValue.cropped_face_height);
       setPredictMugshotWidth(result.returnValue.cropped_face_width);
+      setCroppedDocumentHeight(result.returnValue.cropped_doc_height);
+      setCroppedDocumentWidth(result.returnValue.cropped_doc_width);
     } else {
       setIsFound(false);
       setPredictMugshotHeight(null);
       setPredictMugshotWidth(null);
+      setCroppedDocumentHeight(null);
+      setCroppedDocumentWidth(null);
       scanFrontDocument();
     }
     // scanFrontDocument();
@@ -35,6 +45,29 @@ const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotS
     console.log("Mugshot image:", mugshotBase64);
     return mugshotBase64;
   };
+
+  const convertCroppedDocument = async () => {
+    const mugshotBase64 = await convertCroppedImage(
+      croppedDocumentImageData,
+      croppedDocumentWidth,
+      croppedDocumentHeight
+    );
+    console.log("Cropped Document:", mugshotBase64);
+    setCroppedDocumentImage(mugshotBase64);
+    return mugshotBase64;
+  };
+
+  // Cropped Document
+  useEffect(() => {
+    if (isFound && croppedDocumentImageData && croppedDocumentWidth && croppedDocumentHeight) {
+      console.log("before converting cropped face: ", {
+        croppedDocumentImageData,
+        croppedDocumentWidth,
+        croppedDocumentHeight,
+      });
+      convertCroppedDocument();
+    }
+  }, [isFound, croppedDocumentImageData, croppedDocumentWidth, croppedDocumentHeight]);
 
   useEffect(() => {
     if (isFound && predictMugshotRaw && predictMugshotWidth && predictMugshotHeight) {
@@ -52,10 +85,14 @@ const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotS
       result: resultData,
       croppedDocument,
       croppedMugshot,
-    } = await isValidPhotoID("PHOTO_ID_FRONT", documentCallback, false);
+    } = await isValidPhotoID("PHOTO_ID_FRONT", documentCallback, false, undefined, {
+      // blur_threshold_doc: 1700,
+      // threshold_doc_y: 0.02,
+      // threshold_doc_x: 0.02,
+    });
 
     setPredictMugshotRaw(croppedMugshot);
-
+    setCroppedDocumentImageData(croppedDocument);
     console.log(croppedDocument, croppedMugshot);
 
     console.log("Validate DL", resultData);
