@@ -1,6 +1,11 @@
 /* eslint-disable */
 import { useEffect, useMemo, useState } from "react";
-import { switchCamera, setStopLoopContinuousAuthentication, closeCamera } from "@privateid/cryptonets-web-sdk-alpha";
+import {
+  switchCamera,
+  setStopLoopContinuousAuthentication,
+  closeCamera,
+  faceCompareLocal,
+} from "@privateid/cryptonets-web-sdk-alpha";
 
 import {
   useCamera,
@@ -341,6 +346,111 @@ const Ready = () => {
     navigate("/compare");
   };
 
+  const [uploadImage1, setUploadImage1] = useState(null);
+  const [uploadImage2, setUploadImage2] = useState(null);
+
+  const handleUploadImage1 = async (e) => {
+    console.log(e.target.files);
+    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
+    if (e.target.files.length > 0) {
+      if (imageRegex.test(e.target.files[0].type)) {
+        const imageUrl = URL.createObjectURL(e.target.files[0]);
+        console.log(e.target.files[0]);
+
+        const getBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+
+            reader.onload = function () {
+              resolve(reader.result);
+            };
+            reader.onerror = function (error) {
+              reject(error);
+            };
+          });
+        };
+
+        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
+        var newImg = new Image();
+        newImg.src = base64;
+        newImg.onload = async () => {
+          var imgSize = {
+            w: newImg.width,
+            h: newImg.height,
+          };
+          alert(imgSize.w + " " + imgSize.h);
+          const canvas = document.createElement("canvas");
+          canvas.setAttribute("height", `${imgSize.h}`);
+          canvas.setAttribute("width", `${imgSize.w}`);
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(newImg, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
+          console.log("imageData", imageData);
+          setUploadImage1(imageData);
+        };
+      } else {
+        console.log("INVALID IMAGE TYPE");
+      }
+    }
+  };
+  const handleUploadImage2 = async (e) => {
+    console.log(e.target.files);
+    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
+    if (e.target.files.length > 0) {
+      if (imageRegex.test(e.target.files[0].type)) {
+        const imageUrl = URL.createObjectURL(e.target.files[0]);
+
+        console.log(e.target.files[0]);
+
+        const getBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+
+            reader.onload = function () {
+              resolve(reader.result);
+            };
+            reader.onerror = function (error) {
+              reject(error);
+            };
+          });
+        };
+
+        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
+        var newImg = new Image();
+        newImg.src = base64;
+        newImg.onload = async () => {
+          var imgSize = {
+            w: newImg.width,
+            h: newImg.height,
+          };
+          alert(imgSize.w + " " + imgSize.h);
+          const canvas = document.createElement("canvas");
+          canvas.setAttribute("height", `${imgSize.h}`);
+          canvas.setAttribute("width", `${imgSize.w}`);
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(newImg, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
+          console.log("imageData", imageData);
+          setUploadImage2(imageData);
+        };
+      } else {
+        console.log("INVALID IMAGE TYPE");
+      }
+    }
+  };
+
+  const handleDoCompare = async () => {
+    const callback = (result) => {
+      console.log("COMPARE RESULT", result);
+    };
+
+    await faceCompareLocal(callback, uploadImage1, uploadImage2);
+  };
+
   return (
     <>
       {deviceSupported.isChecking ? (
@@ -507,7 +617,7 @@ const Ready = () => {
                   }`}</div>
                   <div>{`Mugshot found: ${isMugshotFound ? "Mugshot Available" : "not found"}`}</div>
                   {predictMugshotImage && croppedDocumentImage && (
-                    <div style={{ display: "flex", gap: "10px", padding:"10px" }}>
+                    <div style={{ display: "flex", gap: "10px", padding: "10px" }}>
                       <button
                         className="button"
                         onClick={() => {
@@ -569,6 +679,35 @@ const Ready = () => {
               </button>
               <button className="button" onClick={handleCompareImages}>
                 Compare Flow
+              </button>
+            </div>
+
+            <div>
+              <p> Upload 2 images to use compare: </p>
+              <label>
+                <input
+                  type="file"
+                  name="upload"
+                  accept="image/png, image/gif, image/jpeg"
+                  onChange={handleUploadImage1}
+                  style={{ display: "none" }}
+                />
+                <span className="button">Upload Image 1</span>
+              </label>
+              <label>
+                <input
+                  type="file"
+                  name="upload"
+                  accept="image/png, image/gif, image/jpeg"
+                  onChange={handleUploadImage2}
+                  style={{ display: "none" }}
+                />
+                <span className="button">Upload Image 2</span>
+              </label>
+
+              <button className="button" onClick={handleDoCompare}>
+                {" "}
+                Do Compare{" "}
               </button>
             </div>
           </div>

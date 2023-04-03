@@ -22,7 +22,7 @@
   },
   "scripts": {
     "prestart": "cp -R ./node_modules/@privateid/cryptonets-web-sdk-alpha/wasm public/&& cp -R ./node_modules/@privateid/cryptonets-web-sdk-alpha/workers public/",
-    "start": "cross-env GENERATE_SOURCEMAP=false react-scripts start",
+    "start": "react-scripts start",
     "prebuild": "cp -R ./node_modules/@privateid/cryptonets-web-sdk-alpha/wasm public/ && cp -R ./node_modules/@privateid/cryptonets-web-sdk-alpha/workers public/",
     "build": "react-scripts build",
     "test": "react-scripts test",

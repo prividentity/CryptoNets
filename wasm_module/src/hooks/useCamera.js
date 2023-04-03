@@ -45,8 +45,9 @@ const useCamera = (element = "userVideo", resolution = null) => {
     //       await track.applyConstraints({
     //         advanced: [
     //           {
-    //             focusMode: capabilities.focusMode.includes("continuous") ? "continuous" : "manual",
-    //             focusDistance: 100,
+    //             //focusMode: capabilities.focusMode.includes("continuous") ? "continuous" : "manual",
+    //             // focusDistance: 1,
+    //             width: {ideal: 1280}
     //           },
     //         ],
     //       });
