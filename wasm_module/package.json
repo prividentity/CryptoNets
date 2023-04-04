@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@privateid/cryptonets-web-sdk-alpha": "latest",
+    "@privateid/cryptonets-web-sdk-alpha": "2.0.208-alpha",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.5.0",
@@ -22,7 +22,7 @@
   },
   "scripts": {
     "prestart": "cp -R ./node_modules/@privateid/cryptonets-web-sdk-alpha/wasm public/&& cp -R ./node_modules/@privateid/cryptonets-web-sdk-alpha/workers public/",
-    "start": "react-scripts start",
+    "start": "cross-env GENERATE_SOURCEMAP=false react-scripts start",
     "prebuild": "cp -R ./node_modules/@privateid/cryptonets-web-sdk-alpha/wasm public/ && cp -R ./node_modules/@privateid/cryptonets-web-sdk-alpha/workers public/",
     "build": "react-scripts build",
     "test": "react-scripts test",

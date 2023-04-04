@@ -451,6 +451,10 @@ const Ready = () => {
     await faceCompareLocal(callback, uploadImage1, uploadImage2);
   };
 
+  const handleBoundingBox = async()=>{
+    navigate("/bounding_box");
+  }
+
   return (
     <>
       {deviceSupported.isChecking ? (
@@ -680,6 +684,9 @@ const Ready = () => {
               <button className="button" onClick={handleCompareImages}>
                 Compare Flow
               </button>
+              <button className="button" onClick={handleBoundingBox}>
+                Document Bounding Box
+              </button>
             </div>
 
             <div>
@@ -706,8 +713,7 @@ const Ready = () => {
               </label>
 
               <button className="button" onClick={handleDoCompare}>
-                {" "}
-                Do Compare{" "}
+                Do Compare
               </button>
             </div>
           </div>

@@ -11,8 +11,9 @@ import { useCamera, useWasm, useEnrollOneFa } from "../hooks";
 import { canvasSizeOptions, isBackCamera, setMax2KForMobile, WIDTH_TO_STANDARDS } from "../utils";
 
 import "./styles.css";
-import useScanFrontDocumentWithoutPredictGetMugShot from "../hooks/useScanFrontDocumentWithoutPredictGetMugshot";
 import { useNavigate } from "react-router-dom";
+import useScanFrontWithBoundingBox from "../hooks/useScanFrontWithBoundingBox";
+import useScanBackWithBoundingBox from "../hooks/useScanBackWithBoundingBox";
 
 let callingWasm = false;
 const ScanDocumentBoundingBox = () => {
@@ -75,7 +76,17 @@ const ScanDocumentBoundingBox = () => {
     }
   };
 
-  // Scan Front DL without predict
+  // Scan Front with Bounding Box 
+  // const {
+  //   isFound: isfoundValidity,
+  //   scanFrontDocument: scanFrontValidity,
+  //   confidenceValue,
+  //   predictMugshotImageData,
+  //   scanResult,
+  //   scaledBoundingBoxRef,
+  // } = useScanFrontWithBoundingBox(setShowSuccess, () => {});
+
+  // Scan Back With Bounding Box
   const {
     isFound: isfoundValidity,
     scanFrontDocument: scanFrontValidity,
@@ -83,7 +94,7 @@ const ScanDocumentBoundingBox = () => {
     predictMugshotImageData,
     scanResult,
     scaledBoundingBoxRef,
-  } = useScanFrontDocumentWithoutPredictGetMugShot(setShowSuccess, () => {});
+  } = useScanBackWithBoundingBox(setShowSuccess, ()=>{})
 
   const handleReopenCamera = async () => {
     setReady(false);
