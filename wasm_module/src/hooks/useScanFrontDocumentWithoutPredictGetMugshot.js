@@ -20,44 +20,28 @@ const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotS
   const [croppedDocumentHeight, setCroppedDocumentHeight] = useState(null);
   const [croppedDocumentImage, setCroppedDocumentImage] = useState(null);
 
+  let running = false;
+
   const documentCallback = (result) => {
-    // console.log("Front scan callback result:", result);
-    console.log("TIMESTAMP-Callback: ", new Date());
-    console.timeEnd("frontDocument");
-    // if (result.returnValue.op_status === 0 && result.returnValue.cropped_face_height) {
-    //   setIsFound(true);
-    //   setShowSuccess(true);
-    //   setPredictMugshotHeight(result.returnValue.cropped_face_height);
-    //   setPredictMugshotWidth(result.returnValue.cropped_face_width);
-    //   setCroppedDocumentHeight(result.returnValue.cropped_doc_height);
-    //   setCroppedDocumentWidth(result.returnValue.cropped_doc_width);
-    // } else {
-    //   setIsFound(false);
-    //   setPredictMugshotHeight(null);
-    //   setPredictMugshotWidth(null);
-    //   setCroppedDocumentHeight(null);
-    //   setCroppedDocumentWidth(null);
-    //   scanFrontDocument();
-    // }
 
-    if (result.returnValue.cropped_doc_width) {
-      // setIsFound(true);
-      // setShowSuccess(true);
-      setScanResult(result.returnValue);
-      scaledBoundingBoxRef.current = getScaledBoundingBox(result.returnValue, document.getElementById("userVideo"));
+    if (result.status === "WASM_RESPONSE") {
+      if (result.returnValue.op_status === 0 && result.returnValue.cropped_face_height) {
+        setIsFound(true);
+        setShowSuccess(true);
+        setPredictMugshotHeight(result.returnValue.cropped_face_height);
+        setPredictMugshotWidth(result.returnValue.cropped_face_width);
+        setCroppedDocumentHeight(result.returnValue.cropped_doc_height);
+        setCroppedDocumentWidth(result.returnValue.cropped_doc_width);
+      } else {
+        setIsFound(false);
+        setPredictMugshotHeight(null);
+        setPredictMugshotWidth(null);
+        setCroppedDocumentHeight(null);
+        setCroppedDocumentWidth(null);
+        scanFrontDocument();
+      }
+    } 
 
-      setPredictMugshotHeight(result.returnValue.cropped_face_height);
-      setPredictMugshotWidth(result.returnValue.cropped_face_width);
-      setCroppedDocumentHeight(result.returnValue.cropped_doc_height);
-      setCroppedDocumentWidth(result.returnValue.cropped_doc_width);
-      scanFrontDocument();
-    } else {
-      setScanResult(null);
-      scaledBoundingBoxRef.current = null;
-      scanFrontDocument();
-    }
-
-    // scanFrontDocument();
   };
 
   const doConvert = async () => {
@@ -124,6 +108,7 @@ const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotS
     isFound,
     scannedIdData,
     predictMugshotImageData,
+    croppedDocumentImage,
     scaledBoundingBoxRef,
   };
 };
