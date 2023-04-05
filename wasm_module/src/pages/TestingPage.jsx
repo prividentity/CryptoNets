@@ -4,6 +4,7 @@ import {
   switchCamera,
   setStopLoopContinuousAuthentication,
   closeCamera,
+  faceCompareLocal,
 } from "@privateid/cryptonets-web-sdk";
 
 
@@ -35,8 +36,16 @@ import { useNavigate } from "react-router-dom";
 
 let callingWasm = false;
 const Ready = () => {
-  const { ready: wasmReady, deviceSupported, init:initWasm } = useWasm();
-  const { ready: cameraReady, init:initCamera, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
+  const { ready: wasmReady, deviceSupported, init: initWasm } = useWasm();
+  const {
+    ready: cameraReady,
+    init: initCamera,
+    device,
+    devices,
+    settings,
+    capabilities,
+    setReady,
+  } = useCamera("userVideo");
 
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -100,8 +109,8 @@ const Ready = () => {
     console.log("useEffect starting wasm and camera");
     console.log("--- wasm status ", wasmReady, cameraReady);
     if (wasmReady && cameraReady) return;
-    if (!wasmReady) { 
-      if(!callingWasm){
+    if (!wasmReady) {
+      if (!callingWasm) {
         // NOTE: MAKE SURE THAT WASM IS ONLY LOADED ONCE
         initWasm();
         callingWasm = true;
@@ -112,7 +121,6 @@ const Ready = () => {
       initCamera();
     }
   }, [wasmReady, cameraReady]);
-
 
   const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");
   // isValid
@@ -160,8 +168,13 @@ const Ready = () => {
   const handlePreidctSuccess = (result) => {
     console.log("======PREDICT SUCCESS========");
   };
-  const { predictOneFaData, predictOneFaaceDetected, predictMessage, predictUserOneFa } =
-    usePredictOneFa("userVideo", handlePreidctSuccess, 4, null, setShowSuccess);
+  const { predictOneFaData, predictOneFaaceDetected, predictMessage, predictUserOneFa } = usePredictOneFa(
+    "userVideo",
+    handlePreidctSuccess,
+    4,
+    null,
+    setShowSuccess
+  );
   const handlePredictOneFa = async () => {
     setShowSuccess(false);
     setCurrentAction("usePredictOneFa");
@@ -280,6 +293,8 @@ const Ready = () => {
     confidenceValue,
     predictMugshotImageData,
     isMugshotFound,
+    croppedDocumentImage,
+    predictMugshotImage,
   } = useScanFrontDocumentWithoutPredict(setShowSuccess);
 
   const handleFrontDLValidity = async () => {
@@ -300,7 +315,7 @@ const Ready = () => {
 
       if (currentAction === "useScanFrontValidity") {
         setTimeout(async () => {
-          await  useScanFrontDocumentWithoutPredict(e.target.value);
+          await useScanFrontDocumentWithoutPredict(e.target.value);
         }, 1000);
       } else {
         setTimeout(async () => {
@@ -327,11 +342,119 @@ const Ready = () => {
     await closeCamera();
   };
 
-
   const navigate = useNavigate();
   const handleCompareImages = async () => {
     navigate("/compare");
   };
+
+  const [uploadImage1, setUploadImage1] = useState(null);
+  const [uploadImage2, setUploadImage2] = useState(null);
+
+  const handleUploadImage1 = async (e) => {
+    console.log(e.target.files);
+    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
+    if (e.target.files.length > 0) {
+      if (imageRegex.test(e.target.files[0].type)) {
+        const imageUrl = URL.createObjectURL(e.target.files[0]);
+        console.log(e.target.files[0]);
+
+        const getBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+
+            reader.onload = function () {
+              resolve(reader.result);
+            };
+            reader.onerror = function (error) {
+              reject(error);
+            };
+          });
+        };
+
+        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
+        var newImg = new Image();
+        newImg.src = base64;
+        newImg.onload = async () => {
+          var imgSize = {
+            w: newImg.width,
+            h: newImg.height,
+          };
+          alert(imgSize.w + " " + imgSize.h);
+          const canvas = document.createElement("canvas");
+          canvas.setAttribute("height", `${imgSize.h}`);
+          canvas.setAttribute("width", `${imgSize.w}`);
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(newImg, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
+          console.log("imageData", imageData);
+          setUploadImage1(imageData);
+        };
+      } else {
+        console.log("INVALID IMAGE TYPE");
+      }
+    }
+  };
+  const handleUploadImage2 = async (e) => {
+    console.log(e.target.files);
+    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
+    if (e.target.files.length > 0) {
+      if (imageRegex.test(e.target.files[0].type)) {
+        const imageUrl = URL.createObjectURL(e.target.files[0]);
+
+        console.log(e.target.files[0]);
+
+        const getBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+
+            reader.onload = function () {
+              resolve(reader.result);
+            };
+            reader.onerror = function (error) {
+              reject(error);
+            };
+          });
+        };
+
+        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
+        var newImg = new Image();
+        newImg.src = base64;
+        newImg.onload = async () => {
+          var imgSize = {
+            w: newImg.width,
+            h: newImg.height,
+          };
+          alert(imgSize.w + " " + imgSize.h);
+          const canvas = document.createElement("canvas");
+          canvas.setAttribute("height", `${imgSize.h}`);
+          canvas.setAttribute("width", `${imgSize.w}`);
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(newImg, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
+          console.log("imageData", imageData);
+          setUploadImage2(imageData);
+        };
+      } else {
+        console.log("INVALID IMAGE TYPE");
+      }
+    }
+  };
+
+  const handleDoCompare = async () => {
+    const callback = (result) => {
+      console.log("COMPARE RESULT", result);
+    };
+
+    await faceCompareLocal(callback, uploadImage1, uploadImage2);
+  };
+
+  const handleBoundingBox = async()=>{
+    navigate("/bounding_box");
+  }
 
   return (
     <>
@@ -494,8 +617,30 @@ const Ready = () => {
 
               {currentAction === "useScanDocumentFrontValidity" && (
                 <div>
-                  <div>{`Document 4 corners found: ${isfoundValidity ? "Document 4 corners available" : "not found"}`}</div>
+                  <div>{`Document 4 corners found: ${
+                    isfoundValidity ? "Document 4 corners available" : "not found"
+                  }`}</div>
                   <div>{`Mugshot found: ${isMugshotFound ? "Mugshot Available" : "not found"}`}</div>
+                  {predictMugshotImage && croppedDocumentImage && (
+                    <div style={{ display: "flex", gap: "10px", padding: "10px" }}>
+                      <button
+                        className="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(predictMugshotImage);
+                        }}
+                      >
+                        Copy Mugshot Image String
+                      </button>
+                      <button
+                        className="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(croppedDocumentImage);
+                        }}
+                      >
+                        Copy Document Image String
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -539,6 +684,37 @@ const Ready = () => {
               </button>
               <button className="button" onClick={handleCompareImages}>
                 Compare Flow
+              </button>
+              <button className="button" onClick={handleBoundingBox}>
+                Document Bounding Box
+              </button>
+            </div>
+
+            <div>
+              <p> Upload 2 images to use compare: </p>
+              <label>
+                <input
+                  type="file"
+                  name="upload"
+                  accept="image/png, image/gif, image/jpeg"
+                  onChange={handleUploadImage1}
+                  style={{ display: "none" }}
+                />
+                <span className="button">Upload Image 1</span>
+              </label>
+              <label>
+                <input
+                  type="file"
+                  name="upload"
+                  accept="image/png, image/gif, image/jpeg"
+                  onChange={handleUploadImage2}
+                  style={{ display: "none" }}
+                />
+                <span className="button">Upload Image 2</span>
+              </label>
+
+              <button className="button" onClick={handleDoCompare}>
+                Do Compare
               </button>
             </div>
           </div>

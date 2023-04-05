@@ -18,14 +18,15 @@ let wasmSession = null;
 let setCache = true;
 let checkWasmLoaded = false;
 
-const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) => 
+const isLoad = (simd, url, key, module, debug_type, cacheConfig = true) =>
   new Promise(async (resolve, reject) => {
     apiUrl = url;
     apiKey = key;
     wasmModule = module;
-    debugType = debug_type;
+    if(debug_type){
+      debugType = debug_type;
+    }
     setCache = cacheConfig;
-
 
     if (module === 'voice') {
       importScripts('../wasm/voice/simd/privid_fhe.js');
@@ -36,8 +37,8 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
       console.log(wasmPrivModule);
 
       await wasmPrivModule._privid_voice_init(parseInt(debug_type, 10));
-      const verison = await wasmPrivModule._privid_module_get_version();
-      resolve(`loaded wasm privid verison ${verison}`);
+      const version = await wasmPrivModule._privid_module_get_version();
+      resolve(`loaded wasm privid verison ${version}`);
     } else if (['face', 'face_mask'].includes(module)) {
       const moduleName = 'privid_fhe';
       const modulePath = simd ? 'simd' : 'noSimd';
@@ -45,16 +46,20 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
       const cachedModule = await readKey(module);
       const fetchdWasmVersion = await fetch(`../wasm/${module}/${modulePath}/version.json`);
       const fetchdVersion = await fetchdWasmVersion.json();
-      if (cachedModule?.version && cachedModule?.version.toString() === fetchdVersion?.version.toString()) {
+      console.log(
+        `check version ${`${
+          cachedModule ? cachedModule?.version.toString() : 'no cached version'
+        } - ${fetchdVersion?.version.toString()}`}`,
+      );
+      if (cachedModule && cachedModule?.version.toString() === fetchdVersion?.version.toString()) {
         if (!wasmPrivModule) {
           const { cachedWasm, cachedScript } = cachedModule;
-          await eval(cachedScript);
+          eval(cachedScript);
           wasmPrivModule = await createTFLiteModule({ wasmBinary: cachedWasm });
-          if(!checkWasmLoaded){
-            await initializeWasmSession(url, key, debug_type);
+          if (!checkWasmLoaded) {
+            await initializeWasmSession(url, key, debugType);
             checkWasmLoaded = true;
           }
-          
         }
 
         resolve('Cache Loaded');
@@ -64,11 +69,13 @@ const isLoad = (simd, url, key, module, debug_type = '0', cacheConfig = true) =>
 
         const scriptBuffer = await script.text();
         const buffer = await wasm.arrayBuffer();
-        await eval(scriptBuffer);
+        eval(scriptBuffer);
+
         wasmPrivModule = await createTFLiteModule({ wasmBinary: buffer });
-        if(!checkWasmLoaded){
-          await initializeWasmSession(url, key, debug_type);
-          checkWasmLoaded=true
+
+        if (!checkWasmLoaded) {
+          await initializeWasmSession(url, key, debugType);
+          checkWasmLoaded = true;
         }
 
         const version = wasmPrivModule.UTF8ToString(wasmPrivModule._get_version());
@@ -311,72 +318,69 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
   return { result, croppedDocument, croppedMugshot };
 };
 
-const FHE_enrollOnefa = (originalImages, simd, debug_type = 0, cb, config = {}) =>
-  new Promise(async (resolve) => {
-    privid_wasm_result = cb;
+const FHE_enrollOnefa = async (originalImages, simd, debug_type = 0, cb, config = {}) => {
+  privid_wasm_result = cb;
 
-    if (!wasmPrivModule) {
-      console.log('loaded for first wsm wrkr', simd, action);
-      await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
-    }
-    // console.log('-------WASM----WORKER------', simd, action);
-    const numImages = originalImages.length;
-    const imageInput = flatten(
-      originalImages.map((x) => x.data),
-      Uint8Array,
+  if (!wasmPrivModule) {
+    console.log('loaded for first wsm wrkr', simd, action);
+    await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
+  }
+  // console.log('-------WASM----WORKER------', simd, action);
+  const numImages = originalImages.length;
+  const imageInput = flatten(
+    originalImages.map((x) => x.data),
+    Uint8Array,
+  );
+  // const version = wasmPrivModule._get_version();
+  // console.log('Version = ', version);
+
+  const encoder = new TextEncoder();
+  const config_bytes = encoder.encode(`${config}\0`);
+
+  const configInputSize = config.length;
+  const configInputPtr = wasmPrivModule._malloc(configInputSize);
+  wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
+
+  const imageInputSize = imageInput.length * imageInput.BYTES_PER_ELEMENT;
+  const imageInputPtr = wasmPrivModule._malloc(imageInputSize);
+
+  wasmPrivModule.HEAP8.set(imageInput, imageInputPtr / imageInput.BYTES_PER_ELEMENT);
+
+  const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+  // create a pointer to interger to hold the length of the output buffer
+  const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+
+  // Initialize Session
+  // await initializeWasmSession(apiUrl, apiKey);
+
+  try {
+    wasmPrivModule._privid_enroll_onefa(
+      wasmSession /* session pointer */,
+      configInputPtr,
+      configInputSize,
+      imageInputPtr /* input images */,
+      numImages /* number of input images */,
+      originalImages[0].data.length /* size of one image */,
+      originalImages[0].width /* width of one image */,
+      originalImages[0].height /* height of one image */,
+      null /* embeddings output */,
+      null /* length of embeddings out */,
+      true /* remove bad embeddings flag */,
+      null /* augmentations out buffer */,
+      null /* length of augmentations out buffer */,
+      resultFirstPtr /* operation result output buffer */,
+      resultLenPtr /* operation result buffer length */,
     );
-    // const version = wasmPrivModule._get_version();
-    // console.log('Version = ', version);
+  } catch (e) {
+    console.error('---------__E__-------', e);
+  }
 
-    const encoder = new TextEncoder();
-    const config_bytes = encoder.encode(`${config}\0`);
+  wasmPrivModule._free(imageInputPtr);
+  wasmPrivModule._free(resultFirstPtr);
+  wasmPrivModule._free(resultLenPtr);
 
-    const configInputSize = config.length;
-    const configInputPtr = wasmPrivModule._malloc(configInputSize);
-    wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
-
-    const imageInputSize = imageInput.length * imageInput.BYTES_PER_ELEMENT;
-    const imageInputPtr = wasmPrivModule._malloc(imageInputSize);
-
-    wasmPrivModule.HEAP8.set(imageInput, imageInputPtr / imageInput.BYTES_PER_ELEMENT);
-
-    const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    // create a pointer to interger to hold the length of the output buffer
-    const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-    let result = null;
-    console.log('wasmPrivModule', wasmPrivModule);
-
-    // Initialize Session
-    // await initializeWasmSession(apiUrl, apiKey);
-
-    try {
-      result = await wasmPrivModule._privid_enroll_onefa(
-        wasmSession /* session pointer */,
-        configInputPtr,
-        configInputSize,
-        imageInputPtr /* input images */,
-        numImages /* number of input images */,
-        originalImages[0].data.length /* size of one image */,
-        originalImages[0].width /* width of one image */,
-        originalImages[0].height /* height of one image */,
-        null /* embeddings output */,
-        null /* length of embeddings out */,
-        true /* remove bad embeddings flag */,
-        null /* augmentations out buffer */,
-        null /* length of augmentations out buffer */,
-        resultFirstPtr /* operation result output buffer */,
-        resultLenPtr /* operation result buffer length */,
-      );
-    } catch (e) {
-      console.error('---------__E__-------', e);
-    }
-
-    wasmPrivModule._free(imageInputPtr);
-    wasmPrivModule._free(resultFirstPtr);
-    wasmPrivModule._free(configInputPtr);
-
-    resolve({ result });
-  });
+  wasmPrivModule._free(configInputPtr);
+};
 
 const FHE_predictOnefa = async (originalImages, simd, debug_type = 0, cb, config = {}) => {
   privid_wasm_result = cb;
@@ -616,7 +620,8 @@ function readKey(key) {
     const open = indexedDB.open('/privid-wasm', 21);
 
     open.onerror = function () {
-      reject(open.error);
+      resolve(false);
+      console.log('Private Browser. ');
     };
 
     open.onupgradeneeded = function () {
@@ -638,7 +643,12 @@ function readKey(key) {
       };
 
       tx.oncomplete = function () {
-        db.close();
+        try{
+          db.close();
+        }
+        catch(e) {
+            // 
+        }
       };
     };
   });
@@ -651,7 +661,8 @@ function putKey(key, cachedWasm, cachedScript, version) {
     const open = indexedDB.open('/privid-wasm', 21);
 
     open.onerror = function () {
-      reject(open.error);
+      resolve(false);
+      console.log("Private Browser.");
     };
 
     open.onupgradeneeded = function () {
@@ -673,7 +684,12 @@ function putKey(key, cachedWasm, cachedScript, version) {
       };
 
       tx.oncomplete = function () {
-        db.close();
+        try{
+          db.close();
+        }
+        catch(e) {
+            // 
+        }
       };
     };
   });
@@ -681,27 +697,33 @@ function putKey(key, cachedWasm, cachedScript, version) {
 
 async function setCacheConfiguration() {
   console.log('initializing setCacheConfiguration');
-  const cacheObj = JSON.stringify({ cache_type: 'basic' });
-  const encoder = new TextEncoder();
-  const cache_config_bytes = encoder.encode(`${cacheObj}\0`);
+  const db = indexedDB.open('test');
+  db.onerror = function () {
+    console.log('Private browser no cache');
+  };
+  db.onsuccess = async function () {
+    const cacheObj = JSON.stringify({ cache_type: 'basic' });
+    const encoder = new TextEncoder();
+    const cache_config_bytes = encoder.encode(`${cacheObj}\0`);
 
-  const cacheInputSize = cacheObj.length;
-  const cacheInputPtr = wasmPrivModule._malloc(cacheInputSize);
+    const cacheInputSize = cacheObj.length;
+    const cacheInputPtr = wasmPrivModule._malloc(cacheInputSize);
 
-  wasmPrivModule.HEAP8.set(cache_config_bytes, cacheInputPtr / cache_config_bytes.BYTES_PER_ELEMENT);
-  await wasmPrivModule._privid_set_configuration(wasmSession, cacheInputPtr, cacheInputSize);
-  // await wasmPrivModule._privid_set_default_configuration(wasmSession, 1);
-  wasmPrivModule._free(cacheInputPtr);
+    wasmPrivModule.HEAP8.set(cache_config_bytes, cacheInputPtr / cache_config_bytes.BYTES_PER_ELEMENT);
+    await wasmPrivModule._privid_set_configuration(wasmSession, cacheInputPtr, cacheInputSize);
+    // await wasmPrivModule._privid_set_default_configuration(wasmSession, 1);
+    wasmPrivModule._free(cacheInputPtr);
+  };
 }
 
 /**
  * @brief A closure to create a string buffer arguments that can be used with wasm calls
- * for a given javascript value. 
- * This is suitable for native calls that have string input arguments represented with contigious 
+ * for a given javascript value.
+ * This is suitable for native calls that have string input arguments represented with contigious
  * string_buffer,sizeofbuffer arguments.
  * If the 'text' argument is null or undefined or NaN then the arguments generated  are [null,0]
- * @usage 
- * 
+ * @usage
+ *
  var url_args= buffer_args(url);
  var key_args= buffer_args(key);
  var session_out_ptr = output_ptr();
@@ -712,11 +734,11 @@ async function setCacheConfiguration() {
       session_out_ptr.outer_ptr(),
     );
     url_args.free();
-    key_args.free(); 
-    //get 
+    key_args.free();
+    //get
     var session = session_out_ptr.inner_ptr();
- * 
- *  when .free() is called the closure can be reused to create a buffer for the same string with which, it was created with 
+ *
+ *  when .free() is called the closure can be reused to create a buffer for the same string with which, it was created with
  *  over and over again.
  */
 const buffer_args = function (text) {

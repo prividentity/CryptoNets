@@ -45,15 +45,12 @@ export function getQueryParams(queryString) {
   const regex = /(?:\?|&|;)([^=]+)=([^&|;]+)/g;
   const tokens = regex.exec(query);
 
-  if (tokens && tokens.length > 2)
-    params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
+  if (tokens && tokens.length > 2) params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
   return params;
 }
 
 export const isBackCamera = (availableDevices, currentDevice) => {
-  const mediaDevice = availableDevices.find(
-    (device) => device.value === currentDevice
-  );
+  const mediaDevice = availableDevices.find((device) => device.value === currentDevice);
   return mediaDevice?.label?.toLowerCase().includes("back");
 };
 
@@ -95,27 +92,69 @@ const MOBILE_CANVAS_SIZE = {
   UXGA: { width: 1600, height: 1200 },
 };
 
-export const CANVAS_SIZE = isMobile ? MOBILE_CANVAS_SIZE : WEB_CANVAS_SIZE
+export const CANVAS_SIZE = isMobile ? MOBILE_CANVAS_SIZE : WEB_CANVAS_SIZE;
 
-export const mapDevices = devices => ({label: devices.label, value: devices.deviceId})
+export const mapDevices = (devices) => ({ label: devices.label, value: devices.deviceId });
 
 export function getUrlParameter(sParam, defaultValue) {
   const sPageURL = window.location.search.substring(1);
-  const sURLVariables = sPageURL.split('&');
+  const sURLVariables = sPageURL.split("&");
   let sParameterName;
   let i;
 
   for (i = 0; i < sURLVariables.length; i++) {
-    sParameterName = sURLVariables[i].split('=');
+    sParameterName = sURLVariables[i].split("=");
 
     if (sParameterName[0] === sParam) {
       return typeof sParameterName[1] === undefined ? defaultValue : decodeURIComponent(sParameterName[1]);
     }
   }
   return defaultValue;
-};
+}
 
 export const setMax2KForMobile = (width) => {
-  if(!isMobile) return width;
+  if (!isMobile) return width;
   return Math.min(width, 2560);
-}
+};
+
+export const getScaledBoundingBox = (scanResult, videoElement) => {
+  if (!scanResult || !videoElement || videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
+    return;
+  }
+
+  const originalImageWidth = scanResult.image_width;
+  const originalImageHeight = scanResult.image_height;
+  const videoElementWidth = videoElement.offsetWidth;
+  const videoElementHeight = videoElement.offsetHeight;
+  const originalAspectRatio = originalImageWidth / originalImageHeight;
+  const videoAspectRatio = videoElementWidth / videoElementHeight;
+  let scaleX, scaleY, scaledTopLeftX, scaledTopLeftY, scaledDocumentWidth, scaledDocumentHeight;
+
+  if (originalAspectRatio > videoAspectRatio) {
+    const croppedImageWidth = originalImageHeight * videoAspectRatio;
+    const croppedImageX = (originalImageWidth - croppedImageWidth) / 2;
+    scaleX = videoElementWidth / croppedImageWidth;
+    scaleY = videoElementHeight / originalImageHeight;
+    scaledTopLeftX = (scanResult.doc_x1 - croppedImageX) * scaleX;
+    scaledTopLeftY = scanResult.doc_y1 * scaleY;
+    scaledDocumentWidth = scanResult.cropped_doc_width * scaleX;
+    scaledDocumentHeight = scanResult.cropped_doc_height * scaleY;
+  } else {
+    const croppedImageHeight = originalImageWidth / videoAspectRatio;
+    const croppedImageY = (originalImageHeight - croppedImageHeight) / 2;
+    scaleX = videoElementWidth / originalImageWidth;
+    scaleY = videoElementHeight / croppedImageHeight;
+    scaledTopLeftX = scanResult.doc_x1 * scaleX;
+    scaledTopLeftY = (scanResult.doc_y1 - croppedImageY) * scaleY;
+    scaledDocumentWidth = scanResult.cropped_doc_width * scaleX;
+    scaledDocumentHeight = scanResult.cropped_doc_height * scaleY;
+  }
+  const roughScale = scaleX + scaleY / 2;
+  return {
+    doc_x1: scaledTopLeftX,
+    doc_y1: scaledTopLeftY,
+    cropped_doc_width: scaledDocumentWidth,
+    cropped_doc_height: scaledDocumentHeight,
+    roughScale,
+  };
+};

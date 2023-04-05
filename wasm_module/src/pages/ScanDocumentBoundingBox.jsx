@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import {
   switchCamera,
   setStopLoopContinuousAuthentication,
@@ -11,13 +11,14 @@ import { useCamera, useWasm, useEnrollOneFa } from "../hooks";
 import { canvasSizeOptions, isBackCamera, setMax2KForMobile, WIDTH_TO_STANDARDS } from "../utils";
 
 import "./styles.css";
-import useScanFrontDocumentWithoutPredictGetMugShot from "../hooks/useScanFrontDocumentWithoutPredictGetMugshot";
 import { useNavigate } from "react-router-dom";
+import useScanFrontWithBoundingBox from "../hooks/useScanFrontWithBoundingBox";
+import useScanBackWithBoundingBox from "../hooks/useScanBackWithBoundingBox";
 
 let callingWasm = false;
 const ScanDocumentBoundingBox = () => {
-  const { ready: wasmReady, deviceSupported, init:initWasm } = useWasm();
-  const { ready, init:initCamera, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
+  const { ready: wasmReady, deviceSupported, init: initWasm } = useWasm();
+  const { ready, init: initCamera, device, devices, settings, capabilities, setReady } = useCamera("userVideo");
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [deviceCapabilities, setDeviceCapabilities] = useState(capabilities);
@@ -41,12 +42,11 @@ const ScanDocumentBoundingBox = () => {
 
   const [currentAction, setCurrentAction] = useState("standby");
 
-
   useEffect(() => {
     console.log("useEffect starting wasm and camera");
     console.log("--- wasm status ", wasmReady, ready);
-    if (!wasmReady) { 
-      if(!callingWasm){
+    if (!wasmReady) {
+      if (!callingWasm) {
         console.log("init wasm called:");
         initWasm();
         callingWasm = true;
@@ -58,11 +58,9 @@ const ScanDocumentBoundingBox = () => {
       initCamera();
     }
     if (wasmReady && ready) {
-        scanFrontValidity();
-      }
+      scanFrontValidity();
+    }
   }, [wasmReady, ready]);
-
-
 
   const handleSwitchCamera = async (e) => {
     setDeviceId(e.target.value);
@@ -78,14 +76,25 @@ const ScanDocumentBoundingBox = () => {
     }
   };
 
-  // Scan Front DL without predict
+  // Scan Front with Bounding Box 
+  // const {
+  //   isFound: isfoundValidity,
+  //   scanFrontDocument: scanFrontValidity,
+  //   confidenceValue,
+  //   predictMugshotImageData,
+  //   scanResult,
+  //   scaledBoundingBoxRef,
+  // } = useScanFrontWithBoundingBox(setShowSuccess, () => {});
+
+  // Scan Back With Bounding Box
   const {
     isFound: isfoundValidity,
     scanFrontDocument: scanFrontValidity,
     confidenceValue,
     predictMugshotImageData,
     scanResult,
-  } = useScanFrontDocumentWithoutPredictGetMugShot(setShowSuccess, () => {});
+    scaledBoundingBoxRef,
+  } = useScanBackWithBoundingBox(setShowSuccess, ()=>{})
 
   const handleReopenCamera = async () => {
     setReady(false);
@@ -96,7 +105,30 @@ const ScanDocumentBoundingBox = () => {
   const handleCloseCamera = async () => {
     await closeCamera();
   };
+  // const handleVideoLoad = useCallback(() => {
+  //   const videoElement = document.getElementById("userVideo");
+  //   if (!scanResultRef?.current || !videoElement) return;
+  //   // use the dimensions of the video element to calculate the scaling factors
+  //   const scaleX = videoElement.videoWidth / scanResultRef?.current?.cropped_doc_width;
+  //   const scaleY = videoElement.videoHeight / scanResultRef?.current?.cropped_doc_height;
+  //   // apply the scaling factors to the bounding box coordinates
+  //   const scaledTopLeftX = scanResultRef?.current?.doc_x1 * scaleX;
+  //   const scaledTopLeftY = scanResultRef?.current?.doc_y1 * scaleY;
+  //   const scaledDocumentWidth = scanResultRef?.current?.cropped_doc_width * scaleX;
+  //   const scaledDocumentHeight = scanResultRef?.current?.cropped_doc_height * scaleY;
 
+  //   console.log("scaledTopLeftX", scaledTopLeftX);
+  //   console.log("scaledTopLeftY", scaledTopLeftY);
+  //   console.log("scaledDocumentWidth", scaledDocumentWidth);
+  //   console.log("scaledDocumentHeight", scaledDocumentHeight);
+  // }, [scanResultRef]);
+
+  // useEffect(() => {
+  //   const videoElement = document.getElementById("userVideo");
+
+  // }, [scanResult]);
+  const res = scaledBoundingBoxRef?.current;
+  console.log("res123", res);
   return (
     <>
       {deviceSupported.isChecking ? (
@@ -166,12 +198,13 @@ const ScanDocumentBoundingBox = () => {
             </div>
             <div style={{ position: "relative" }}>
               {console.log("ScanResult??", scanResult)};
-              {scanResult && (
+              {res && (
                 <Box
-                  topLeftX={scanResult.doc_x1}
-                  topLeftY={scanResult.doc_y1}
-                  documentHeight={scanResult.cropped_doc_height}
-                  documentWidth={scanResult.cropped_doc_width}
+                  topLeftX={res.doc_x1}
+                  topLeftY={res.doc_y1}
+                  documentHeight={res.cropped_doc_height}
+                  documentWidth={res.cropped_doc_width}
+                  scale={res.roughScale}
                 />
               )}
               <video id="userVideo" muted autoPlay playsInline />
@@ -201,7 +234,7 @@ const ScanDocumentBoundingBox = () => {
 
 export default ScanDocumentBoundingBox;
 
-const Box = ({topLeftX, topLeftY, documentHeight, documentWidth}) => {
+const Box = ({ topLeftX, topLeftY, documentHeight, documentWidth, scale }) => {
   console.log("BOX POSITION:", { topLeftX, topLeftY, documentWidth, documentHeight });
   return (
     <>
@@ -212,7 +245,7 @@ const Box = ({topLeftX, topLeftY, documentHeight, documentWidth}) => {
             zIndex: 999,
             top: `${topLeftY}px`,
             left: `${topLeftX}px`,
-            border: "5px solid green",
+            border: `${4 * Math.min(Math.max(scale, 0.8), 1.25)}px solid green`,
             height: `${documentHeight ? documentHeight : "50"}px`,
             width: `${documentWidth ? documentWidth : "50"}px`,
           }}
