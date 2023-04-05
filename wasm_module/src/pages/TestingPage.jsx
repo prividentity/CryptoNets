@@ -7,6 +7,7 @@ import {
   faceCompareLocal,
 } from "@privateid/cryptonets-web-sdk";
 
+
 import {
   useCamera,
   useWasm,
