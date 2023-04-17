@@ -577,7 +577,7 @@ const Ready = () => {
                 <div>
                   <div>{`Face Valid: ${isValidFaceDetected}`}</div>
                   <div>{`Liveness Check: ${
-                    livenessCheck === -1 ? "Invalid Image" : livenessCheck === 0 ? "Real" : "Spoof"
+                    livenessCheck === -1 ? "No Face Detected" : livenessCheck === 0 ? "Real" : livenessCheck === 1 ? "Spoof" : ""
                   }`}</div>
                 </div>
               )}
