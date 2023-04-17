@@ -17,6 +17,7 @@ let privid_wasm_result = null;
 let wasmSession = null;
 let setCache = true;
 let checkWasmLoaded = false;
+let wasmPrivAntispoofModule;
 
 const isLoad = (simd, url, key, module, debug_type, cacheConfig = true) =>
   new Promise(async (resolve, reject) => {
@@ -27,6 +28,17 @@ const isLoad = (simd, url, key, module, debug_type, cacheConfig = true) =>
       debugType = debug_type;
     }
     setCache = cacheConfig;
+
+    // loading antispoof model
+    importScripts('../wasm/face_mask/simd/antispoof.js');
+    const wasm = await fetch('../wasm/face_mask/simd/antispoof.wasm');
+    const buffer = await wasm.arrayBuffer();
+    antispoofModule = await createTFLiteModule({ wasmBinary: buffer });
+    console.log(antispoofModule);
+    const result = await antispoofModule._loadModels();
+    console.log(`loaded wasm antispoof models ${result}`);
+    
+
 
     if (module === 'voice') {
       importScripts('../wasm/voice/simd/privid_fhe.js');
@@ -495,6 +507,35 @@ const isValidInternal = async (
   wasmPrivModule._free(configInputPtr);
   wasmPrivModule._free(resultFirstPtr);
   wasmPrivModule._free(resultLenPtr);
+
+
+  is_spoof = -100;
+
+  const imagePtr = antispoofModule._malloc(imageSize);
+  antispoofModule.HEAP8.set(data, imagePtr / data.BYTES_PER_ELEMENT);
+
+  try {
+   
+    is_spoof = antispoofModule._predict(
+      imagePtr,
+      width,
+      height);
+    const isImageFilled = new Float32Array(antispoofModule.HEAPF32.buffer, antispoofModule._getImageFilledOffset(), 1)[0];
+    console.log("isImageFilled: ", isImageFilled);
+    const modelResults = new Int32Array(antispoofModule.HEAP32.buffer, antispoofModule._getAntiSpoofingOffset(), 4);
+    console.log("modelResults: ", modelResults);
+    if(isImageFilled){
+      is_spoof = -1;
+    }
+  } catch (e) {
+    console.log('_predict', e);
+  }
+
+  console.log("SPOOFING RESULT: ", is_spoof);
+  antispoofModule._free(imagePtr);
+
+  return {livenessCheck:is_spoof}
+  
 };
 
 const prividAgePredict = async (
