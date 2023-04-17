@@ -523,8 +523,15 @@ const isValidInternal = async (
   wasmPrivModule._free(configInputPtr);
   wasmPrivModule._free(resultFirstPtr);
   wasmPrivModule._free(resultLenPtr);
+};
 
-  is_spoof = -100;
+const antispoofCheck = async (
+  data,
+  width,
+  height,
+) => {
+  is_spoof = -1;
+  const imageSize = data.length * data.BYTES_PER_ELEMENT;
 
   const imagePtr = wasmPrivAntispoofModule._malloc(imageSize);
   wasmPrivAntispoofModule.HEAP8.set(data, imagePtr / data.BYTES_PER_ELEMENT);
@@ -536,17 +543,19 @@ const isValidInternal = async (
       wasmPrivAntispoofModule._getImageFilledOffset(),
       1,
     )[0];
-    console.log('isImageFilled: ', isImageFilled);
-    const modelResults = new Int32Array(wasmPrivAntispoofModule.HEAP32.buffer, wasmPrivAntispoofModule._getAntiSpoofingOffset(), 4);
-    console.log('modelResults: ', modelResults);
+    // console.log('isImageFilled: ', isImageFilled);
+    // const modelResults = new Int32Array(
+    //   wasmPrivAntispoofModule.HEAP32.buffer,
+    //   wasmPrivAntispoofModule._getAntiSpoofingOffset(),
+    //   4,
+    // );
+    // console.log('modelResults: ', modelResults);
     if (isImageFilled) {
       is_spoof = -1;
     }
   } catch (e) {
     console.log('_predict', e);
   }
-
-  console.log('SPOOFING RESULT: ', is_spoof);
   wasmPrivAntispoofModule._free(imagePtr);
 
   return { livenessCheck: is_spoof };
@@ -1065,4 +1074,5 @@ Comlink.expose({
   deleteUUID,
   prividFaceISO,
   prividFaceCompareLocal,
+  antispoofCheck,
 });
