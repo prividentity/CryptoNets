@@ -121,7 +121,13 @@ const Ready = () => {
     }
   }, [wasmReady, cameraReady]);
 
-  const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");
+  const {
+    faceDetected: isValidFaceDetected,
+    isValidCall,
+    hasFinished,
+    setHasFinished,
+    livenessCheck,
+  } = useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
     setShowSuccess(false);
@@ -451,9 +457,9 @@ const Ready = () => {
     await faceCompareLocal(callback, uploadImage1, uploadImage2);
   };
 
-  const handleBoundingBox = async()=>{
+  const handleBoundingBox = async () => {
     navigate("/bounding_box");
-  }
+  };
 
   return (
     <>
@@ -570,6 +576,9 @@ const Ready = () => {
               {currentAction === "isValid" && (
                 <div>
                   <div>{`Face Valid: ${isValidFaceDetected}`}</div>
+                  <div>{`Liveness Check: ${
+                    livenessCheck === -1 ? "Invalid Image" : livenessCheck === 0 ? "Real" : "Spoof"
+                  }`}</div>
                 </div>
               )}
 

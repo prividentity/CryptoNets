@@ -534,6 +534,7 @@ const isValidInternal = async (
   console.log("SPOOFING RESULT: ", is_spoof);
   antispoofModule._free(imagePtr);
 
+  return {livenessCheck:is_spoof}
   
 };
 
