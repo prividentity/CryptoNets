@@ -615,7 +615,6 @@ const prividAgePredict = async (
 };
 
 const isValidFrontDocument = async (imagePtr, width, height, simd, action, debug_type = 0, cb) =>
-  // new Promise(async (resolve) => {
   {
     privid_wasm_result = cb;
 
@@ -629,7 +628,6 @@ const isValidFrontDocument = async (imagePtr, width, height, simd, action, debug
 
     return result;
   };
-// });
 
 const isValidVoice = (data, action, params, recordDuration, simd, debug_type = 0) =>
   new Promise(async (resolve) => {
@@ -764,7 +762,7 @@ async function setCacheConfiguration() {
     console.log('Private browser no cache');
   };
   db.onsuccess = async function () {
-    const cacheObj = JSON.stringify({ cache_type: 'basic' });
+    const cacheObj = JSON.stringify({ cache_type: setCache? 'basic' : "nocache" });
     const encoder = new TextEncoder();
     const cache_config_bytes = encoder.encode(`${cacheObj}\0`);
 

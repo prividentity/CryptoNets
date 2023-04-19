@@ -37,7 +37,7 @@ const usePredictAgeWithLivenessCheck = () => {
   };
 
   const doPredictAge = async () => {
-    await predictAge(null, predictAgeCallback, true);
+    await predictAge(null, predictAgeCallback, undefined,undefined, true);
   };
 
   return { doPredictAge, age, predictAgeHasFinished, setPredictAgeHasFinished, predictAgeLivenessResult };

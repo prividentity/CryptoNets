@@ -109,7 +109,9 @@ const Ready = () => {
   useEffect(() => {
     console.log("useEffect starting wasm and camera");
     console.log("--- wasm status ", wasmReady, cameraReady);
-    if (wasmReady && cameraReady) return;
+    if (wasmReady && cameraReady) {
+      return;
+    }  
     if (!wasmReady) {
       if (!callingWasm) {
         // NOTE: MAKE SURE THAT WASM IS ONLY LOADED ONCE
