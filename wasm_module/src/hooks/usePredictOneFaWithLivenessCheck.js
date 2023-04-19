@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { predict1FA } from "@privateid/cryptonets-web-sdk-alpha";
 
-const usePredictOneFaWithLivenessCheck = (
-  setShowSuccess
-) => {
+const usePredictOneFaWithLivenessCheck = (setShowSuccess) => {
   const [predictOneFaaceDetected, setFaceDetected] = useState(false);
   const [predictOneFaStatus, setPredictStatus] = useState(null);
   const [predictOneFaData, setPredictData] = useState(null);
@@ -19,12 +17,12 @@ const usePredictOneFaWithLivenessCheck = (
       {
         input_image_format: "rgba",
       },
+      undefined,
       true
     );
   };
 
   const callback = async (result) => {
-
     const { livenessCheck } = result;
     setPredictLivenvessCheck(livenessCheck);
 
@@ -60,13 +58,12 @@ const usePredictOneFaWithLivenessCheck = (
           break;
         default:
       }
-    } 
-    else{
-        setFaceDetected(null);
-        setPredictStatus(null);
-        predictUserOneFa();
-        setPredictData(null);
-        setPredictMessage(livenessCheck===1?"Detected as Spoof":"No Face Found")
+    } else {
+      setFaceDetected(null);
+      setPredictStatus(null);
+      predictUserOneFa();
+      setPredictData(null);
+      setPredictMessage(livenessCheck === 1 ? "Detected as Spoof" : "No Face Found");
     }
   };
 
