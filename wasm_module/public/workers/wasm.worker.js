@@ -17,20 +17,48 @@ let privid_wasm_result = null;
 let wasmSession = null;
 let setCache = true;
 let checkWasmLoaded = false;
+let wasmPrivAntispoofModule;
 
 const isLoad = (simd, url, key, module, debug_type, cacheConfig = true) =>
   new Promise(async (resolve, reject) => {
     apiUrl = url;
     apiKey = key;
     wasmModule = module;
-    if(debug_type){
+    if (debug_type) {
       debugType = debug_type;
     }
     setCache = cacheConfig;
 
+    if (simd) {
+      // loading simd antispoof model
+      try {
+        importScripts('../wasm/face_mask/simd/antispoof.js');
+        const wasm = await fetch('../wasm/face_mask/simd/antispoof.wasm');
+        const buffer = await wasm.arrayBuffer();
+        wasmPrivAntispoofModule = await createTFLiteModule({ wasmBinary: buffer });
+        console.log(wasmPrivAntispoofModule);
+        const result = await wasmPrivAntispoofModule._loadModels();
+        console.log(`loaded simd wasm antispoof models ${result}`);
+      } catch (e) {
+        console.log(e);
+      }
+    } else {
+      try {
+        // loading nonSimd antispoof model
+        importScripts('../wasm/face_mask/noSimd/antispoof_nosimd.js');
+        const wasm = await fetch('../wasm/face_mask/noSimd/antispoof_nosimd.wasm');
+        const buffer = await wasm.arrayBuffer();
+        wasmPrivAntispoofModule = await createTFLiteModule({ wasmBinary: buffer });
+        console.log(wasmPrivAntispoofModule);
+        const result = await wasmPrivAntispoofModule._loadModels();
+        console.log(`loaded noSimd wasm antispoof models ${result}`);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+
     if (module === 'voice') {
       importScripts('../wasm/voice/simd/privid_fhe.js');
-
       const wasm = await fetch('../wasm/voice/simd/privid_fhe.wasm');
       const buffer = await wasm.arrayBuffer();
       wasmPrivModule = await createTFLiteModule({ wasmBinary: buffer });
@@ -497,6 +525,42 @@ const isValidInternal = async (
   wasmPrivModule._free(resultLenPtr);
 };
 
+const antispoofCheck = async (
+  data,
+  width,
+  height,
+) => {
+  is_spoof = -1;
+  const imageSize = data.length * data.BYTES_PER_ELEMENT;
+
+  const imagePtr = wasmPrivAntispoofModule._malloc(imageSize);
+  wasmPrivAntispoofModule.HEAP8.set(data, imagePtr / data.BYTES_PER_ELEMENT);
+
+  try {
+    is_spoof = wasmPrivAntispoofModule._predict(imagePtr, width, height);
+    const isImageFilled = new Float32Array(
+      wasmPrivAntispoofModule.HEAPF32.buffer,
+      wasmPrivAntispoofModule._getImageFilledOffset(),
+      1,
+    )[0];
+    // console.log('isImageFilled: ', isImageFilled);
+    // const modelResults = new Int32Array(
+    //   wasmPrivAntispoofModule.HEAP32.buffer,
+    //   wasmPrivAntispoofModule._getAntiSpoofingOffset(),
+    //   4,
+    // );
+    // console.log('modelResults: ', modelResults);
+    if (isImageFilled) {
+      is_spoof = -1;
+    }
+  } catch (e) {
+    console.log('_predict', e);
+  }
+  wasmPrivAntispoofModule._free(imagePtr);
+
+  return { livenessCheck: is_spoof };
+};
+
 const prividAgePredict = async (
   data,
   width,
@@ -551,7 +615,6 @@ const prividAgePredict = async (
 };
 
 const isValidFrontDocument = async (imagePtr, width, height, simd, action, debug_type = 0, cb) =>
-  // new Promise(async (resolve) => {
   {
     privid_wasm_result = cb;
 
@@ -565,7 +628,6 @@ const isValidFrontDocument = async (imagePtr, width, height, simd, action, debug
 
     return result;
   };
-// });
 
 const isValidVoice = (data, action, params, recordDuration, simd, debug_type = 0) =>
   new Promise(async (resolve) => {
@@ -643,11 +705,10 @@ function readKey(key) {
       };
 
       tx.oncomplete = function () {
-        try{
+        try {
           db.close();
-        }
-        catch(e) {
-            // 
+        } catch (e) {
+          //
         }
       };
     };
@@ -662,7 +723,7 @@ function putKey(key, cachedWasm, cachedScript, version) {
 
     open.onerror = function () {
       resolve(false);
-      console.log("Private Browser.");
+      console.log('Private Browser.');
     };
 
     open.onupgradeneeded = function () {
@@ -684,11 +745,10 @@ function putKey(key, cachedWasm, cachedScript, version) {
       };
 
       tx.oncomplete = function () {
-        try{
+        try {
           db.close();
-        }
-        catch(e) {
-            // 
+        } catch (e) {
+          //
         }
       };
     };
@@ -702,7 +762,7 @@ async function setCacheConfiguration() {
     console.log('Private browser no cache');
   };
   db.onsuccess = async function () {
-    const cacheObj = JSON.stringify({ cache_type: 'basic' });
+    const cacheObj = JSON.stringify({ cache_type: setCache? 'basic' : "nocache" });
     const encoder = new TextEncoder();
     const cache_config_bytes = encoder.encode(`${cacheObj}\0`);
 
@@ -1012,4 +1072,5 @@ Comlink.expose({
   deleteUUID,
   prividFaceISO,
   prividFaceCompareLocal,
+  antispoofCheck,
 });

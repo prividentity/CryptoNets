@@ -4,11 +4,13 @@ import { isValid } from "@privateid/cryptonets-web-sdk";
 const useIsValid = (element = "userVideo", deviceId = null) => {
   const [faceDetected, setFaceDetected] = useState(false);
   const [hasFinished, setHasFinished] = useState(false);
+  const [livenessCheck, setLivenessCheck] = useState(null);
   const isValidCall = async () => {
     // eslint-disable-next-line no-unused-vars
     const result = await isValid(callback);
     console.log("NEW IS VALID RETURNED DATA:", result);
     // result = undefined;
+    setLivenessCheck(result.livenessCheck);
   };
 
   const callback = async (result) => {
@@ -35,7 +37,7 @@ const useIsValid = (element = "userVideo", deviceId = null) => {
     }
   };
 
-  return { faceDetected, isValidCall, hasFinished, setHasFinished };
+  return { faceDetected, isValidCall, hasFinished, setHasFinished, livenessCheck };
 };
 
 export default useIsValid;

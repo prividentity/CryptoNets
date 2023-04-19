@@ -7,7 +7,6 @@ import {
   faceCompareLocal,
 } from "@privateid/cryptonets-web-sdk";
 
-
 import {
   useCamera,
   useWasm,
@@ -33,6 +32,8 @@ import usePredictAge from "../hooks/usePredictAge";
 import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocumentWithoutPredict";
 import usePrividFaceISO from "../hooks/usePrividFaceISO";
 import { useNavigate } from "react-router-dom";
+import usePredictAgeWithLivenessCheck from "../hooks/usePredictAgeWithLivenessCheck";
+import usePredictOneFaWithLivenessCheck from "../hooks/usePredictOneFaWithLivenessCheck";
 
 let callingWasm = false;
 const Ready = () => {
@@ -108,7 +109,9 @@ const Ready = () => {
   useEffect(() => {
     console.log("useEffect starting wasm and camera");
     console.log("--- wasm status ", wasmReady, cameraReady);
-    if (wasmReady && cameraReady) return;
+    if (wasmReady && cameraReady) {
+      return;
+    }  
     if (!wasmReady) {
       if (!callingWasm) {
         // NOTE: MAKE SURE THAT WASM IS ONLY LOADED ONCE
@@ -122,7 +125,13 @@ const Ready = () => {
     }
   }, [wasmReady, cameraReady]);
 
-  const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");
+  const {
+    faceDetected: isValidFaceDetected,
+    isValidCall,
+    hasFinished,
+    setHasFinished,
+    livenessCheck,
+  } = useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
     setShowSuccess(false);
@@ -452,9 +461,55 @@ const Ready = () => {
     await faceCompareLocal(callback, uploadImage1, uploadImage2);
   };
 
-  const handleBoundingBox = async()=>{
+  const handleBoundingBox = async () => {
     navigate("/bounding_box");
-  }
+  };
+
+  // usePredictAge with Liveness
+  const {
+    age: ageWithLiveness,
+    doPredictAge: doPredictAgeWithLiveness,
+    setPredictAgeHasFinished: setPredictAgeHasFinishedWithLiveness,
+    predictAgeLivenessResult,
+    predictAgeHasFinished: predictAgeHasFinishedWithLiveness,
+  } = usePredictAgeWithLivenessCheck();
+
+  const handleDoPredictAgeWithLiveness = async () => {
+    setShowSuccess(false);
+    setCurrentAction("usePredictAgeWithLiveness");
+    await doPredictAgeWithLiveness();
+  };
+
+  // to start and stop predictAge call when on loop
+  useEffect(() => {
+    const doUsePredictAge = async () => {
+      await doPredictAgeWithLiveness();
+    };
+    if (currentAction === "usePredictAgeWithLiveness" && predictAgeHasFinishedWithLiveness) {
+      setPredictAgeHasFinishedWithLiveness(false);
+    }
+    if (currentAction === "usePredictAgeWithLiveness" && !predictAgeHasFinishedWithLiveness) {
+      doUsePredictAge();
+    }
+    if (currentAction !== "usePredictAgeWithLiveness" && predictAgeHasFinishedWithLiveness) {
+      setPredictAgeHasFinishedWithLiveness(false);
+    }
+  }, [currentAction, predictAgeHasFinishedWithLiveness]);
+
+  // predict1Fa with liveness
+  const {
+    predictMessage: predictMessageWithLiveness,
+    predictOneFaData: predictOneFaDataWithLiveness,
+    predictOneFaaceDetected: predictOneFaaceDetectedWithLiveness,
+    predictUserOneFa: predictUserOneFaWithLiveness,
+    predictLivenessCheck,
+  } = usePredictOneFaWithLivenessCheck(setShowSuccess);
+
+  const handlePredict1FaWithLiveness = async () => {
+    setShowSuccess(false);
+    setCurrentAction("usePredictOneFaWithLiveness");
+    predictUserOneFaWithLiveness();
+  };
 
   return (
     <>
@@ -546,6 +601,11 @@ const Ready = () => {
                   <div>{Math.round(age)}</div>
                 </div>
               )}
+              {currentAction === "usePredictAgeWithLiveness" && ageWithLiveness > 0 && (
+                <div className="age-box">
+                  <div>{Math.round(ageWithLiveness)}</div>
+                </div>
+              )}
             </div>
 
             <div>
@@ -571,6 +631,15 @@ const Ready = () => {
               {currentAction === "isValid" && (
                 <div>
                   <div>{`Face Valid: ${isValidFaceDetected}`}</div>
+                  <div>{`Liveness Check: ${
+                    livenessCheck === -1
+                      ? "No Face Detected"
+                      : livenessCheck === 0
+                      ? "Real"
+                      : livenessCheck === 1
+                      ? "Spoof"
+                      : ""
+                  }`}</div>
                 </div>
               )}
 
@@ -589,6 +658,24 @@ const Ready = () => {
                   <div>{`Message: ${predictMessage || ""}`}</div>
                   <div>{`Predicted GUID: ${predictOneFaData ? predictOneFaData.PI.guid : ""}`}</div>
                   <div>{`Predicted UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
+                </div>
+              )}
+
+              {currentAction === "usePredictOneFaWithLiveness" && (
+                <div>
+                  <div>{`Face Valid: ${predictOneFaaceDetectedWithLiveness ? "Face Detected" : "Face not detected"}`}</div>
+                  <div>{`Message: ${predictMessageWithLiveness || ""}`}</div>
+                  <div>{`Predicted GUID: ${predictOneFaDataWithLiveness ? predictOneFaDataWithLiveness.PI.guid : ""}`}</div>
+                  <div>{`Predicted UUID: ${predictOneFaDataWithLiveness ? predictOneFaDataWithLiveness.PI.uuid : ""}`}</div>
+                  <div>{`Liveness Check: ${
+                    predictLivenessCheck === -1
+                      ? "No Face Detected"
+                      : predictLivenessCheck === 0
+                      ? "Real"
+                      : predictLivenessCheck === 1
+                      ? "Spoof"
+                      : ""
+                  }`}</div>
                 </div>
               )}
 
@@ -652,6 +739,23 @@ const Ready = () => {
                   </div>
                 </div>
               )}
+
+              {currentAction === "usePredictAgeWithLiveness" && (
+                <div>
+                  <div>{`Estimated Age: ${
+                    predictAgeLivenessResult === -1 || predictAgeLivenessResult === 1 ? "" : Math.round(ageWithLiveness)
+                  }`}</div>
+                  <div>{`Liveness Check: ${
+                    predictAgeLivenessResult === -1
+                      ? "No Face Detected"
+                      : predictAgeLivenessResult === 0
+                      ? "Real"
+                      : predictAgeLivenessResult === 1
+                      ? "Spoof"
+                      : ""
+                  }`}</div>
+                </div>
+              )}
             </div>
 
             <div id="module_functions" className="buttonContainer">
@@ -661,11 +765,17 @@ const Ready = () => {
               <button className="button" onClick={handlePredictAge}>
                 Predict Age
               </button>
+              <button className="button" onClick={handleDoPredictAgeWithLiveness}>
+                Predict Age with Liveness
+              </button>
               <button className="button" onClick={handleEnrollOneFa}>
                 Enroll
               </button>
               <button className="button" onClick={handlePredictOneFa}>
                 Predict
+              </button>
+              <button className="button" onClick={handlePredict1FaWithLiveness}>
+                Predict with Liveness
               </button>
               <button className="button" onClick={handleContinuousPredict}>
                 Continuous Authentication
