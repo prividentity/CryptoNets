@@ -18,6 +18,7 @@ let wasmSession = null;
 let setCache = true;
 let checkWasmLoaded = false;
 let wasmPrivAntispoofModule;
+let checkAntispoofLoaded = false;
 
 const isLoad = (simd, url, key, module, debug_type, cacheConfig = true) =>
   new Promise(async (resolve, reject) => {
@@ -28,34 +29,6 @@ const isLoad = (simd, url, key, module, debug_type, cacheConfig = true) =>
       debugType = debug_type;
     }
     setCache = cacheConfig;
-
-    if (simd) {
-      // loading simd antispoof model
-      try {
-        importScripts('../wasm/face_mask/simd/antispoof.js');
-        const wasm = await fetch('../wasm/face_mask/simd/antispoof.wasm');
-        const buffer = await wasm.arrayBuffer();
-        wasmPrivAntispoofModule = await createTFLiteModule({ wasmBinary: buffer });
-        console.log(wasmPrivAntispoofModule);
-        const result = await wasmPrivAntispoofModule._loadModels();
-        console.log(`loaded simd wasm antispoof models ${result}`);
-      } catch (e) {
-        console.log(e);
-      }
-    } else {
-      try {
-        // loading nonSimd antispoof model
-        importScripts('../wasm/face_mask/noSimd/antispoof_nosimd.js');
-        const wasm = await fetch('../wasm/face_mask/noSimd/antispoof_nosimd.wasm');
-        const buffer = await wasm.arrayBuffer();
-        wasmPrivAntispoofModule = await createTFLiteModule({ wasmBinary: buffer });
-        console.log(wasmPrivAntispoofModule);
-        const result = await wasmPrivAntispoofModule._loadModels();
-        console.log(`loaded noSimd wasm antispoof models ${result}`);
-      } catch (e) {
-        console.log(e);
-      }
-    }
 
     if (module === 'voice') {
       importScripts('../wasm/voice/simd/privid_fhe.js');
@@ -107,12 +80,51 @@ const isLoad = (simd, url, key, module, debug_type, cacheConfig = true) =>
         }
 
         const version = wasmPrivModule.UTF8ToString(wasmPrivModule._get_version());
-
         await putKey(module, buffer, scriptBuffer, version);
         resolve('Loaded');
       }
     } else {
       reject(new Error('Incorrect WASM'));
+    }
+  });
+
+const loadAntispoof = (simd) =>
+  new Promise(async (resolve, reject) => {
+    // eslint-disable-next-line no-lone-blocks
+    {
+      if (simd) {
+        // loading simd antispoof model
+        try {
+          importScripts('../wasm/face_mask/simd/antispoof.js');
+          const wasm = await fetch('../wasm/face_mask/simd/antispoof.wasm');
+          const buffer = await wasm.arrayBuffer();
+          wasmPrivAntispoofModule = await createTFLiteModule({ wasmBinary: buffer });
+          console.log(wasmPrivAntispoofModule);
+          const result = await wasmPrivAntispoofModule._loadModels();
+          console.log(`loaded simd wasm antispoof models ${result}`);
+          checkAntispoofLoaded = true;
+          resolve(true);
+        } catch (e) {
+          console.log(e);
+          resolve(false);
+        }
+      } else {
+        try {
+          // loading nonSimd antispoof model
+          importScripts('../wasm/face_mask/noSimd/antispoof_nosimd.js');
+          const wasm = await fetch('../wasm/face_mask/noSimd/antispoof_nosimd.wasm');
+          const buffer = await wasm.arrayBuffer();
+          wasmPrivAntispoofModule = await createTFLiteModule({ wasmBinary: buffer });
+          console.log(wasmPrivAntispoofModule);
+          const result = await wasmPrivAntispoofModule._loadModels();
+          console.log(`loaded noSimd wasm antispoof models ${result}`);
+          checkAntispoofLoaded = true;
+          resolve(true);
+        } catch (e) {
+          console.log(e);
+          resolve(false);
+        }
+      }
     }
   });
 
@@ -525,11 +537,7 @@ const isValidInternal = async (
   wasmPrivModule._free(resultLenPtr);
 };
 
-const antispoofCheck = async (
-  data,
-  width,
-  height,
-) => {
+const antispoofCheck = async (data, width, height) => {
   is_spoof = -1;
   const imageSize = data.length * data.BYTES_PER_ELEMENT;
 
@@ -614,20 +622,19 @@ const prividAgePredict = async (
   wasmPrivModule._free(resultFirstPtr);
 };
 
-const isValidFrontDocument = async (imagePtr, width, height, simd, action, debug_type = 0, cb) =>
-  {
-    privid_wasm_result = cb;
+const isValidFrontDocument = async (imagePtr, width, height, simd, action, debug_type = 0, cb) => {
+  privid_wasm_result = cb;
 
-    if (!wasmPrivModule) {
-      console.log('loaded for first wsm wrkr', simd, apiUrl, debugType, wasmModule);
-      await isLoad(simd, apiUrl, apiKey, wasmModule, debug_type);
-    }
+  if (!wasmPrivModule) {
+    console.log('loaded for first wsm wrkr', simd, apiUrl, debugType, wasmModule);
+    await isLoad(simd, apiUrl, apiKey, wasmModule, debug_type);
+  }
 
-    const result = wasmPrivModule._is_valid(action, imagePtr, width, height, 0, 0, 0);
-    wasmPrivModule._free(imagePtr);
+  const result = wasmPrivModule._is_valid(action, imagePtr, width, height, 0, 0, 0);
+  wasmPrivModule._free(imagePtr);
 
-    return result;
-  };
+  return result;
+};
 
 const isValidVoice = (data, action, params, recordDuration, simd, debug_type = 0) =>
   new Promise(async (resolve) => {
@@ -762,7 +769,7 @@ async function setCacheConfiguration() {
     console.log('Private browser no cache');
   };
   db.onsuccess = async function () {
-    const cacheObj = JSON.stringify({ cache_type: setCache? 'basic' : "nocache" });
+    const cacheObj = JSON.stringify({ cache_type: setCache ? 'basic' : 'nocache' });
     const encoder = new TextEncoder();
     const cache_config_bytes = encoder.encode(`${cacheObj}\0`);
 
@@ -1065,6 +1072,7 @@ Comlink.expose({
   isValidInternal,
   prividAgePredict,
   isLoad,
+  loadAntispoof,
   voicePredict,
   isValidVoice,
   scanDocument,
