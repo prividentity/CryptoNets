@@ -130,7 +130,6 @@ const Ready = () => {
     isValidCall,
     hasFinished,
     setHasFinished,
-    livenessCheck,
   } = useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
@@ -631,15 +630,6 @@ const Ready = () => {
               {currentAction === "isValid" && (
                 <div>
                   <div>{`Face Valid: ${isValidFaceDetected}`}</div>
-                  <div>{`Liveness Check: ${
-                    livenessCheck === -1
-                      ? "No Face Detected"
-                      : livenessCheck === 0
-                      ? "Real"
-                      : livenessCheck === 1
-                      ? "Spoof"
-                      : ""
-                  }`}</div>
                 </div>
               )}
 
