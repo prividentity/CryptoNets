@@ -34,6 +34,7 @@ import usePrividFaceISO from "../hooks/usePrividFaceISO";
 import { useNavigate } from "react-router-dom";
 import usePredictAgeWithLivenessCheck from "../hooks/usePredictAgeWithLivenessCheck";
 import usePredictOneFaWithLivenessCheck from "../hooks/usePredictOneFaWithLivenessCheck";
+import useEnrollOneFaWithLiveness from "../hooks/useEnrollOneFaWithLivenessCheck";
 
 let callingWasm = false;
 const Ready = () => {
@@ -125,14 +126,7 @@ const Ready = () => {
     }
   }, [wasmReady, cameraReady]);
 
-  const {
-    faceDetected: isValidFaceDetected,
-    isValidCall,
-    hasFinished,
-    setHasFinished,
-    livenessCheck,
-    exposureValue
-  } = useIsValid("userVideo");
+  const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished, exposureValue } = useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
     setShowSuccess(false);
@@ -512,6 +506,21 @@ const Ready = () => {
     predictUserOneFaWithLiveness();
   };
 
+  const {
+    enrollOneFaWithLivenessFaceDetected,
+    enrollOneFaWithLivenessStatus,
+    enrollOneFaWithLivenessData,
+    enrollUserOneFaWithLiveness,
+    enrollOneFaWithLivenessProgress,
+    enrollOneFaWithLivenessCheckStatus,
+  } = useEnrollOneFaWithLiveness("userVideo", () => {}, null, deviceId, setShowSuccess);
+
+  const handleEnrollOneFaWithLiveness = async () => {
+    setShowSuccess(false);
+    setCurrentAction("useEnrollOneFaWithLiveness");
+    enrollUserOneFaWithLiveness();
+  };
+
   return (
     <>
       {deviceSupported.isChecking ? (
@@ -629,18 +638,44 @@ const Ready = () => {
                 </div>
               )}
 
+              {currentAction === "useEnrollOneFaWithLiveness" && (
+                <div>
+                  {console.log("HERE",{
+                    enrollOneFaWithLivenessFaceDetected,
+                    enrollOneFaWithLivenessStatus,
+                    enrollOneFaWithLivenessProgress,
+                    enrollOneFaWithLivenessData,
+                  })}
+                  <div>
+                    Enroll Face Detected:
+                    {enrollOneFaWithLivenessFaceDetected ? "Face Detected" : "No Face Detected"}
+                  </div>
+                  <div> Enroll Status: {enrollOneFaWithLivenessStatus} </div>
+                  <div> Progress: {`${enrollOneFaWithLivenessProgress} %`}</div>
+                  <div>
+                    Enroll GUID:&nbsp;
+                    {`${enrollOneFaWithLivenessData ? enrollOneFaWithLivenessData.PI.guid : ""}`}
+                  </div>
+                  <div>
+                    Enroll UUID:&nbsp;
+                    {`${enrollOneFaWithLivenessData ? enrollOneFaWithLivenessData.PI.uuid : ""}`}
+                  </div>
+                  <div>
+                    Liveness Check:{" "}
+                    {`${
+                      enrollOneFaWithLivenessCheckStatus === 0
+                        ? "Real"
+                        : enrollOneFaWithLivenessCheckStatus === 1
+                        ? "Spoof"
+                        : "Face not found"
+                    }`}
+                  </div>
+                </div>
+              )}
+
               {currentAction === "isValid" && (
                 <div>
                   <div>{`Face Valid: ${isValidFaceDetected}`}</div>
-                  <div>{`Liveness Check: ${
-                    livenessCheck === -1
-                      ? "No Face Detected"
-                      : livenessCheck === 0
-                      ? "Real"
-                      : livenessCheck === 1
-                      ? "Spoof"
-                      : ""
-                  }`}</div>
                   <div>{`Exposure: ${exposureValue}`}</div>
                 </div>
               )}
@@ -665,10 +700,16 @@ const Ready = () => {
 
               {currentAction === "usePredictOneFaWithLiveness" && (
                 <div>
-                  <div>{`Face Valid: ${predictOneFaaceDetectedWithLiveness ? "Face Detected" : "Face not detected"}`}</div>
+                  <div>{`Face Valid: ${
+                    predictOneFaaceDetectedWithLiveness ? "Face Detected" : "Face not detected"
+                  }`}</div>
                   <div>{`Message: ${predictMessageWithLiveness || ""}`}</div>
-                  <div>{`Predicted GUID: ${predictOneFaDataWithLiveness ? predictOneFaDataWithLiveness.PI.guid : ""}`}</div>
-                  <div>{`Predicted UUID: ${predictOneFaDataWithLiveness ? predictOneFaDataWithLiveness.PI.uuid : ""}`}</div>
+                  <div>{`Predicted GUID: ${
+                    predictOneFaDataWithLiveness ? predictOneFaDataWithLiveness.PI.guid : ""
+                  }`}</div>
+                  <div>{`Predicted UUID: ${
+                    predictOneFaDataWithLiveness ? predictOneFaDataWithLiveness.PI.uuid : ""
+                  }`}</div>
                   <div>{`Liveness Check: ${
                     predictLivenessCheck === -1
                       ? "No Face Detected"
@@ -773,6 +814,10 @@ const Ready = () => {
               <button className="button" onClick={handleEnrollOneFa}>
                 Enroll
               </button>
+              <button className="button" onClick={handleEnrollOneFaWithLiveness}>
+                Enroll with Liveness
+              </button>
+
               <button className="button" onClick={handlePredictOneFa}>
                 Predict
               </button>
