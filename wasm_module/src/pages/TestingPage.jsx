@@ -111,7 +111,7 @@ const Ready = () => {
     console.log("--- wasm status ", wasmReady, cameraReady);
     if (wasmReady && cameraReady) {
       return;
-    }  
+    }
     if (!wasmReady) {
       if (!callingWasm) {
         // NOTE: MAKE SURE THAT WASM IS ONLY LOADED ONCE
@@ -131,6 +131,7 @@ const Ready = () => {
     hasFinished,
     setHasFinished,
     livenessCheck,
+    exposureValue
   } = useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
@@ -640,6 +641,7 @@ const Ready = () => {
                       ? "Spoof"
                       : ""
                   }`}</div>
+                  <div>{`Exposure: ${exposureValue}`}</div>
                 </div>
               )}
 

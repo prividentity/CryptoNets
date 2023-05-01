@@ -170,7 +170,7 @@ const useScanBackDocument = (setShowSuccess) => {
       documentCallback,
       true,
       undefined,
-      undefined,
+        { document_scan_barcode_only: true},
       canvasObj
     );
     setCroppedDocumentImageData(croppedDocument);
