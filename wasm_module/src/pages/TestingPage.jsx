@@ -126,7 +126,7 @@ const Ready = () => {
     }
   }, [wasmReady, cameraReady]);
 
-  const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished } = useIsValid("userVideo");
+  const { faceDetected: isValidFaceDetected, isValidCall, hasFinished, setHasFinished, exposureValue } = useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
     setShowSuccess(false);
@@ -676,6 +676,7 @@ const Ready = () => {
               {currentAction === "isValid" && (
                 <div>
                   <div>{`Face Valid: ${isValidFaceDetected}`}</div>
+                  <div>{`Exposure: ${exposureValue}`}</div>
                 </div>
               )}
 
