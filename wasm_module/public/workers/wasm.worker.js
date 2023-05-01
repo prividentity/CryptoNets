@@ -18,6 +18,7 @@ let wasmSession = null;
 let setCache = true;
 let checkWasmLoaded = false;
 let wasmPrivAntispoofModule;
+let checkAntispoofLoaded = false;
 
 const isLoad = (simd, url, key, module, debug_type, cacheConfig = true) =>
   new Promise(async (resolve, reject) => {
@@ -28,34 +29,6 @@ const isLoad = (simd, url, key, module, debug_type, cacheConfig = true) =>
       debugType = debug_type;
     }
     setCache = cacheConfig;
-
-    if (simd) {
-      // loading simd antispoof model
-      try {
-        importScripts('../wasm/face_mask/simd/antispoof.js');
-        const wasm = await fetch('../wasm/face_mask/simd/antispoof.wasm');
-        const buffer = await wasm.arrayBuffer();
-        wasmPrivAntispoofModule = await createTFLiteModule({ wasmBinary: buffer });
-        console.log(wasmPrivAntispoofModule);
-        const result = await wasmPrivAntispoofModule._loadModels();
-        console.log(`loaded simd wasm antispoof models ${result}`);
-      } catch (e) {
-        console.log(e);
-      }
-    } else {
-      try {
-        // loading nonSimd antispoof model
-        importScripts('../wasm/face_mask/noSimd/antispoof_nosimd.js');
-        const wasm = await fetch('../wasm/face_mask/noSimd/antispoof_nosimd.wasm');
-        const buffer = await wasm.arrayBuffer();
-        wasmPrivAntispoofModule = await createTFLiteModule({ wasmBinary: buffer });
-        console.log(wasmPrivAntispoofModule);
-        const result = await wasmPrivAntispoofModule._loadModels();
-        console.log(`loaded noSimd wasm antispoof models ${result}`);
-      } catch (e) {
-        console.log(e);
-      }
-    }
 
     if (module === 'voice') {
       importScripts('../wasm/voice/simd/privid_fhe.js');
@@ -107,12 +80,51 @@ const isLoad = (simd, url, key, module, debug_type, cacheConfig = true) =>
         }
 
         const version = wasmPrivModule.UTF8ToString(wasmPrivModule._get_version());
-
         await putKey(module, buffer, scriptBuffer, version);
         resolve('Loaded');
       }
     } else {
       reject(new Error('Incorrect WASM'));
+    }
+  });
+
+const loadAntispoof = (simd) =>
+  new Promise(async (resolve, reject) => {
+    // eslint-disable-next-line no-lone-blocks
+    {
+      if (simd) {
+        // loading simd antispoof model
+        try {
+          importScripts('../wasm/face_mask/simd/antispoof.js');
+          const wasm = await fetch('../wasm/face_mask/simd/antispoof.wasm');
+          const buffer = await wasm.arrayBuffer();
+          wasmPrivAntispoofModule = await createTFLiteModule({ wasmBinary: buffer });
+          console.log(wasmPrivAntispoofModule);
+          const result = await wasmPrivAntispoofModule._loadModels();
+          console.log(`loaded simd wasm antispoof models ${result}`);
+          checkAntispoofLoaded = true;
+          resolve(true);
+        } catch (e) {
+          console.log(e);
+          resolve(false);
+        }
+      } else {
+        try {
+          // loading nonSimd antispoof model
+          importScripts('../wasm/face_mask/noSimd/antispoof_nosimd.js');
+          const wasm = await fetch('../wasm/face_mask/noSimd/antispoof_nosimd.wasm');
+          const buffer = await wasm.arrayBuffer();
+          wasmPrivAntispoofModule = await createTFLiteModule({ wasmBinary: buffer });
+          console.log(wasmPrivAntispoofModule);
+          const result = await wasmPrivAntispoofModule._loadModels();
+          console.log(`loaded noSimd wasm antispoof models ${result}`);
+          checkAntispoofLoaded = true;
+          resolve(true);
+        } catch (e) {
+          console.log(e);
+          resolve(false);
+        }
+      }
     }
   });
 
@@ -171,9 +183,6 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) => {
   const configInputSize = config.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
   wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
-
-  // Initialize Session
-  // await initializeWasmSession(apiUrl, apiKey);
 
   let result = null;
   try {
@@ -271,9 +280,6 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
   // Cropped Mugshot malloc
   const croppedMugshotBufferFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   const croppedMugshotBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-
-  // Initialize Session
-  // await initializeWasmSession(apiUrl, apiKey);
 
   let result = null;
 
@@ -378,9 +384,6 @@ const FHE_enrollOnefa = async (originalImages, simd, debug_type = 0, cb, config 
   // create a pointer to interger to hold the length of the output buffer
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
-  // Initialize Session
-  // await initializeWasmSession(apiUrl, apiKey);
-
   try {
     wasmPrivModule._privid_enroll_onefa(
       wasmSession /* session pointer */,
@@ -441,8 +444,6 @@ const FHE_predictOnefa = async (originalImages, simd, debug_type = 0, cb, config
   // create a pointer to interger to hold the length of the output buffer
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
-  // Initialize Session
-  // await initializeWasmSession(apiUrl, apiKey);
   try {
     wasmPrivModule._privid_face_predict_onefa(
       wasmSession /* session pointer */,
@@ -486,8 +487,6 @@ const isValidInternal = async (
     console.log('loaded for first wsm wrkr', simd, action);
     await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
   }
-  // Initialize Session
-  // await initializeWasmSession(apiUrl, apiKey);
 
   const imageSize = data.length * data.BYTES_PER_ELEMENT;
 
@@ -525,11 +524,7 @@ const isValidInternal = async (
   wasmPrivModule._free(resultLenPtr);
 };
 
-const antispoofCheck = async (
-  data,
-  width,
-  height,
-) => {
+const antispoofCheck = async (data, width, height) => {
   is_spoof = -1;
   const imageSize = data.length * data.BYTES_PER_ELEMENT;
 
@@ -614,20 +609,19 @@ const prividAgePredict = async (
   wasmPrivModule._free(resultFirstPtr);
 };
 
-const isValidFrontDocument = async (imagePtr, width, height, simd, action, debug_type = 0, cb) =>
-  {
-    privid_wasm_result = cb;
+const isValidFrontDocument = async (imagePtr, width, height, simd, action, debug_type = 0, cb) => {
+  privid_wasm_result = cb;
 
-    if (!wasmPrivModule) {
-      console.log('loaded for first wsm wrkr', simd, apiUrl, debugType, wasmModule);
-      await isLoad(simd, apiUrl, apiKey, wasmModule, debug_type);
-    }
+  if (!wasmPrivModule) {
+    console.log('loaded for first wsm wrkr', simd, apiUrl, debugType, wasmModule);
+    await isLoad(simd, apiUrl, apiKey, wasmModule, debug_type);
+  }
 
-    const result = wasmPrivModule._is_valid(action, imagePtr, width, height, 0, 0, 0);
-    wasmPrivModule._free(imagePtr);
+  const result = wasmPrivModule._is_valid(action, imagePtr, width, height, 0, 0, 0);
+  wasmPrivModule._free(imagePtr);
 
-    return result;
-  };
+  return result;
+};
 
 const isValidVoice = (data, action, params, recordDuration, simd, debug_type = 0) =>
   new Promise(async (resolve) => {
@@ -762,7 +756,7 @@ async function setCacheConfiguration() {
     console.log('Private browser no cache');
   };
   db.onsuccess = async function () {
-    const cacheObj = JSON.stringify({ cache_type: setCache? 'basic' : "nocache" });
+    const cacheObj = JSON.stringify({ cache_type: setCache ? 'basic' : 'nocache' });
     const encoder = new TextEncoder();
     const cache_config_bytes = encoder.encode(`${cacheObj}\0`);
 
@@ -851,8 +845,8 @@ const buffer_args = function (text) {
  * @note It is the responsability of the caller to free the pointer returned by this inner_ptr()
  */
 const output_ptr = function () {
-  let outer_ptr = null;
-  let inner_ptr = null;
+  let out_ptr = null;
+  let in_ptr = null;
   const free_ptr = (ptr) => {
     if (ptr) {
       wasmPrivModule._free(ptr);
@@ -866,18 +860,25 @@ const output_ptr = function () {
      * if the container is already created it will be returned
      */
     outer_ptr: () => {
-      if (!outer_ptr) outer_ptr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-      return outer_ptr;
+      // TODO: may be used SharedArrayBuffer() instead
+      // allocate memory the expected pointer (outer pointer or container)  
+      if (!out_ptr) out_ptr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+      return out_ptr;
     },
     /**
      * @brief Creates a javascript Uint32Array pointer to contain the result pointed by outer_ptr and return it,
      * It is the responsability of the caller to free the pointer returned by this function
      */
     inner_ptr: () => {
-      if (!outer_ptr) return null;
-      if (inner_ptr) return inner_ptr;
-      inner_ptr = new Uint32Array(wasmPrivModule.HEAPU8.buffer, outer_ptr, 1);
-      return inner_ptr;
+      //  If we did not allocate yet the output buffer return null
+      if (!out_ptr) return null;
+      // if we already have our inner pointer for this closure return it 
+      if (in_ptr) return in_ptr;
+      // Access  the outer pointer as an arry of uint32 which conatin a single cell
+      // whose value is the pointer allocated in the wasm module (inner pointer of the output param)      
+      // and return it
+      [in_ptr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, out_ptr, 1);
+      return in_ptr;
     },
   };
 };
@@ -888,7 +889,6 @@ async function initializeWasmSession(url, key, debug_type) {
     const url_args = buffer_args(url);
     const key_args = buffer_args(key);
     const session_out_ptr = output_ptr();
-
     const s_result = wasmPrivModule._privid_initialize_session(
       ...key_args.args(),
       ...url_args.args(),
@@ -907,6 +907,7 @@ async function initializeWasmSession(url, key, debug_type) {
 
     // get our inner session created by wasm and free the outer container ptr
     wasmSession = session_out_ptr.inner_ptr();
+    
     await wasmPrivModule._privid_set_default_configuration(wasmSession, 1);
     if (setCache) {
       await setCacheConfiguration();
@@ -1065,6 +1066,7 @@ Comlink.expose({
   isValidInternal,
   prividAgePredict,
   isLoad,
+  loadAntispoof,
   voicePredict,
   isValidVoice,
   scanDocument,
