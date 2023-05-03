@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
 import { getScaledBoundingBox } from "../utils";
 
-const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotSuccess) => {
+const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotSuccess, config) => {
   const scaledBoundingBoxRef = useRef(null);
   const [scanResult, setScanResult] = useState(null);
   const [scannedIdData, setScannedIdData] = useState(null);
@@ -23,7 +23,6 @@ const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotS
   let running = false;
 
   const documentCallback = (result) => {
-
     if (result.status === "WASM_RESPONSE") {
       if (result.returnValue.op_status === 0 && result.returnValue.cropped_face_height) {
         setIsFound(true);
@@ -40,8 +39,7 @@ const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotS
         setCroppedDocumentWidth(null);
         scanFrontDocument();
       }
-    } 
-
+    }
   };
 
   const doConvert = async () => {
@@ -89,11 +87,7 @@ const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotS
       result: resultData,
       croppedDocument,
       croppedMugshot,
-    } = await isValidPhotoID("PHOTO_ID_FRONT", documentCallback, false, undefined, {
-      // blur_threshold_doc: 1700,
-      // threshold_doc_y: 0.02,
-      // threshold_doc_x: 0.02,
-    });
+    } = await isValidPhotoID("PHOTO_ID_FRONT", documentCallback, false, undefined, config || undefined);
 
     setPredictMugshotRaw(croppedMugshot);
     setCroppedDocumentImageData(croppedDocument);

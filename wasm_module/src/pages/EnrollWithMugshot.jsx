@@ -75,10 +75,8 @@ const EnrollWithMugshot = () => {
   // Enroll ONEFA
   const useEnrollSuccess = (results) => {
     // setCurrentAction("useScanDocumentFrontValidity");
-    console.log("on success enroll",results)
+    console.log("on success enroll", results);
   };
-
-
 
   const handleSwitchCamera = async (e) => {
     setDeviceId(e.target.value);
@@ -96,8 +94,7 @@ const EnrollWithMugshot = () => {
 
   const onMugshotSuccess = async () => {
     setCurrentAction("useEnrollOneFa");
-  }
-
+  };
 
   // Scan Front DL without predict
   const {
@@ -110,8 +107,8 @@ const EnrollWithMugshot = () => {
   const { enroll1FaWithImageData, enroll1FaWithImageStatus, enrollUserOneFaWithImage } = useEnroll1FaWithImage(
     useEnrollSuccess,
     setShowSuccess,
-    { allowed_results: [ 10 ] },
-    [predictMugshotImageData],
+    { allowed_results: [10], context_string: "mugshot", image_input_format: "rgba" },
+    [predictMugshotImageData]
   );
 
   const handleReopenCamera = async () => {
@@ -149,10 +146,9 @@ const EnrollWithMugshot = () => {
             }}
           >
             <div>
-              <h4>Face Compare Flow:</h4>
+              <h4>Enroll with Mugshot:</h4>
               <p> Step1 - Scan Front Document </p>
               <p> Step2 - Will use cropped mugshot for enroll </p>
-              <p> Step3 - Result </p>
             </div>
             <div
               style={{

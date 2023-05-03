@@ -4,6 +4,7 @@ import TestingPage from "../pages/TestingPage";
 import CompareFlow from "../pages/CompareFlow";
 import ScanDocumentBoundingBox from "../pages/ScanDocumentBoundingBox";
 import EnrollWithMugshot from "../pages/EnrollWithMugshot";
+import PredictWithMugshot from "../pages/PredictWithMugshot";
 
 const router = createBrowserRouter([
   {
@@ -21,6 +22,10 @@ const router = createBrowserRouter([
   {
     path: "/enroll_with_mugshot",
     element: <EnrollWithMugshot />
+  },
+  {
+    path: "/predict_with_mugshot",
+    element: <PredictWithMugshot />
   }
 ]);
 
