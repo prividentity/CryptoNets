@@ -3,7 +3,7 @@ name: wasm sample devel workflow
 on:
   push:
     branches:
-    - devel
+    - test
   
 jobs:
   run:
