@@ -8,8 +8,8 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
   const [faceLoginMessage, setPredictMessage] = useState("");
 
   const doFaceLogin = async () => {
-    setFaceDetected(false);
-    setPredictData(null);
+    // setFaceDetected(false);
+    // setPredictData(null);
     // eslint-disable-next-line no-unused-vars
     await faceLogin(callback, {
       input_image_format: "rgba",
@@ -17,7 +17,7 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
   };
 
   const callback = async (result) => {
-    console.log("predict callback hook result:", result);
+    console.log("facelogin callback hook result:", result);
     switch (result.status) {
       case "WASM_RESPONSE":
         if (result?.returnValue?.error) {
@@ -45,11 +45,13 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
           }
           setFaceDetected(hasValidFace);
           setPredictStatus(null);
-          doFaceLogin();
+          setFaceDetected(false);
+          setPredictData(null);
         }
         break;
       default:
     }
+    doFaceLogin();
   };
 
   return {

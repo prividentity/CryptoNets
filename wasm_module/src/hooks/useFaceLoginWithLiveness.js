@@ -9,8 +9,8 @@ const useFaceLoginWithLivenessCheck = (setShowSuccess) => {
   const [faceLoginLivenessCheck, setPredictLivenvessCheck] = useState(null);
 
   const faceLoginWithLiveness = async () => {
-    setFaceDetected(false);
-    setPredictData(null);
+    // setFaceDetected(false);
+    // setPredictData(null);
     // eslint-disable-next-line no-unused-vars
     await faceLogin(
       callback,
@@ -53,7 +53,6 @@ const useFaceLoginWithLivenessCheck = (setShowSuccess) => {
             }
             setFaceDetected(hasValidFace);
             setPredictStatus(null);
-            faceLoginWithLiveness();
           }
           break;
         default:
@@ -63,8 +62,9 @@ const useFaceLoginWithLivenessCheck = (setShowSuccess) => {
       setPredictStatus(null);
       setPredictData(null);
       setPredictMessage(livenessCheck === 1 ? "Detected as Spoof" : "No Face Found");
-      faceLoginWithLiveness();
+      
     }
+    faceLoginWithLiveness();
   };
 
   return {
