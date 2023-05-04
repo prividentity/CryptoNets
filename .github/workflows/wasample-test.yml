@@ -1,4 +1,4 @@
-name: wasm sample devel workflow
+name: wasm sample test workflow
 
 on:
   push:
