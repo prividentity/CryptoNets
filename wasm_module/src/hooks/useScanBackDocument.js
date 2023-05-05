@@ -69,6 +69,46 @@ const useScanBackDocument = (setShowSuccess) => {
         setScannedCodeData(finalResult);
         setShowSuccess(true);
         return finalResult;
+      } else if (result.returnValue.op_status === 3) {
+        const {
+          firstName,
+          middleName,
+          lastName,
+          dateOfBirth,
+          gender,
+          streetAddress1,
+          streetAddress2,
+          state,
+          city,
+          postCode,
+          issuingCountry,
+          crop_doc_width,
+          crop_doc_height,
+          crop_barcode_width,
+          crop_barcode_height,
+        } = result.returnValue;
+        const finalResult = {
+          firstName,
+          middleName,
+          lastName,
+          dateOfBirth,
+          gender,
+          streetAddress1,
+          streetAddress2,
+          state,
+          city,
+          postCode,
+          issuingCountry,
+        };
+        setCropedDocumentWidth(crop_doc_width);
+        setCroppedDocumentHeight(crop_doc_height);
+        setCroppedBarcodeWidth(crop_barcode_width);
+        setCroppedBarcodeHeight(crop_barcode_height);
+        setIsFound(true);
+        setScannedCodeData(finalResult);
+        setShowSuccess(true);
+        scanBackDocument();
+        return finalResult;
       } else {
         setCropedDocumentWidth(null);
         setCroppedDocumentHeight(null);
@@ -82,9 +122,10 @@ const useScanBackDocument = (setShowSuccess) => {
     scanBackDocument();
   };
 
-  const convertImageData = async (imageData, width, height, setState) => {
-    if ((width * height * 4) === imageData.length) {
+  const convertImageData = async (imageData, width, height, setState, message = "") => {
+    if (width * height * 4 === imageData.length) {
       const convertedImage = await convertCroppedImage(imageData, width, height);
+      console.log(message, convertedImage);
       setState(convertedImage);
     }
   };
@@ -97,7 +138,13 @@ const useScanBackDocument = (setShowSuccess) => {
 
   useEffect(() => {
     if (isFound && croppedBarcodeImageData && croppedBarcodeWidth && croppedBarcodeHeight) {
-      convertImageData(croppedBarcodeImageData, croppedBarcodeWidth, croppedBarcodeHeight, setCroppedBarcodeImage);
+      convertImageData(
+        croppedBarcodeImageData,
+        croppedBarcodeWidth,
+        croppedBarcodeHeight,
+        setCroppedBarcodeImage,
+        "Barcode:"
+      );
     }
   }, [isFound, croppedBarcodeImageData, croppedBarcodeWidth, croppedBarcodeHeight]);
 
@@ -123,13 +170,12 @@ const useScanBackDocument = (setShowSuccess) => {
       documentCallback,
       true,
       undefined,
-      undefined,
+        { document_scan_barcode_only: true},
       canvasObj
     );
     setCroppedDocumentImageData(croppedDocument);
     setCroppedBarcodeImageData(croppedBarcode);
     setInputImageData(imageData);
-
   };
 
   return { scanBackDocument, scannedCodeData, isFound, croppedDocumentImage, croppedBarcodeImage, barcodeStatusCode };

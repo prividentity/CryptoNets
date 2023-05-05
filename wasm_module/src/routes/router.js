@@ -3,6 +3,9 @@ import TestingPage from "../pages/TestingPage";
 
 import CompareFlow from "../pages/CompareFlow";
 import ScanDocumentBoundingBox from "../pages/ScanDocumentBoundingBox";
+import EnrollWithMugshot from "../pages/EnrollWithMugshot";
+import PredictWithMugshot from "../pages/PredictWithMugshot";
+import EnrollWithLabel from "../pages/EnrollWithLabel";
 
 const router = createBrowserRouter([
   {
@@ -16,6 +19,18 @@ const router = createBrowserRouter([
   {
     path: "/bounding_box",
     element: <ScanDocumentBoundingBox />
+  },
+  {
+    path: "/enroll_with_mugshot",
+    element: <EnrollWithMugshot />
+  },
+  {
+    path: "/predict_with_mugshot",
+    element: <PredictWithMugshot />
+  },
+  {
+    path: "/enroll_with_label",
+    element: <EnrollWithLabel />
   }
 ]);
 

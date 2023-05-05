@@ -34,6 +34,9 @@ import usePrividFaceISO from "../hooks/usePrividFaceISO";
 import { useNavigate } from "react-router-dom";
 import usePredictAgeWithLivenessCheck from "../hooks/usePredictAgeWithLivenessCheck";
 import usePredictOneFaWithLivenessCheck from "../hooks/usePredictOneFaWithLivenessCheck";
+import useEnrollOneFaWithLiveness from "../hooks/useEnrollOneFaWithLivenessCheck";
+import useFaceLogin from "../hooks/useFaceLogin";
+import useFaceLoginWithLivenessCheck from "../hooks/useFaceLoginWithLiveness";
 
 let callingWasm = false;
 const Ready = () => {
@@ -111,7 +114,7 @@ const Ready = () => {
     console.log("--- wasm status ", wasmReady, cameraReady);
     if (wasmReady && cameraReady) {
       return;
-    }  
+    }
     if (!wasmReady) {
       if (!callingWasm) {
         // NOTE: MAKE SURE THAT WASM IS ONLY LOADED ONCE
@@ -130,6 +133,7 @@ const Ready = () => {
     isValidCall,
     hasFinished,
     setHasFinished,
+    exposureValue,
   } = useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
@@ -510,6 +514,46 @@ const Ready = () => {
     predictUserOneFaWithLiveness();
   };
 
+  const {
+    enrollOneFaWithLivenessFaceDetected,
+    enrollOneFaWithLivenessStatus,
+    enrollOneFaWithLivenessData,
+    enrollUserOneFaWithLiveness,
+    enrollOneFaWithLivenessProgress,
+    enrollOneFaWithLivenessCheckStatus,
+  } = useEnrollOneFaWithLiveness("userVideo", () => {}, null, deviceId, setShowSuccess);
+
+  const handleEnrollOneFaWithLiveness = async () => {
+    setShowSuccess(false);
+    setCurrentAction("useEnrollOneFaWithLiveness");
+    enrollUserOneFaWithLiveness();
+  };
+
+  // Face Login
+  const { doFaceLogin, faceLoginData, faceLoginFaceDetected, faceLoginMessage, faceLoginStatus } = useFaceLogin("userVideo", () => {}, null, deviceId, setShowSuccess);
+
+  const handleFaceLogin = async () => {
+    setShowSuccess(false);
+    setCurrentAction("useFaceLogin");
+    doFaceLogin();
+  };
+
+  // Face Login With Liveness
+  const {
+    faceLoginLivenessCheck,
+    faceLoginWithLiveness,
+    faceLoginWithLivenessData,
+    faceLoginWithLivenessFaceDetected,
+    faceLoginWithLivenessMessage,
+    faceLoginWithLivenessStatus,
+  } = useFaceLoginWithLivenessCheck(setShowSuccess);
+
+  const handleFaceLoginWithLiveness = async () => {
+    setShowSuccess(false);
+    setCurrentAction("useFaceLoginWithLiveness");
+    faceLoginWithLiveness();
+  };
+
   return (
     <>
       {deviceSupported.isChecking ? (
@@ -627,9 +671,45 @@ const Ready = () => {
                 </div>
               )}
 
+              {currentAction === "useEnrollOneFaWithLiveness" && (
+                <div>
+                  {console.log("HERE", {
+                    enrollOneFaWithLivenessFaceDetected,
+                    enrollOneFaWithLivenessStatus,
+                    enrollOneFaWithLivenessProgress,
+                    enrollOneFaWithLivenessData,
+                  })}
+                  <div>
+                    Enroll Face Detected:
+                    {enrollOneFaWithLivenessFaceDetected ? "Face Detected" : "No Face Detected"}
+                  </div>
+                  <div> Enroll Status: {enrollOneFaWithLivenessStatus} </div>
+                  <div> Progress: {`${enrollOneFaWithLivenessProgress} %`}</div>
+                  <div>
+                    Enroll GUID:&nbsp;
+                    {`${enrollOneFaWithLivenessData ? enrollOneFaWithLivenessData.PI.guid : ""}`}
+                  </div>
+                  <div>
+                    Enroll UUID:&nbsp;
+                    {`${enrollOneFaWithLivenessData ? enrollOneFaWithLivenessData.PI.uuid : ""}`}
+                  </div>
+                  <div>
+                    Liveness Check:{" "}
+                    {`${
+                      enrollOneFaWithLivenessCheckStatus === 0
+                        ? "Real"
+                        : enrollOneFaWithLivenessCheckStatus === 1
+                        ? "Spoof"
+                        : "Face not found"
+                    }`}
+                  </div>
+                </div>
+              )}
+
               {currentAction === "isValid" && (
                 <div>
                   <div>{`Face Valid: ${isValidFaceDetected}`}</div>
+                  <div>{`Exposure: ${exposureValue}`}</div>
                 </div>
               )}
 
@@ -653,16 +733,51 @@ const Ready = () => {
 
               {currentAction === "usePredictOneFaWithLiveness" && (
                 <div>
-                  <div>{`Face Valid: ${predictOneFaaceDetectedWithLiveness ? "Face Detected" : "Face not detected"}`}</div>
+                  <div>{`Face Valid: ${
+                    predictOneFaaceDetectedWithLiveness ? "Face Detected" : "Face not detected"
+                  }`}</div>
                   <div>{`Message: ${predictMessageWithLiveness || ""}`}</div>
-                  <div>{`Predicted GUID: ${predictOneFaDataWithLiveness ? predictOneFaDataWithLiveness.PI.guid : ""}`}</div>
-                  <div>{`Predicted UUID: ${predictOneFaDataWithLiveness ? predictOneFaDataWithLiveness.PI.uuid : ""}`}</div>
+                  <div>{`Predicted GUID: ${
+                    predictOneFaDataWithLiveness ? predictOneFaDataWithLiveness.PI.guid : ""
+                  }`}</div>
+                  <div>{`Predicted UUID: ${
+                    predictOneFaDataWithLiveness ? predictOneFaDataWithLiveness.PI.uuid : ""
+                  }`}</div>
                   <div>{`Liveness Check: ${
                     predictLivenessCheck === -1
                       ? "No Face Detected"
                       : predictLivenessCheck === 0
                       ? "Real"
                       : predictLivenessCheck === 1
+                      ? "Spoof"
+                      : ""
+                  }`}</div>
+                </div>
+              )}
+
+              {currentAction === "useFaceLogin" && (
+                <div>
+                  <div>{`Face Valid: ${faceLoginFaceDetected ? "Face Detected" : "Face not detected"}`}</div>
+                  <div>{`Message: ${faceLoginMessage || ""}`}</div>
+                  <div>{`Face Login GUID: ${faceLoginData ? faceLoginData.PI.guid : ""}`}</div>
+                  <div>{`Face Login UUID: ${faceLoginData ? faceLoginData.PI.uuid : ""}`}</div>
+                </div>
+              )}
+
+              {currentAction === "useFaceLoginWithLiveness" && (
+                <div>
+                  <div>{`Face Valid: ${
+                    faceLoginWithLivenessFaceDetected ? "Face Detected" : "Face not detected"
+                  }`}</div>
+                  <div>{`Message: ${faceLoginWithLivenessMessage || ""}`}</div>
+                  <div>{`Face Login GUID: ${faceLoginWithLivenessData ? faceLoginWithLivenessData.PI.guid : ""}`}</div>
+                  <div>{`Face Login UUID: ${faceLoginWithLivenessData ? faceLoginWithLivenessData.PI.uuid : ""}`}</div>
+                  <div>{`Liveness Check: ${
+                    faceLoginLivenessCheck === -1
+                      ? "No Face Detected"
+                      : faceLoginLivenessCheck === 0
+                      ? "Real"
+                      : faceLoginLivenessCheck === 1
                       ? "Spoof"
                       : ""
                   }`}</div>
@@ -761,11 +876,21 @@ const Ready = () => {
               <button className="button" onClick={handleEnrollOneFa}>
                 Enroll
               </button>
+              <button className="button" onClick={handleEnrollOneFaWithLiveness}>
+                Enroll with Liveness
+              </button>
+
               <button className="button" onClick={handlePredictOneFa}>
                 Predict
               </button>
               <button className="button" onClick={handlePredict1FaWithLiveness}>
                 Predict with Liveness
+              </button>
+              <button className="button" onClick={handleFaceLogin}>
+                Face Login
+              </button>
+              <button className="button" onClick={handleFaceLoginWithLiveness}>
+                Face Login with Liveness
               </button>
               <button className="button" onClick={handleContinuousPredict}>
                 Continuous Authentication
@@ -789,7 +914,33 @@ const Ready = () => {
                 Document Bounding Box
               </button>
             </div>
-
+            <div>
+              <p> Other Utilities: </p>
+              <button
+                className="button"
+                onClick={() => {
+                  navigate("/enroll_with_mugshot");
+                }}
+              >
+                Enroll with Mugshot
+              </button>
+              <button
+                className="button"
+                onClick={() => {
+                  navigate("/predict_with_mugshot");
+                }}
+              >
+                Predict with Mugshot
+              </button>
+              <button
+                className="button"
+                onClick={() => {
+                  navigate("/enroll_with_label");
+                }}
+              >
+                Enroll with Label
+              </button>
+            </div>
             <div>
               <p> Upload 2 images to use compare: </p>
               <label>

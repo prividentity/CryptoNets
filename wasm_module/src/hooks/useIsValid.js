@@ -4,9 +4,14 @@ import { isValid } from "@privateid/cryptonets-web-sdk";
 const useIsValid = (element = "userVideo", deviceId = null) => {
   const [faceDetected, setFaceDetected] = useState(false);
   const [hasFinished, setHasFinished] = useState(false);
+  const [exposureValue, setExposureValue] = useState(0);
   const isValidCall = async () => {
     // eslint-disable-next-line no-unused-vars
-    await isValid(callback);
+    await isValid(callback, null, {
+      threshold_image_too_bright: 0.95,
+      threshold_image_too_dark: 0.05,
+      input_image_format: "rgba",
+    });
   };
 
   const callback = async (result) => {
@@ -27,13 +32,14 @@ const useIsValid = (element = "userVideo", deviceId = null) => {
             setFaceDetected(false);
           }
         }
+        setExposureValue(result?.returnValue?.exposure);
         setHasFinished(true);
         break;
       default:
     }
   };
 
-  return { faceDetected, isValidCall, hasFinished, setHasFinished };
+  return { faceDetected, isValidCall, hasFinished, setHasFinished, exposureValue };
 };
 
 export default useIsValid;
