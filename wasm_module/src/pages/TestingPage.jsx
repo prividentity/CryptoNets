@@ -932,6 +932,14 @@ const Ready = () => {
               >
                 Predict with Mugshot
               </button>
+              <button
+                className="button"
+                onClick={() => {
+                  navigate("/enroll_with_label");
+                }}
+              >
+                Enroll with Label
+              </button>
             </div>
             <div>
               <p> Upload 2 images to use compare: </p>
