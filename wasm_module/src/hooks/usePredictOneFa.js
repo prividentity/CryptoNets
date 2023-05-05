@@ -6,6 +6,7 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
   const [predictOneFaStatus, setPredictStatus] = useState(null);
   const [predictOneFaData, setPredictData] = useState(null);
   const [predictMessage, setPredictMessage] = useState('');
+  const [predictUserIdentifier, setPredictUserIdentifier] = useState([]);
 
   const predictUserOneFa = async () => {
     setFaceDetected(false);
@@ -35,6 +36,9 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
           onSuccess(result.returnValue);
           setFaceDetected(true);
           setShowSuccess(true);
+          if(result?.returnValue?.user_identifier_list){
+            setPredictUserIdentifier(result?.returnValue?.user_identifier_list);
+          }
         }
         if (result.returnValue?.status !== 0) {
           const {validation_status, message}  = result.returnValue;
@@ -61,6 +65,7 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
     predictOneFaData,
     predictUserOneFa,
     predictMessage,
+    predictUserIdentifier,
   };
 };
 

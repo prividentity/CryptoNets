@@ -116,8 +116,14 @@ const EnrollWithLabel = () => {
   };
 
   // Predict One FA
-  const { predictMessage, predictOneFaData, predictOneFaStatus, predictOneFaaceDetected, predictUserOneFa } =
-    usePredictOneFa("userVideo", () => {}, null, deviceId, setShowSuccess);
+  const {
+    predictMessage,
+    predictOneFaData,
+    predictOneFaStatus,
+    predictOneFaaceDetected,
+    predictUserOneFa,
+    predictUserIdentifier,
+  } = usePredictOneFa("userVideo", () => {}, null, deviceId, setShowSuccess);
 
   const handleReopenCamera = async () => {
     setReady(false);
@@ -249,6 +255,12 @@ const EnrollWithLabel = () => {
                   <div>{`Message: ${predictMessage || ""}`}</div>
                   <div>{`Predicted GUID: ${predictOneFaData ? predictOneFaData.PI.guid : ""}`}</div>
                   <div>{`Predicted UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
+                  <div> Identifiers: </div>
+                  <ul>
+                    {predictUserIdentifier &&
+                      predictUserIdentifier.length > 0 &&
+                      predictUserIdentifier.map((value) => <li>{value}</li>)}
+                  </ul>
                 </div>
               )}
 

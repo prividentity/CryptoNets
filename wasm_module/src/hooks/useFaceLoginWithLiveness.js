@@ -53,6 +53,7 @@ const useFaceLoginWithLivenessCheck = (setShowSuccess) => {
             }
             setFaceDetected(hasValidFace);
             setPredictStatus(null);
+            setPredictData(null);
           }
           break;
         default:
