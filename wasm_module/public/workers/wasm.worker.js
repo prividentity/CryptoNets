@@ -394,11 +394,7 @@ const FHE_enrollOnefa = async (originalImages, simd, debug_type = 0, cb, config 
       originalImages[0].data.length /* size of one image */,
       originalImages[0].width /* width of one image */,
       originalImages[0].height /* height of one image */,
-      null /* embeddings output */,
-      null /* length of embeddings out */,
       true /* remove bad embeddings flag */,
-      null /* augmentations out buffer */,
-      null /* length of augmentations out buffer */,
       resultFirstPtr /* operation result output buffer */,
       resultLenPtr /* operation result buffer length */,
     );
@@ -454,11 +450,7 @@ const FHE_predictOnefa = async (originalImages, simd, debug_type = 0, cb, config
       originalImages[0].data.length /* size of one image */,
       originalImages[0].width /* width of one image */,
       originalImages[0].height /* height of one image */,
-      null /* embeddings output */,
-      null /* length of embeddings out */,
       true /* remove bad embeddings flag */,
-      null /* augmentations out buffer */,
-      null /* length of augmentations out buffer */,
       resultFirstPtr /* operation result output buffer */,
       resultLenPtr /* operation result buffer length */,
     );
@@ -601,7 +593,7 @@ const prividAgePredict = async (
       resultLenPtr,
     );
   } catch (e) {
-    console.log('_____ PREDICT AGE: ', result);
+    console.log('_____ PREDICT AGE: ', e);
   }
 
   wasmPrivModule._free(isValidPtr);
@@ -861,7 +853,7 @@ const output_ptr = function () {
      */
     outer_ptr: () => {
       // TODO: may be used SharedArrayBuffer() instead
-      // allocate memory the expected pointer (outer pointer or container)  
+      // allocate memory the expected pointer (outer pointer or container)
       if (!out_ptr) out_ptr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
       return out_ptr;
     },
@@ -872,10 +864,10 @@ const output_ptr = function () {
     inner_ptr: () => {
       //  If we did not allocate yet the output buffer return null
       if (!out_ptr) return null;
-      // if we already have our inner pointer for this closure return it 
+      // if we already have our inner pointer for this closure return it
       if (in_ptr) return in_ptr;
       // Access  the outer pointer as an arry of uint32 which conatin a single cell
-      // whose value is the pointer allocated in the wasm module (inner pointer of the output param)      
+      // whose value is the pointer allocated in the wasm module (inner pointer of the output param)
       // and return it
       [in_ptr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, out_ptr, 1);
       return in_ptr;
@@ -907,7 +899,7 @@ async function initializeWasmSession(url, key, debug_type) {
 
     // get our inner session created by wasm and free the outer container ptr
     wasmSession = session_out_ptr.inner_ptr();
-    
+
     await wasmPrivModule._privid_set_default_configuration(wasmSession, 1);
     if (setCache) {
       await setCacheConfiguration();
