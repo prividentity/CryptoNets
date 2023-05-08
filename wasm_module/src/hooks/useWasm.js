@@ -10,7 +10,7 @@ const useWasm = () => {
   const init = async () => {
     const apiKey = getUrlParameter("api_key", null);
     const apiUrl = getUrlParameter("api_url", null);
-    const isSupported = await loadPrivIdModule(apiUrl, apiKey);
+    const isSupported = await loadPrivIdModule(apiUrl, apiKey, null, null, null, null, true);
     if (isSupported.support){
       setReady(true);
       setDeviceSupported({supported: true, isChecking:false});
