@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
+import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk-test";
 import { getScaledBoundingBox } from "../utils";
 
 const useScanFrontWithBoundingBox = (setShowSuccess, onMugshotSuccess) => {
