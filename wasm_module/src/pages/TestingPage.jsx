@@ -37,6 +37,7 @@ import usePredictOneFaWithLivenessCheck from "../hooks/usePredictOneFaWithLivene
 import useEnrollOneFaWithLiveness from "../hooks/useEnrollOneFaWithLivenessCheck";
 import useFaceLogin from "../hooks/useFaceLogin";
 import useFaceLoginWithLivenessCheck from "../hooks/useFaceLoginWithLiveness";
+import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
 
 let callingWasm = false;
 const Ready = () => {
@@ -554,6 +555,15 @@ const Ready = () => {
     faceLoginWithLiveness();
   };
 
+  // Scan Healthcare Card
+  const { croppedDocumentBase64,doScanHealthcareCard } = useScanHealthcareCard();
+
+  const handleUseScanHealhcareCard = async () => {
+    setShowSuccess(false);
+    setCurrentAction("useScanHealthcareCard");
+    doScanHealthcareCard();
+  }
+
   return (
     <>
       {deviceSupported.isChecking ? (
@@ -629,7 +639,8 @@ const Ready = () => {
                 className={
                   (currentAction === "useScanDocumentFront" ||
                   currentAction === "useScanDocumentBack" ||
-                  currentAction === "useScanDocumentFrontValidity"
+                  currentAction === "useScanDocumentFrontValidity" ||
+                  currentAction === "useScanHealthcareCard"
                     ? `cameraDisplay`
                     : `cameraDisplay mirrored`) +
                   " " +
@@ -910,8 +921,8 @@ const Ready = () => {
               <button className="button" onClick={handleCompareImages}>
                 Compare Flow
               </button>
-              <button className="button" onClick={handleBoundingBox}>
-                Document Bounding Box
+              <button className="button" onClick={handleUseScanHealhcareCard}>
+                Healthcare Card Scan
               </button>
             </div>
             <div>
