@@ -1,6 +1,6 @@
 import { convertCroppedImage, scanHealthcareCard } from "@privateid/cryptonets-web-sdk-alpha";
 import React, { useEffect, useState } from "react";
-
+let scanOnce =false;
 const useScanHealthcareCard = (setShowSuccess = () => {}) => {
   // cropped document base 64
   const [croppedDocumentBase64, setCroppedDocumentBase64] = useState(null);
@@ -31,10 +31,10 @@ const useScanHealthcareCard = (setShowSuccess = () => {}) => {
 
     console.log('======= Healthcare Card Scan Result: ==================');
     console.log('result.returnValue.conf_level : ' + result.returnValue.conf_level);
-    console.log('result.op_status: ' + result.returnValue.op_status);
+    console.log('result.returnValue.op_status: ' + result.returnValue.op_status);
     console.log('======================================================');
 
-    if (result.returnValue.conf_level < 0.8 && result.op_status===0){
+    if (result.returnValue.conf_level < 0.8 && result.returnValue.op_status===0){
       console.log('=======PROBLEMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM==================\n');
       console.log(result);
       console.log('======================================================\n');
@@ -53,16 +53,19 @@ const useScanHealthcareCard = (setShowSuccess = () => {}) => {
       setCroppedDocumentImageData(null);
       setCroppedDocumentHeight(null);
       setCroppedDocumentWidth(null);
-      doScanHealthcareCard();
+      if(!scanOnce){
+        doScanHealthcareCard();
+      } 
     }
   };
 
-  const doScanHealthcareCard = async () => {
+  const doScanHealthcareCard = async (image) => {
     setCroppedDocumentHeight(null);
     setCroppedDocumentWidth(null);
+    if(image) scanOnce = true;
     const { croppedDocument } = await scanHealthcareCard(callback, { input_image_format: "rgba",
     thresholdConfScoreDoc: 0.8,
-});
+}, image);
     setCroppedDocumentImageData(croppedDocument);
   };
 
