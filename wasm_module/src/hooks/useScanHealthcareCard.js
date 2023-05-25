@@ -64,7 +64,7 @@ const useScanHealthcareCard = (setShowSuccess = () => {}) => {
     setCroppedDocumentWidth(null);
     if(image) scanOnce = true;
     const { croppedDocument } = await scanHealthcareCard(callback, { input_image_format: "rgba",
-    conf_score_thr_doc: 0.8,
+    conf_score_thr_doc: 0.9,
 }, image);
     setCroppedDocumentImageData(croppedDocument);
   };
