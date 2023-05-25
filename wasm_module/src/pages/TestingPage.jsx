@@ -556,7 +556,7 @@ const Ready = () => {
   };
 
   // Scan Healthcare Card
-  const { croppedDocumentBase64,doScanHealthcareCard } = useScanHealthcareCard();
+  const { croppedDocumentBase64,doScanHealthcareCard } = useScanHealthcareCard(setShowSuccess);
 
   const handleUseScanHealhcareCard = async () => {
     setShowSuccess(false);
@@ -974,7 +974,7 @@ const Ready = () => {
                 Healthcare Card Scan
               </button>
 
-              <label>
+              {/* <label>
                 <input
                   type="file"
                   name="upload"
@@ -983,7 +983,7 @@ const Ready = () => {
                   style={{ display: "none" }}
                 />
                 <span className="button">Upload Image Use Healthcare Scan</span>
-              </label>
+              </label> */}
             </div>
             <div>
               <p> Other Utilities: </p>
