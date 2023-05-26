@@ -38,6 +38,7 @@ import useEnrollOneFaWithLiveness from "../hooks/useEnrollOneFaWithLivenessCheck
 import useFaceLogin from "../hooks/useFaceLogin";
 import useFaceLoginWithLivenessCheck from "../hooks/useFaceLoginWithLiveness";
 import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
+import { antispoofCheck } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
 
 let callingWasm = false;
 const Ready = () => {
@@ -556,7 +557,7 @@ const Ready = () => {
   };
 
   // Scan Healthcare Card
-  const { croppedDocumentBase64,doScanHealthcareCard } = useScanHealthcareCard();
+  const { croppedDocumentBase64,doScanHealthcareCard } = useScanHealthcareCard(setShowSuccess);
 
   const handleUseScanHealhcareCard = async () => {
     setShowSuccess(false);
@@ -606,6 +607,55 @@ const Ready = () => {
           const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
           console.log("imageData", imageData);
           doScanHealthcareCard(imageData);
+        };
+      } else {
+        console.log("INVALID IMAGE TYPE");
+      }
+    }
+  };
+
+  const handleUploadDoAntispoofCheck = async (e) => {
+    console.log(e.target.files);
+    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
+    if (e.target.files.length > 0) {
+      if (imageRegex.test(e.target.files[0].type)) {
+        const imageUrl = URL.createObjectURL(e.target.files[0]);
+
+        console.log(e.target.files[0]);
+
+        const getBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+
+            reader.onload = function () {
+              resolve(reader.result);
+            };
+            reader.onerror = function (error) {
+              reject(error);
+            };
+          });
+        };
+
+        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
+        var newImg = new Image();
+        newImg.src = base64;
+        newImg.onload = async () => {
+          var imgSize = {
+            w: newImg.width,
+            h: newImg.height,
+          };
+          alert(imgSize.w + " " + imgSize.h);
+          const canvas = document.createElement("canvas");
+          canvas.setAttribute("height", `${imgSize.h}`);
+          canvas.setAttribute("width", `${imgSize.w}`);
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(newImg, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
+          console.log("imageData", imageData);
+          const livenssResult = await antispoofCheck(imageData.data, imageData.width, imageData.height);
+          console.log("LIVENESS: ", livenssResult);
         };
       } else {
         console.log("INVALID IMAGE TYPE");
@@ -973,8 +1023,8 @@ const Ready = () => {
               <button className="button" onClick={handleUseScanHealhcareCard}>
                 Healthcare Card Scan
               </button>
-
-              <label>
+              
+              {/* <label>
                 <input
                   type="file"
                   name="upload"
@@ -983,6 +1033,17 @@ const Ready = () => {
                   style={{ display: "none" }}
                 />
                 <span className="button">Upload Image Use Healthcare Scan</span>
+              </label> */}
+
+               <label>
+                <input
+                  type="file"
+                  name="upload"
+                  accept="image/png, image/gif, image/jpeg"
+                  onChange={handleUploadDoAntispoofCheck}
+                  style={{ display: "none" }}
+                />
+                <span className="button">Upload Image Use Antispoof Check</span>
               </label>
             </div>
             <div>
