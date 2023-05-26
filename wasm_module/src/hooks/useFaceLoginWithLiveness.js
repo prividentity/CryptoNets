@@ -25,7 +25,7 @@ const useFaceLoginWithLivenessCheck = (setShowSuccess) => {
   const callback = async (result) => {
     const { livenessCheck } = result;
     setPredictLivenvessCheck(livenessCheck);
-
+    console.log("LIVENESS RESULT:", livenessCheck);
     if (livenessCheck === 0) {
       switch (result.status) {
         case "WASM_RESPONSE":

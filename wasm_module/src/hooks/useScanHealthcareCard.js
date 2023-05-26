@@ -11,12 +11,20 @@ const useScanHealthcareCard = (setShowSuccess = () => {}) => {
   const [croppedDocumentHeight, setCroppedDocumentHeight] = useState(null);
   const [croppedDocumentWidth, setCroppedDocumentWidth] = useState(null);
 
-  const doConvert = async (data, width, height) => {
+  // input image base 64
+  const [inputImageBase64, setTnputImageBase64] = useState(null);
+
+  // Data
+  const [inputImageData, setInputImageData] = useState(null);
+  const [inputImagetHeight, setInputImagetHeight] = useState(null);
+  const [inputImageWidth, setInputImageWidth] = useState(null);
+
+  const doConvert = async (data, width, height, setState = () => {}, messege = "Image:") => {
     try {
       if (width * height * 4 === data.length) {
         const result = await convertCroppedImage(data, width, height);
-        console.log("Cropped Healthcare Card:", result);
-        setCroppedDocumentBase64(result);
+        console.log(messege, result);
+        setState(result);
       }
     } catch (e) {
       console.log(e);
@@ -25,9 +33,21 @@ const useScanHealthcareCard = (setShowSuccess = () => {}) => {
 
   useEffect(() => {
     if ((scanHealthcareCardSuccess, croppedDocumentImageData && croppedDocumentHeight && croppedDocumentWidth)) {
-      doConvert(croppedDocumentImageData, croppedDocumentWidth, croppedDocumentHeight);
+      doConvert(
+        croppedDocumentImageData,
+        croppedDocumentWidth,
+        croppedDocumentHeight,
+        setCroppedDocumentBase64,
+        "croppedDocument: "
+      );
     }
   }, [scanHealthcareCardSuccess, croppedDocumentImageData, croppedDocumentHeight, croppedDocumentWidth]);
+
+  useEffect(() => {
+    if ((scanHealthcareCardSuccess, inputImageData && inputImagetHeight && inputImageWidth)) {
+      doConvert(inputImageData, inputImageWidth, inputImagetHeight, setInputImageData, "inputImage: ");
+    }
+  }, [scanHealthcareCardSuccess, inputImageData, inputImagetHeight, inputImageWidth]);
 
   const callback = (result) => {
     console.log("Healthcare Card Scan Result:", result);
@@ -47,6 +67,8 @@ const useScanHealthcareCard = (setShowSuccess = () => {}) => {
       setCroppedDocumentHeight(result.returnValue.cropped_doc_height);
       setCroppedDocumentWidth(result.returnValue.cropped_doc_width);
       setScanHealthcareCardSuccess(true);
+      setInputImageWidth(result.returnValue.image_width);
+      setInputImagetHeight(result.returnValue.image_height);
     } else {
       setCroppedDocumentImageData(null);
       setCroppedDocumentHeight(null);
@@ -61,15 +83,15 @@ const useScanHealthcareCard = (setShowSuccess = () => {}) => {
     setCroppedDocumentHeight(null);
     setCroppedDocumentWidth(null);
     if (image) scanOnce = true;
-    const { croppedDocument } = await scanHealthcareCard(
-      callback,
-      { input_image_format: "rgba", conf_score_thr_doc: 0.9 },
-      image
-    );
+    const result  = await scanHealthcareCard(callback, { input_image_format: "rgba" }, image);
+    const {imageData, croppedDocument } = result;
+    console.log("Result:", result);
     setCroppedDocumentImageData(croppedDocument);
+    setInputImageData(imageData);
   };
 
   return {
+    inputImageBase64,
     croppedDocumentBase64,
     doScanHealthcareCard,
   };
