@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { enroll1FA } from "@privateid/cryptonets-web-sdk";
+import { convertCroppedImage, enroll1FA } from "@privateid/cryptonets-web-sdk";
+
 
 const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess) => {
   const [faceDetected, setFaceDetected] = useState(false);
@@ -18,9 +19,12 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
     setProgress(0);
     setEnrollData(null);
     // eslint-disable-next-line no-unused-vars
-    await enroll1FA(callback, config || {
+   const {imageData, height, width} = await enroll1FA(callback, config || {
       send_original_images: false,
     });
+   if(imageData) {
+     setEnrollImageData(new ImageData(imageData, width, height));
+   }
   };
 
   const callback = async (result) => {
@@ -51,8 +55,8 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
           setEnrollStatus("ENROLL SUCCESS");
           setEnrollData(result.returnValue);
           onSuccess(result.returnValue);
-          setEnrollPortrait(result.portrait);
-          convertBase64ToImageData(result.portrait, setEnrollImageData);
+          // setEnrollPortrait(result.portrait);
+          // convertBase64ToImageData(result.portrait, setEnrollImageData);
           setShowSuccess(true);
         }
         if (

@@ -13,17 +13,14 @@ const useScanBackDocument = (setShowSuccess) => {
 
   // Cropped Document
   const [croppedDocumentImageData, setCroppedDocumentImageData] = useState(null);
-  const [croppedDocumentWidth, setCropedDocumentWidth] = useState(null);
-  const [croppedDocumentHeight, setCroppedDocumentHeight] = useState(null);
   const [croppedDocumentImage, setCroppedDocumentImage] = useState(null);
 
   // Cropped Barcode
   const [croppedBarcodeImageData, setCroppedBarcodeImageData] = useState(null);
-  const [croppedBarcodeWidth, setCroppedBarcodeWidth] = useState(null);
-  const [croppedBarcodeHeight, setCroppedBarcodeHeight] = useState(null);
   const [croppedBarcodeImage, setCroppedBarcodeImage] = useState(null);
 
   const [barcodeStatusCode, setBarcodeStatusCode] = useState(null);
+  const [returnValue, setResultValue] = useState(null);
 
   const documentCallback = (result) => {
     console.log("--------- Back scan callback result:", result);
@@ -43,10 +40,10 @@ const useScanBackDocument = (setShowSuccess) => {
           city,
           postCode,
           issuingCountry,
-          crop_doc_width,
-          crop_doc_height,
-          crop_barcode_width,
-          crop_barcode_height,
+          // crop_doc_width,
+          // crop_doc_height,
+          // crop_barcode_width,
+          // crop_barcode_height,
         } = result.returnValue;
         const finalResult = {
           firstName,
@@ -61,59 +58,21 @@ const useScanBackDocument = (setShowSuccess) => {
           postCode,
           issuingCountry,
         };
-        setCropedDocumentWidth(crop_doc_width);
-        setCroppedDocumentHeight(crop_doc_height);
-        setCroppedBarcodeWidth(crop_barcode_width);
-        setCroppedBarcodeHeight(crop_barcode_height);
+        setResultValue(result.returnValue);
+        // setCropedDocumentWidth(crop_doc_width);
+        // setCroppedDocumentHeight(crop_doc_height);
+        // setCroppedBarcodeWidth(crop_barcode_width);
+        // setCroppedBarcodeHeight(crop_barcode_height);
         setIsFound(true);
         setScannedCodeData(finalResult);
         setShowSuccess(true);
-        return finalResult;
-      } else if (result.returnValue.op_status === 3) {
-        const {
-          firstName,
-          middleName,
-          lastName,
-          dateOfBirth,
-          gender,
-          streetAddress1,
-          streetAddress2,
-          state,
-          city,
-          postCode,
-          issuingCountry,
-          crop_doc_width,
-          crop_doc_height,
-          crop_barcode_width,
-          crop_barcode_height,
-        } = result.returnValue;
-        const finalResult = {
-          firstName,
-          middleName,
-          lastName,
-          dateOfBirth,
-          gender,
-          streetAddress1,
-          streetAddress2,
-          state,
-          city,
-          postCode,
-          issuingCountry,
-        };
-        setCropedDocumentWidth(crop_doc_width);
-        setCroppedDocumentHeight(crop_doc_height);
-        setCroppedBarcodeWidth(crop_barcode_width);
-        setCroppedBarcodeHeight(crop_barcode_height);
-        setIsFound(true);
-        setScannedCodeData(finalResult);
-        setShowSuccess(true);
-        scanBackDocument();
         return finalResult;
       } else {
-        setCropedDocumentWidth(null);
-        setCroppedDocumentHeight(null);
-        setCroppedBarcodeWidth(null);
-        setCroppedBarcodeHeight(null);
+        setResultValue(null);
+        // setCropedDocumentWidth(null);
+        // setCroppedDocumentHeight(null);
+        // setCroppedBarcodeWidth(null);
+        // setCroppedBarcodeHeight(null);
       }
     }
     setCroppedDocumentImageData(null);
@@ -131,26 +90,31 @@ const useScanBackDocument = (setShowSuccess) => {
   };
 
   useEffect(() => {
-    if (isFound && croppedDocumentImageData && croppedDocumentWidth && croppedDocumentHeight) {
-      convertImageData(croppedDocumentImageData, croppedDocumentWidth, croppedDocumentHeight, setCroppedDocumentImage);
+    if (isFound && croppedDocumentImageData && returnValue) {
+      convertImageData(
+        croppedDocumentImageData,
+        returnValue.crop_doc_width,
+        returnValue.crop_doc_height,
+        setCroppedDocumentImage
+      );
     }
-  }, [isFound, croppedDocumentImageData, croppedDocumentWidth, croppedDocumentHeight]);
+  }, [isFound, croppedDocumentImageData, returnValue]);
 
   useEffect(() => {
-    if (isFound && croppedBarcodeImageData && croppedBarcodeWidth && croppedBarcodeHeight) {
+    if (isFound && croppedBarcodeImageData && returnValue) {
       convertImageData(
         croppedBarcodeImageData,
-        croppedBarcodeWidth,
-        croppedBarcodeHeight,
+        returnValue.crop_barcode_width,
+        returnValue.crop_barcode_height,
         setCroppedBarcodeImage,
         "Barcode:"
       );
     }
-  }, [isFound, croppedBarcodeImageData, croppedBarcodeWidth, croppedBarcodeHeight]);
+  }, [isFound, croppedBarcodeImageData, returnValue]);
 
   useEffect(() => {
     if (isFound && inputImageData) {
-      convertImageData(inputImageData.data, inputImageData.width, inputImageData.height, setInputImage);
+      convertImageData(inputImageData, returnValue.image_width, returnValue.image_height, setInputImage);
     }
   }, [isFound, inputImageData]);
 
@@ -170,12 +134,15 @@ const useScanBackDocument = (setShowSuccess) => {
       documentCallback,
       true,
       undefined,
-        { document_scan_barcode_only: true},
+      { document_scan_barcode_only: true },
       canvasObj
     );
-    setCroppedDocumentImageData(croppedDocument);
-    setCroppedBarcodeImageData(croppedBarcode);
-    setInputImageData(imageData);
+    console.log({croppedBarcode, croppedDocument, imageData})
+    if(croppedBarcode && croppedDocument && imageData){
+      setCroppedDocumentImageData(croppedDocument);
+      setCroppedBarcodeImageData(croppedBarcode);
+      setInputImageData(imageData);
+    }
   };
 
   return { scanBackDocument, scannedCodeData, isFound, croppedDocumentImage, croppedBarcodeImage, barcodeStatusCode };
