@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { faceLogin } from "@privateid/cryptonets-web-sdk-alpha";
+import { faceLogin } from "@privateid/cryptonets-web-sdk";
 
 const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess) => {
   const [faceLoginFaceDetected, setFaceDetected] = useState(false);
