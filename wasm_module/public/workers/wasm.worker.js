@@ -19,18 +19,15 @@ let wasmSession = null;
 let setCache = true;
 let checkWasmLoaded = false;
 let wasmPrivAntispoofModule;
-let AntispoofVersion = 2;
+let antispoofVersion;
 
-const isLoad = (simd, url, key, module, debug_type, cacheConfig = true, liveness = false, antispoof_version) =>
+const isLoad = (simd, url, key, module, debug_type, cacheConfig = true, liveness = false) =>
   new Promise(async (resolve, reject) => {
     apiUrl = url;
     apiKey = key;
     wasmModule = module;
     if (debug_type) {
       debugType = debug_type;
-    }
-    if (antispoof_version) {
-      AntispoofVersion = antispoof_version;
     }
     setCache = cacheConfig;
     const modulePath = simd ? 'simd' : 'noSimd';
@@ -45,6 +42,9 @@ const isLoad = (simd, url, key, module, debug_type, cacheConfig = true, liveness
       const cachedAntispoofModule = await readKey('antispoof');
       const fetchdWasmVersion = await fetch(`../wasm/${module}/${modulePath}/version.json`);
       const fetchdVersion = await fetchdWasmVersion.json();
+      const fetchdAntispoofVersion = await fetch(`../../wasm/${module}/${modulePath}/${'antispoof'}/version.json`);
+      const antispoofFetchedJson = await fetchdAntispoofVersion.json();
+      antispoofVersion = antispoofFetchedJson.version;
       console.log(
         `check version ${`${
           cachedModule ? cachedModule?.version.toString() : 'no cached version'
@@ -62,17 +62,13 @@ const isLoad = (simd, url, key, module, debug_type, cacheConfig = true, liveness
         }
         if (liveness) {
           if (!wasmPrivAntispoofModule) {
-            if (!antispoof_version) {
-              if (cachedAntispoofModule) {
-                const { cachedWasm, cachedScript } = cachedAntispoofModule;
-                eval(cachedScript);
-                wasmPrivAntispoofModule = await createTFLiteModule({ wasmBinary: cachedWasm });
-                await wasmPrivAntispoofModule._loadModels();
-              } else {
-                await loadAntispoof(simd, fetchdVersion?.version.toString());
-              }
+            if (cachedAntispoofModule && antispoofVersion === cachedAntispoofModule.version) {
+              const { cachedWasm, cachedScript } = cachedAntispoofModule;
+              eval(cachedScript);
+              wasmPrivAntispoofModule = await createTFLiteModule({ wasmBinary: cachedWasm });
+              await wasmPrivAntispoofModule._loadModels();
             } else {
-              await loadAntispoof(simd, fetchdVersion?.version.toString());
+              await loadAntispoof(simd);
             }
           }
         }
@@ -93,16 +89,16 @@ const isLoad = (simd, url, key, module, debug_type, cacheConfig = true, liveness
     }
   });
 
-const loadAntispoof = async (simd, version = '') => {
+const loadAntispoof = async (simd) => {
   const path = simd ? 'simd' : 'noSimd';
   const filename = simd ? 'antispoof' : 'antispoof_nosimd';
-  const wasm = await fetch(`../wasm/face_mask/${path}/antispoof/${AntispoofVersion}/${filename}.wasm`);
-  const script = await fetch(`../wasm/face_mask/${path}/antispoof/${AntispoofVersion}/${filename}.js`);
+  const wasm = await fetch(`../wasm/face_mask/${path}/antispoof/${filename}.wasm`);
+  const script = await fetch(`../wasm/face_mask/${path}/antispoof/${filename}.js`);
   const scriptBuffer = await script.text();
   const buffer = await wasm.arrayBuffer();
   eval(scriptBuffer);
   const module = await createTFLiteModule({ wasmBinary: buffer });
-  await putKey('antispoof', buffer, scriptBuffer, version);
+  await putKey('antispoof', buffer, scriptBuffer, antispoofVersion);
   wasmPrivAntispoofModule = module;
   await wasmPrivAntispoofModule._loadModels();
 };
@@ -272,10 +268,8 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
     croppedMugshotBufferFirstPtr,
     croppedMugshotBufferLenPtr,
   );
-  let imageBuffer = null;
-  if (croppedMugshotSize && croppedDocumentSize) {
-    imageBuffer = getBufferFromPtrImage(inputPtr, imageInputSize);
-  }
+
+  const imageBuffer = getBufferFromPtrImage(inputPtr, imageInputSize);
 
   wasmPrivModule._free(croppedDocumentBufferFirstPtr);
   wasmPrivModule._free(croppedDocumentBufferLenPtr);
@@ -487,16 +481,16 @@ const antispoofCheck = async (data, width, height) => {
 
   const imagePtr = wasmPrivAntispoofModule._malloc(imageSize);
   wasmPrivAntispoofModule.HEAP8.set(data, imagePtr / data.BYTES_PER_ELEMENT);
- 
+
   // const AntispoofVersion = wasmPrivAntispoofModule._get_version();
   try {
     is_spoof = wasmPrivAntispoofModule._predict(imagePtr, width, height);
-    
-    if(is_spoof === -2){
+
+    if (is_spoof === -2) {
       is_spoof = 1;
     }
-    if(is_spoof === -3){
-      is_spoof = -1
+    if (is_spoof === -3) {
+      is_spoof = -1;
     }
   } catch (e) {
     console.error('_predict', e);

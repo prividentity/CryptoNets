@@ -8,7 +8,8 @@ const useWasm = () => {
   const [ready, setReady] = useState(false);
   const [deviceSupported, setDeviceSupported] = useState({isChecking:true});
   const init = async () => {
-    const apiKey = getUrlParameter("api_key", null);
+    console.log(process.env.REACT_APP_API_KEY, process.env.REACT_APP_API_URL)
+    const apiKey = getUrlParameter("api_key", null) || process.env.REACT_APP_API_KEY;
     const apiUrl = getUrlParameter("api_url", null);
     const isSupported = await loadPrivIdModule(apiUrl, apiKey, null, null, null, null, true);
     if (isSupported.support){
