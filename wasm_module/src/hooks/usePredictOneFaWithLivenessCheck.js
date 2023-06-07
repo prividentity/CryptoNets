@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { predict1FA } from "@privateid/cryptonets-web-sdk-alpha";
+import { predict1FA } from "@privateid/cryptonets-web-sdk";
 
 const usePredictOneFaWithLivenessCheck = (setShowSuccess) => {
   const [predictOneFaaceDetected, setFaceDetected] = useState(false);

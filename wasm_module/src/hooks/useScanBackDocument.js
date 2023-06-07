@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
+import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk";
 import { CANVAS_SIZE } from "../utils";
 
 let internalCanvasSize;
 const useScanBackDocument = (setShowSuccess) => {
   const [scannedCodeData, setScannedCodeData] = useState(null);
   const [isFound, setIsFound] = useState(false);
+
+
 
   // Input image
   const [inputImageData, setInputImageData] = useState(null);

@@ -5,7 +5,7 @@ import {
   setStopLoopContinuousAuthentication,
   closeCamera,
   faceCompareLocal,
-} from "@privateid/cryptonets-web-sdk-alpha";
+} from "@privateid/cryptonets-web-sdk";
 
 import {
   useCamera,
@@ -38,7 +38,7 @@ import useEnrollOneFaWithLiveness from "../hooks/useEnrollOneFaWithLivenessCheck
 import useFaceLogin from "../hooks/useFaceLogin";
 import useFaceLoginWithLivenessCheck from "../hooks/useFaceLoginWithLiveness";
 import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
-import { antispoofCheck } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
+import { antispoofCheck } from "@privateid/cryptonets-web-sdk/dist/utils";
 
 let callingWasm = false;
 const Ready = () => {
