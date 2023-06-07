@@ -264,7 +264,7 @@ const Ready = () => {
   };
 
   // Scan Document Back
-  const { scanBackDocument, scannedCodeData, barcodeStatusCode } = useScanBackDocument(setShowSuccess);
+  const { scanBackDocument, scannedCodeData, barcodeStatusCode, croppedBarcodeImage:croppedBarcodeBase64, croppedDocumentImage:croppedBackDocumentBase64  } = useScanBackDocument(setShowSuccess);
   const handleScanDocumentBack = async () => {
     setShowSuccess(false);
     setCurrentAction("useScanDocumentBack");
@@ -663,6 +663,10 @@ const Ready = () => {
     }
   };
 
+  const handleCopyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+  }
+
   return (
     <>
       {deviceSupported.isChecking ? (
@@ -914,6 +918,18 @@ const Ready = () => {
                   <div>{`Street Address2: ${scannedCodeData ? scannedCodeData.streetAddress2 : ""}`}</div>
                   <div>{`City: ${scannedCodeData ? scannedCodeData.city : ""}`}</div>
                   <div>{`Postal Code: ${scannedCodeData ? scannedCodeData.postCode : ""}`}</div>
+                  <div style={{display:"flex", gap:"5px"}}>
+                    {croppedBarcodeBase64&&
+                      <button className="button" onClick={()=>{handleCopyToClipboard(croppedBarcodeBase64)}}>
+                        Copy Cropped Barcode Base64
+                      </button>
+                    }  
+                    {croppedBackDocumentBase64&&
+                      <button className="button" onClick={()=>{handleCopyToClipboard(croppedBackDocumentBase64)}}>
+                        Copy Cropped Document Base64
+                      </button>
+                    }  
+                  </div>
                 </div>
               )}
 
