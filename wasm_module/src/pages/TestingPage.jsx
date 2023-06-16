@@ -936,8 +936,8 @@ const Ready = () => {
 
               {currentAction === "useScanDocumentFrontValidity" && (
                 <div>
-                  <div>{`Status Code: ${frontScanData.returnValue.op_status}`}</div>
-                  <div>{`Status Message: ${getFrontDocumentStatusMessage(frontScanData.returnValue.op_status)}`} </div>
+                  <div>{`Status Code: ${frontScanData.returnValue.op_status? frontScanData.returnValue.op_status : ""}`}</div>
+                  <div>{`Status Message: ${getFrontDocumentStatusMessage(frontScanData.returnValue.op_status|| null)}`} </div>
                   <div>{`Document 4 corners found: ${
                     isfoundValidity ? "Document 4 corners available" : "not found"
                   }`}</div>
