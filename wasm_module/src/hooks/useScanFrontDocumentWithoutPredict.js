@@ -18,7 +18,7 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
   const [croppedDocumentImage, setCroppedDocumentImage] = useState(null);
   const [returnValue, setResultValue] = useState(null);
 
-  const [frontScanData, setFrontScanData] = useState({});
+  const [frontScanData, setFrontScanData] = useState(null);
 
   const documentCallback = (result) => {
     console.log("Front scan callback result:", result);
