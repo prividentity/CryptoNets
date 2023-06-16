@@ -38,7 +38,7 @@ import useEnrollOneFaWithLiveness from "../hooks/useEnrollOneFaWithLivenessCheck
 import useFaceLogin from "../hooks/useFaceLogin";
 import useFaceLoginWithLivenessCheck from "../hooks/useFaceLoginWithLiveness";
 import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
-import { antispoofCheck } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
+import { antispoofCheck, getFrontDocumentStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
 
 let callingWasm = false;
 const Ready = () => {
@@ -309,6 +309,7 @@ const Ready = () => {
     isMugshotFound,
     croppedDocumentImage,
     predictMugshotImage,
+    frontScanData,
   } = useScanFrontDocumentWithoutPredict(setShowSuccess);
 
   const handleFrontDLValidity = async () => {
@@ -935,6 +936,8 @@ const Ready = () => {
 
               {currentAction === "useScanDocumentFrontValidity" && (
                 <div>
+                  <div>{`Status Code: ${frontScanData.returnValue.op_status}`}</div>
+                  <div>{`Status Message: ${getFrontDocumentStatusMessage(frontScanData.returnValue.op_status)}`} </div>
                   <div>{`Document 4 corners found: ${
                     isfoundValidity ? "Document 4 corners available" : "not found"
                   }`}</div>

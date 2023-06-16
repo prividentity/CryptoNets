@@ -18,8 +18,11 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
   const [croppedDocumentImage, setCroppedDocumentImage] = useState(null);
   const [returnValue, setResultValue] = useState(null);
 
+  const [frontScanData, setFrontScanData] = useState({});
+
   const documentCallback = (result) => {
     console.log("Front scan callback result:", result);
+    setFrontScanData(result);
     if (
       // (result.returnValue.op_status === 0 || result.returnValue.op_status === 10) &&
       result.returnValue.conf_level > 0.95 &&
@@ -109,6 +112,7 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
     predictMugshotImageData,
     predictMugshotImage,
     croppedDocumentImage,
+    frontScanData,
   };
 };
 
