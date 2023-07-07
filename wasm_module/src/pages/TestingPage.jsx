@@ -5,6 +5,7 @@ import {
   setStopLoopContinuousAuthentication,
   closeCamera,
   faceCompareLocal,
+  documentMugshoFaceCompare,
 } from "@privateid/cryptonets-web-sdk-alpha";
 
 import {
@@ -464,7 +465,7 @@ const Ready = () => {
       console.log("COMPARE RESULT", result);
     };
 
-    await faceCompareLocal(callback, uploadImage1, uploadImage2);
+    await documentMugshoFaceCompare(callback, uploadImage1, uploadImage2);
   };
 
   const handleBoundingBox = async () => {

@@ -8,8 +8,6 @@ const useIsValid = (element = "userVideo", deviceId = null) => {
   const isValidCall = async () => {
     // eslint-disable-next-line no-unused-vars
     await isValid(callback, null, {
-      threshold_image_too_bright: 0.95,
-      threshold_image_too_dark: 0.05,
       input_image_format: "rgba",
     });
   };

@@ -1041,6 +1041,71 @@ const loadWasmModule = async (moduleType, modulePath, moduleName, saveCache) => 
   return module;
 };
 
+
+const prividDocumentMugshotFaceCompare = (imageInputA, imageInputB, simd, debug_type = 0, cb, config = {}) =>
+  new Promise(async (resolve) => {
+    privid_wasm_result = cb;
+    if (!wasmPrivModule) {
+      await isLoad(simd, apiUrl, apiKey, wasmModule, debugType);
+    }
+
+    // First Image A
+    const { data: imageDataA } = imageInputA;
+    const imageInputSizeA = imageDataA.length * imageDataA.BYTES_PER_ELEMENT;
+    const imageInputPtrA = wasmPrivModule._malloc(imageInputSizeA);
+    wasmPrivModule.HEAP8.set(imageDataA, imageInputPtrA / imageDataA.BYTES_PER_ELEMENT);
+
+    // Second Image B
+    const { data: imageDataB } = imageInputB;
+    const imageInputSizeB = imageDataB.length * imageDataB.BYTES_PER_ELEMENT;
+    const imageInputPtrB = wasmPrivModule._malloc(imageInputSizeB);
+    wasmPrivModule.HEAP8.set(imageDataB, imageInputPtrB / imageDataB.BYTES_PER_ELEMENT);
+
+    const encoder = new TextEncoder();
+    const config_bytes = encoder.encode(`${config}\0`);
+
+    const configInputSize = config.length;
+    const configInputPtr = wasmPrivModule._malloc(configInputSize);
+    wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
+
+    const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+    // create a pointer to interger to hold the length of the output buffer
+    const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+
+    // Initialize Session
+    // await initializeWasmSession(apiUrl, apiKey);
+
+    let result = null;
+    try {
+      result = wasmPrivModule._compare_mugshot_and_face(
+        wasmSession,
+        configInputPtr,
+        configInputSize,
+        // imageInputPtrA,
+        imageInputA.data.length,
+        imageInputA.width,
+        imageInputA.height,
+        // imageInputPtrB,
+        imageInputB.data.length,
+        imageInputB.width,
+        imageInputB.height,
+        resultFirstPtr,
+        resultLenPtr,
+      );
+    } catch (e) {
+      console.error('________ Doc mugshot face compare _______', e);
+    }
+
+    wasmPrivModule._privid_free_char_buffer(configInputPtr);
+    wasmPrivModule._free(imageInputPtrA);
+    wasmPrivModule._free(imageInputPtrB);
+    wasmPrivModule._free(resultFirstPtr);
+    wasmPrivModule._free(resultLenPtr);
+
+    resolve({ result });
+  });
+
+
 Comlink.expose({
   FHE_enrollOnefa,
   FHE_predictOnefa,
@@ -1056,4 +1121,5 @@ Comlink.expose({
   prividFaceISO,
   prividFaceCompareLocal,
   antispoofCheck,
+  prividDocumentMugshotFaceCompare,
 });
