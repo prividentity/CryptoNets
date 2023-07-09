@@ -38,7 +38,7 @@ import useEnrollOneFaWithLiveness from "../hooks/useEnrollOneFaWithLivenessCheck
 import useFaceLogin from "../hooks/useFaceLogin";
 import useFaceLoginWithLivenessCheck from "../hooks/useFaceLoginWithLiveness";
 import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
-import { antispoofCheck } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
+import { antispoofCheck, getFrontDocumentStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
 
 let callingWasm = false;
 const Ready = () => {
@@ -264,7 +264,7 @@ const Ready = () => {
   };
 
   // Scan Document Back
-  const { scanBackDocument, scannedCodeData, barcodeStatusCode } = useScanBackDocument(setShowSuccess);
+  const { scanBackDocument, scannedCodeData, barcodeStatusCode, croppedBarcodeImage:croppedBarcodeBase64, croppedDocumentImage:croppedBackDocumentBase64  } = useScanBackDocument(setShowSuccess);
   const handleScanDocumentBack = async () => {
     setShowSuccess(false);
     setCurrentAction("useScanDocumentBack");
@@ -309,6 +309,7 @@ const Ready = () => {
     isMugshotFound,
     croppedDocumentImage,
     predictMugshotImage,
+    frontScanData,
   } = useScanFrontDocumentWithoutPredict(setShowSuccess);
 
   const handleFrontDLValidity = async () => {
@@ -663,6 +664,10 @@ const Ready = () => {
     }
   };
 
+  const handleCopyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+  }
+
   return (
     <>
       {deviceSupported.isChecking ? (
@@ -914,11 +919,25 @@ const Ready = () => {
                   <div>{`Street Address2: ${scannedCodeData ? scannedCodeData.streetAddress2 : ""}`}</div>
                   <div>{`City: ${scannedCodeData ? scannedCodeData.city : ""}`}</div>
                   <div>{`Postal Code: ${scannedCodeData ? scannedCodeData.postCode : ""}`}</div>
+                  <div style={{display:"flex", gap:"5px"}}>
+                    {croppedBarcodeBase64&&
+                      <button className="button" onClick={()=>{handleCopyToClipboard(croppedBarcodeBase64)}}>
+                        Copy Cropped Barcode Base64
+                      </button>
+                    }  
+                    {croppedBackDocumentBase64&&
+                      <button className="button" onClick={()=>{handleCopyToClipboard(croppedBackDocumentBase64)}}>
+                        Copy Cropped Document Base64
+                      </button>
+                    }  
+                  </div>
                 </div>
               )}
 
               {currentAction === "useScanDocumentFrontValidity" && (
                 <div>
+                  <div>{`Status Code: ${frontScanData ? frontScanData.returnValue.op_status : ""}`}</div>
+                  <div>{`Status Message: ${frontScanData? getFrontDocumentStatusMessage(frontScanData.returnValue.op_status): ""}`} </div>
                   <div>{`Document 4 corners found: ${
                     isfoundValidity ? "Document 4 corners available" : "not found"
                   }`}</div>
