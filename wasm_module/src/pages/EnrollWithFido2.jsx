@@ -100,7 +100,6 @@ const EnrollWithLabel = (props) => {
     let attResp;
     try {
       const opts = await response.json();
-
       // printDebug(elemDebug, "Registration Options", JSON.stringify(opts, null, 2));
 
       // hideAuthForm();
@@ -108,12 +107,7 @@ const EnrollWithLabel = (props) => {
       attResp = await startRegistration(opts);
       // printDebug(elemDebug, "Registration Response", JSON.stringify(attResp, null, 2));
     } catch (error) {
-      console.log({ error });
-      // if (error.name === "InvalidStateError") {
-      //   elemError.innerText = "Error: Authenticator was probably already registered by user";
-      // } else {
-      //   elemError.innerText = error;
-      // }
+      setVerificationStatus(error);
 
       throw error;
     }
