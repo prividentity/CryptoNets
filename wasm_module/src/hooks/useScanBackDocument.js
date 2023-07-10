@@ -3,6 +3,7 @@ import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-s
 import { CANVAS_SIZE } from "../utils";
 
 let internalCanvasSize;
+let loop = true;
 const useScanBackDocument = (setShowSuccess) => {
   const [scannedCodeData, setScannedCodeData] = useState(null);
   const [isFound, setIsFound] = useState(false);
@@ -78,7 +79,9 @@ const useScanBackDocument = (setShowSuccess) => {
     setCroppedDocumentImageData(null);
     setCroppedBarcodeImageData(null);
     setInputImageData(null);
-    scanBackDocument();
+    if (loop) {
+      scanBackDocument();
+    }
   };
 
   const convertImageData = async (imageData, width, height, setState, message = "") => {
@@ -124,7 +127,8 @@ const useScanBackDocument = (setShowSuccess) => {
     }
   }, [croppedDocumentImage, croppedBarcodeImage, inputImage]);
 
-  const scanBackDocument = async (canvasSize) => {
+  const scanBackDocument = async (canvasSize, functionLoop = true) => {
+    loop = functionLoop;
     if (canvasSize && canvasSize !== internalCanvasSize) {
       internalCanvasSize = canvasSize;
     }
@@ -137,8 +141,8 @@ const useScanBackDocument = (setShowSuccess) => {
       { document_scan_barcode_only: true },
       canvasObj
     );
-    console.log({croppedBarcode, croppedDocument, imageData})
-    if(croppedBarcode && croppedDocument && imageData){
+    console.log({ croppedBarcode, croppedDocument, imageData });
+    if (croppedBarcode && croppedDocument && imageData) {
       setCroppedDocumentImageData(croppedDocument);
       setCroppedBarcodeImageData(croppedBarcode);
       setInputImageData(imageData);

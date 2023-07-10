@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { faceLogin } from "@privateid/cryptonets-web-sdk-alpha";
 
+let loop = true;
 const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess) => {
   const [faceLoginFaceDetected, setFaceDetected] = useState(false);
   const [faceLoginStatus, setPredictStatus] = useState(null);
   const [faceLoginData, setPredictData] = useState(null);
   const [faceLoginMessage, setPredictMessage] = useState("");
 
-  const doFaceLogin = async () => {
-    // setFaceDetected(false);
-    // setPredictData(null);
-    // eslint-disable-next-line no-unused-vars
+  const doFaceLogin = async (functionLoop = true) => {
+    loop = functionLoop;
+
     await faceLogin(callback, {
       input_image_format: "rgba",
     });
@@ -51,7 +51,9 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
         break;
       default:
     }
-    doFaceLogin();
+    if (loop) {
+      doFaceLogin();
+    }
   };
 
   return {

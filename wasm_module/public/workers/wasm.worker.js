@@ -882,6 +882,7 @@ async function initializeWasmSession(url, key, debug_type) {
     wasmSession = session_out_ptr.inner_ptr();
 
     await wasmPrivModule._privid_set_default_configuration(wasmSession, 1);
+    wasmPrivModule._privid_set_operation_debug_enabled(true);
     if (setCache) {
       await setCacheConfiguration();
     }
@@ -1081,12 +1082,12 @@ const prividDocumentMugshotFaceCompare = (imageInputA, imageInputB, simd, debug_
         wasmSession,
         configInputPtr,
         configInputSize,
-        // imageInputPtrA,
-        imageInputA.data.length,
+        imageInputPtrA,
+        // imageInputA.data.length,
         imageInputA.width,
         imageInputA.height,
-        // imageInputPtrB,
-        imageInputB.data.length,
+        imageInputPtrB,
+        // imageInputB.data.length,
         imageInputB.width,
         imageInputB.height,
         resultFirstPtr,

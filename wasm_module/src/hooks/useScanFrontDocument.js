@@ -4,6 +4,7 @@ import { CANVAS_SIZE } from "../utils";
 
 let internalCanvasSize;
 let triggerValue;
+let loop = true;
 const useScanFrontDocument = (setShowSuccess) => {
   const [isFound, setIsFound] = useState(false);
   const [resultStatus, setResultStatus] = useState(null);
@@ -103,10 +104,11 @@ const useScanFrontDocument = (setShowSuccess) => {
     }
   }, [croppedDocumentImage, croppedMugshotImage, inputImage]);
 
-  const scanFrontDocument = async (canvasSize, initializeCanvas) => {
+  const scanFrontDocument = async (canvasSize, initializeCanvas, functionLoop = true) => {
     if (canvasSize && canvasSize !== internalCanvasSize) {
       internalCanvasSize = canvasSize;
     }
+    loop = functionLoop;
     const canvasObj = canvasSize ? CANVAS_SIZE[canvasSize] : internalCanvasSize ? CANVAS_SIZE[internalCanvasSize] : {};
     const { result, imageData, croppedDocument, croppedMugshot } = await isValidPhotoID(
       "PHOTO_ID_FRONT",

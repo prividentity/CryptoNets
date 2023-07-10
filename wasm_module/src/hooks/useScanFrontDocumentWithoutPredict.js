@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
 
+let loop = true;
 const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
   const [scanResult, setScanResult] = useState(null);
   const [scannedIdData, setScannedIdData] = useState(null);
@@ -38,7 +39,9 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
       // setCroppedDocumentWidth(result.returnValue.cropped_doc_width)
     } else {
       setIsFound(false);
-      scanFrontDocument();
+      if(loop){
+        scanFrontDocument();
+      }
     }
   };
 
@@ -86,7 +89,8 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
     }
   }, [isFound, inputImageData]);
 
-  const scanFrontDocument = async () => {
+  const scanFrontDocument = async (functionLoop= true) => {
+    loop = functionLoop;
     const {
       result: resultData,
       croppedDocument,

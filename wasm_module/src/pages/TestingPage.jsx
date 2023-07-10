@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import {
   switchCamera,
   setStopLoopContinuousAuthentication,
@@ -40,9 +40,11 @@ import useFaceLogin from "../hooks/useFaceLogin";
 import useFaceLoginWithLivenessCheck from "../hooks/useFaceLoginWithLiveness";
 import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
 import { antispoofCheck, getFrontDocumentStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
+import { DebugContext } from "../context/DebugContext";
 
 let callingWasm = false;
 const Ready = () => {
+  const debugContext = useContext(DebugContext);
   const { ready: wasmReady, deviceSupported, init: initWasm } = useWasm();
   const {
     ready: cameraReady,
@@ -53,6 +55,30 @@ const Ready = () => {
     capabilities,
     setReady,
   } = useCamera("userVideo");
+
+   function getUrlParameter(sParam, defaultValue = undefined) {
+    const sPageURL = window.location.search.substring(1);
+    const sURLVariables = sPageURL.split("&");
+    let sParameterName;
+    let i;
+  
+    for (i = 0; i < sURLVariables.length; i++) {
+      sParameterName = sURLVariables[i].split("=");
+  
+      if (sParameterName[0] === sParam) {
+        return typeof sParameterName[1] === undefined
+          ? defaultValue
+          : decodeURIComponent(sParameterName[1]);
+      }
+    }
+    return defaultValue;
+  }
+  useEffect(()=>{
+  const debug_type  = getUrlParameter("debug_type", null);
+  if(debug_type){
+    debugContext.setShowDebugOptions(true);
+  }
+  },[])
 
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -65,7 +91,7 @@ const Ready = () => {
     setShouldTriggerCallback,
     scanDocumentFrontMessage,
     resultResponse,
-  } = useScanFrontDocument(setShowSuccess);
+  } = useScanFrontDocument(setShowSuccess, debugContext);
 
   const [deviceCapabilities, setDeviceCapabilities] = useState(capabilities);
   const canvasSizeList = useMemo(() => {
@@ -151,16 +177,20 @@ const Ready = () => {
       await isValidCall();
     };
 
-    if (currentAction === "isValid" && hasFinished) {
+    if (debugContext.functionLoop) {
+      if (currentAction === "isValid" && hasFinished) {
+        setHasFinished(false);
+      }
+      if (currentAction === "isValid" && !hasFinished) {
+        doIsValid();
+      }
+      if (currentAction !== "isValid" && hasFinished) {
+        setHasFinished(false);
+      }
+    } else {
       setHasFinished(false);
     }
-    if (currentAction === "isValid" && !hasFinished) {
-      doIsValid();
-    }
-    if (currentAction !== "isValid" && hasFinished) {
-      setHasFinished(false);
-    }
-  }, [currentAction, hasFinished]);
+  }, [currentAction, hasFinished, debugContext.functionLoop]);
 
   // Enroll ONEFA
   const useEnrollSuccess = () => {
@@ -249,23 +279,29 @@ const Ready = () => {
     }
   }, [currentAction, predictOneFaData]);
 
-  // handleDLfront
-  const handleScanDLFront = async () => {
-    setCurrentAction("useScanDocumentFront");
-    // hack to initialize canvas with large memory, so it doesn't cause an issue.
-    if (canvasSize) {
-      await scanFrontDocument(canvasSize);
-    } else {
-      setShowSuccess(false);
-      if (!isMobile) {
-        await scanFrontDocument(canvasSizeOptions[3].value, () => {});
-      }
-      await scanFrontDocument(initialCanvasSize);
-    }
-  };
+  // // handleDLfront
+  // const handleScanDLFront = async () => {
+  //   setCurrentAction("useScanDocumentFront");
+  //   // hack to initialize canvas with large memory, so it doesn't cause an issue.
+  //   if (canvasSize) {
+  //     await scanFrontDocument(canvasSize);
+  //   } else {
+  //     setShowSuccess(false);
+  //     if (!isMobile) {
+  //       await scanFrontDocument(canvasSizeOptions[3].value, () => {});
+  //     }
+  //     await scanFrontDocument(initialCanvasSize);
+  //   }
+  // };
 
   // Scan Document Back
-  const { scanBackDocument, scannedCodeData, barcodeStatusCode, croppedBarcodeImage:croppedBarcodeBase64, croppedDocumentImage:croppedBackDocumentBase64  } = useScanBackDocument(setShowSuccess);
+  const {
+    scanBackDocument,
+    scannedCodeData,
+    barcodeStatusCode,
+    croppedBarcodeImage: croppedBarcodeBase64,
+    croppedDocumentImage: croppedBackDocumentBase64,
+  } = useScanBackDocument(setShowSuccess);
   const handleScanDocumentBack = async () => {
     setShowSuccess(false);
     setCurrentAction("useScanDocumentBack");
@@ -289,16 +325,20 @@ const Ready = () => {
     const doUsePredictAge = async () => {
       await doPredictAge();
     };
-    if (currentAction === "usePredictAge" && predictAgeHasFinished) {
+    if (debugContext.functionLoop) {
+      if (currentAction === "usePredictAge" && predictAgeHasFinished) {
+        setPredictAgeHasFinished(false);
+      }
+      if (currentAction === "usePredictAge" && !predictAgeHasFinished) {
+        doUsePredictAge();
+      }
+      if (currentAction !== "usePredictAge" && predictAgeHasFinished) {
+        setPredictAgeHasFinished(false);
+      }
+    } else {
       setPredictAgeHasFinished(false);
     }
-    if (currentAction === "usePredictAge" && !predictAgeHasFinished) {
-      doUsePredictAge();
-    }
-    if (currentAction !== "usePredictAge" && predictAgeHasFinished) {
-      setPredictAgeHasFinished(false);
-    }
-  }, [currentAction, predictAgeHasFinished]);
+  }, [currentAction, predictAgeHasFinished, debugContext.functionLoop]);
 
   // Scan Front DL without predict
 
@@ -315,7 +355,7 @@ const Ready = () => {
 
   const handleFrontDLValidity = async () => {
     setCurrentAction("useScanDocumentFrontValidity");
-    await scanFrontValidity();
+    await scanFrontValidity(debugContext.functionLoop);
   };
 
   const handleCanvasSize = async (e, skipSwitchCamera = false) => {
@@ -345,7 +385,7 @@ const Ready = () => {
 
   const handlePrividFaceISO = () => {
     setCurrentAction("privid_face_iso");
-    doFaceISO();
+    doFaceISO(debugContext.functionLoop);
   };
 
   const handleReopenCamera = async () => {
@@ -492,14 +532,16 @@ const Ready = () => {
     const doUsePredictAge = async () => {
       await doPredictAgeWithLiveness();
     };
-    if (currentAction === "usePredictAgeWithLiveness" && predictAgeHasFinishedWithLiveness) {
-      setPredictAgeHasFinishedWithLiveness(false);
-    }
-    if (currentAction === "usePredictAgeWithLiveness" && !predictAgeHasFinishedWithLiveness) {
-      doUsePredictAge();
-    }
-    if (currentAction !== "usePredictAgeWithLiveness" && predictAgeHasFinishedWithLiveness) {
-      setPredictAgeHasFinishedWithLiveness(false);
+    if (debugContext.functionLoop) {
+      if (currentAction === "usePredictAgeWithLiveness" && predictAgeHasFinishedWithLiveness) {
+        setPredictAgeHasFinishedWithLiveness(false);
+      }
+      if (currentAction === "usePredictAgeWithLiveness" && !predictAgeHasFinishedWithLiveness) {
+        doUsePredictAge();
+      }
+      if (currentAction !== "usePredictAgeWithLiveness" && predictAgeHasFinishedWithLiveness) {
+        setPredictAgeHasFinishedWithLiveness(false);
+      }
     }
   }, [currentAction, predictAgeHasFinishedWithLiveness]);
 
@@ -534,12 +576,18 @@ const Ready = () => {
   };
 
   // Face Login
-  const { doFaceLogin, faceLoginData, faceLoginFaceDetected, faceLoginMessage, faceLoginStatus } = useFaceLogin("userVideo", () => {}, null, deviceId, setShowSuccess);
+  const { doFaceLogin, faceLoginData, faceLoginFaceDetected, faceLoginMessage, faceLoginStatus } = useFaceLogin(
+    "userVideo",
+    () => {},
+    null,
+    deviceId,
+    setShowSuccess
+  );
 
   const handleFaceLogin = async () => {
     setShowSuccess(false);
     setCurrentAction("useFaceLogin");
-    doFaceLogin();
+    doFaceLogin(debugContext.functionLoop);
   };
 
   // Face Login With Liveness
@@ -559,15 +607,15 @@ const Ready = () => {
   };
 
   // Scan Healthcare Card
-  const { croppedDocumentBase64,doScanHealthcareCard } = useScanHealthcareCard(setShowSuccess);
+  const { croppedDocumentBase64, doScanHealthcareCard } = useScanHealthcareCard(setShowSuccess);
 
   const handleUseScanHealhcareCard = async () => {
     setShowSuccess(false);
     setCurrentAction("useScanHealthcareCard");
-    doScanHealthcareCard();
-  }
+    doScanHealthcareCard(undefined, debugContext.functionLoop);
+  };
 
-  // 
+  //
   const handleUploadImageHealthcare = async (e) => {
     console.log(e.target.files);
     const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
@@ -667,7 +715,7 @@ const Ready = () => {
 
   const handleCopyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-  }
+  };
 
   return (
     <>
@@ -677,6 +725,27 @@ const Ready = () => {
         </div>
       ) : !deviceSupported.isChecking && deviceSupported.supported ? (
         <div id="canvasInput" className="container">
+          <span
+            style={{
+              display: debugContext.showDebugOptions ? "flex" : "none",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "5px",
+            }}
+          >
+            Do Loop?
+            <label class="switch">
+              <input
+                type="checkbox"
+                value={debugContext.functionLoop}
+                onChange={() => {
+                  debugContext.setFuctionLoop(!debugContext.functionLoop);
+                }}
+              />
+              <span class="slider round"></span>
+            </label>
+          </span>
+
           <div
             style={{
               height: "100%",
@@ -920,17 +989,27 @@ const Ready = () => {
                   <div>{`Street Address2: ${scannedCodeData ? scannedCodeData.streetAddress2 : ""}`}</div>
                   <div>{`City: ${scannedCodeData ? scannedCodeData.city : ""}`}</div>
                   <div>{`Postal Code: ${scannedCodeData ? scannedCodeData.postCode : ""}`}</div>
-                  <div style={{display:"flex", gap:"5px"}}>
-                    {croppedBarcodeBase64&&
-                      <button className="button" onClick={()=>{handleCopyToClipboard(croppedBarcodeBase64)}}>
+                  <div style={{ display: "flex", gap: "5px" }}>
+                    {croppedBarcodeBase64 && (
+                      <button
+                        className="button"
+                        onClick={() => {
+                          handleCopyToClipboard(croppedBarcodeBase64);
+                        }}
+                      >
                         Copy Cropped Barcode Base64
                       </button>
-                    }  
-                    {croppedBackDocumentBase64&&
-                      <button className="button" onClick={()=>{handleCopyToClipboard(croppedBackDocumentBase64)}}>
+                    )}
+                    {croppedBackDocumentBase64 && (
+                      <button
+                        className="button"
+                        onClick={() => {
+                          handleCopyToClipboard(croppedBackDocumentBase64);
+                        }}
+                      >
                         Copy Cropped Document Base64
                       </button>
-                    }  
+                    )}
                   </div>
                 </div>
               )}
@@ -938,7 +1017,11 @@ const Ready = () => {
               {currentAction === "useScanDocumentFrontValidity" && (
                 <div>
                   <div>{`Status Code: ${frontScanData ? frontScanData.returnValue.op_status : ""}`}</div>
-                  <div>{`Status Message: ${frontScanData? getFrontDocumentStatusMessage(frontScanData.returnValue.op_status): ""}`} </div>
+                  <div>
+                    {`Status Message: ${
+                      frontScanData ? getFrontDocumentStatusMessage(frontScanData.returnValue.op_status) : ""
+                    }`}{" "}
+                  </div>
                   <div>{`Document 4 corners found: ${
                     isfoundValidity ? "Document 4 corners available" : "not found"
                   }`}</div>
@@ -1043,7 +1126,7 @@ const Ready = () => {
               <button className="button" onClick={handleUseScanHealhcareCard}>
                 Healthcare Card Scan
               </button>
-              
+
               {/* <label>
                 <input
                   type="file"
@@ -1055,7 +1138,7 @@ const Ready = () => {
                 <span className="button">Upload Image Use Healthcare Scan</span>
               </label> */}
 
-               <label>
+              <label>
                 <input
                   type="file"
                   name="upload"

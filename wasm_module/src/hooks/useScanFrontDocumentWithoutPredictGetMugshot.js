@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
 import { getScaledBoundingBox } from "../utils";
 
+let loop = true;
 const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotSuccess, config) => {
   const scaledBoundingBoxRef = useRef(null);
   const [scanResult, setScanResult] = useState(null);
@@ -82,7 +83,8 @@ const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotS
     }
   }, [isFound, predictMugshotRaw, predictMugshotWidth, predictMugshotHeight]);
 
-  const scanFrontDocument = async () => {
+  const scanFrontDocument = async (functionloop=true) => {
+    loop = functionloop;
     console.log("TIMESTAMP: ", new Date());
     console.time("frontDocument");
     const {

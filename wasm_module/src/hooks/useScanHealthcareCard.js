@@ -79,10 +79,11 @@ const useScanHealthcareCard = (setShowSuccess = () => {}) => {
     }
   };
 
-  const doScanHealthcareCard = async (image = undefined) => {
+  const doScanHealthcareCard = async (image = undefined, loop=true) => {
     setCroppedDocumentHeight(null);
     setCroppedDocumentWidth(null);
     if (image) scanOnce = true;
+    else if(loop) scanOnce = true;
     const result  = await scanHealthcareCard(callback, { input_image_format: "rgba" }, image);
     const {imageData, croppedDocument } = result;
     console.log("Result:", result);
