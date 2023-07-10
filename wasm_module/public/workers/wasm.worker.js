@@ -882,7 +882,7 @@ async function initializeWasmSession(url, key, debug_type) {
     wasmSession = session_out_ptr.inner_ptr();
 
     await wasmPrivModule._privid_set_default_configuration(wasmSession, 1);
-    wasmPrivModule._privid_set_operation_debug_enabled(true);
+    // wasmPrivModule._privid_set_operation_debug_enabled(true);
     if (setCache) {
       await setCacheConfiguration();
     }
