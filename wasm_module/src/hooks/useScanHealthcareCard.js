@@ -83,7 +83,7 @@ const useScanHealthcareCard = (setShowSuccess = () => {}) => {
     setCroppedDocumentHeight(null);
     setCroppedDocumentWidth(null);
     if (image) scanOnce = true;
-    else if(loop) scanOnce = true;
+    else if(!loop) scanOnce = true;
     const result  = await scanHealthcareCard(callback, { input_image_format: "rgba" }, image);
     const {imageData, croppedDocument } = result;
     console.log("Result:", result);

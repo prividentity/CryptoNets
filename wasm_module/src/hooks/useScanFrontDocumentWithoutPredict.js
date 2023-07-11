@@ -25,8 +25,7 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
     console.log("Front scan callback result:", result);
     setFrontScanData(result);
     if (
-      // (result.returnValue.op_status === 0 || result.returnValue.op_status === 10) &&
-      result.returnValue.conf_level > 0.95 &&
+      result.returnValue.op_status === 0 &&
       result.returnValue.cropped_doc_width &&
       result.returnValue.cropped_face_width
     ) {

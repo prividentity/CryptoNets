@@ -305,7 +305,7 @@ const Ready = () => {
   const handleScanDocumentBack = async () => {
     setShowSuccess(false);
     setCurrentAction("useScanDocumentBack");
-    await scanBackDocument();
+    await scanBackDocument(undefined, debugContext.functionLoop);
   };
 
   const isDocumentOrBackCamera =
