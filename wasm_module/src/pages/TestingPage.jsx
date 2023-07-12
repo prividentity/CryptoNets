@@ -135,7 +135,8 @@ const Ready = () => {
     isValidCall,
     hasFinished,
     setHasFinished,
-    exposureValue,
+    exposureValue, 
+    confidenceScore: isValidConfidenceScore,
   } = useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
@@ -825,6 +826,7 @@ const Ready = () => {
                 <div>
                   <div>{`Face Valid: ${isValidFaceDetected}`}</div>
                   <div>{`Exposure: ${exposureValue}`}</div>
+                  <div> {`Confidence Score: ${isValidConfidenceScore}`} </div>
                 </div>
               )}
 
