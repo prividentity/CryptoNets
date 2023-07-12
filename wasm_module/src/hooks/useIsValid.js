@@ -28,7 +28,7 @@ const useIsValid = (element = "userVideo", deviceId = null) => {
             result.returnValue.faces[0].status === 10
           ) {
             setFaceDetected(true);
-            setConfidenceScore(result.returnValue.faces[0].conf_score);
+            setConfidenceScore(result.returnValue.faces[0].box.conf_score);
           }
           if (result.returnValue.faces[0].status === -1) {
             setFaceDetected(false);
