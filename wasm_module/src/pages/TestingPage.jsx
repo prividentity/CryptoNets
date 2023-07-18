@@ -163,6 +163,7 @@ const Ready = () => {
     hasFinished,
     setHasFinished,
     exposureValue,
+    isValidStatusCode
   } = useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
@@ -576,7 +577,7 @@ const Ready = () => {
   };
 
   // Face Login
-  const { doFaceLogin, faceLoginData, faceLoginFaceDetected, faceLoginMessage, faceLoginStatus } = useFaceLogin(
+  const { doFaceLogin, faceLoginData, faceLoginFaceDetected, faceLoginMessage, faceLoginStatus, statusCode:faceLoginStatusCode } = useFaceLogin(
     "userVideo",
     () => {},
     null,
@@ -895,6 +896,7 @@ const Ready = () => {
                 <div>
                   <div>{`Face Valid: ${isValidFaceDetected}`}</div>
                   <div>{`Exposure: ${exposureValue}`}</div>
+                  <div> {`Status: ${isValidStatusCode}`} </div>
                 </div>
               )}
 
@@ -943,6 +945,7 @@ const Ready = () => {
               {currentAction === "useFaceLogin" && (
                 <div>
                   <div>{`Face Valid: ${faceLoginFaceDetected ? "Face Detected" : "Face not detected"}`}</div>
+                  <div>{`Face Login Status: ${faceLoginStatusCode}`} </div>
                   <div>{`Message: ${faceLoginMessage || ""}`}</div>
                   <div>{`Face Login GUID: ${faceLoginData ? faceLoginData.PI.guid : ""}`}</div>
                   <div>{`Face Login UUID: ${faceLoginData ? faceLoginData.PI.uuid : ""}`}</div>

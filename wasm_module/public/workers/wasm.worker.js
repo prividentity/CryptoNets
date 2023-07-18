@@ -739,7 +739,6 @@ async function setCacheConfiguration() {
 
     wasmPrivModule.HEAP8.set(cache_config_bytes, cacheInputPtr / cache_config_bytes.BYTES_PER_ELEMENT);
     await wasmPrivModule._privid_set_configuration(wasmSession, cacheInputPtr, cacheInputSize);
-    // await wasmPrivModule._privid_set_default_configuration(wasmSession, 1);
     wasmPrivModule._free(cacheInputPtr);
   };
 }
@@ -1077,8 +1076,9 @@ const prividDocumentMugshotFaceCompare = (imageInputA, imageInputB, simd, debug_
     // await initializeWasmSession(apiUrl, apiKey);
 
     let result = null;
+    console.log("All Modules:", wasmPrivModule);
     try {
-      result = wasmPrivModule._compare_mugshot_and_face(
+      result = wasmPrivModule._privid_compare_mugshot_and_face(
         wasmSession,
         configInputPtr,
         configInputSize,

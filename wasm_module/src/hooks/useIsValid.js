@@ -5,6 +5,7 @@ const useIsValid = (element = "userVideo", deviceId = null) => {
   const [faceDetected, setFaceDetected] = useState(false);
   const [hasFinished, setHasFinished] = useState(false);
   const [exposureValue, setExposureValue] = useState(0);
+  const [isValidStatusCode, setIsValidStatusCode] = useState(null);
   const isValidCall = async () => {
     // eslint-disable-next-line no-unused-vars
     await isValid(callback, null, {
@@ -18,7 +19,9 @@ const useIsValid = (element = "userVideo", deviceId = null) => {
       case "WASM_RESPONSE":
         if (result.returnValue.faces.length === 0) {
           setFaceDetected(false);
+          setIsValidStatusCode(result?.returnValue?.faces[0]?.status || null)
         } else {
+          setIsValidStatusCode(result.returnValue.faces[0].status)
           if (
             result.returnValue.faces[0].status === 0 ||
             result.returnValue.faces[0].status === 11 ||
@@ -37,7 +40,7 @@ const useIsValid = (element = "userVideo", deviceId = null) => {
     }
   };
 
-  return { faceDetected, isValidCall, hasFinished, setHasFinished, exposureValue };
+  return { faceDetected, isValidCall, hasFinished, setHasFinished, exposureValue, isValidStatusCode };
 };
 
 export default useIsValid;
