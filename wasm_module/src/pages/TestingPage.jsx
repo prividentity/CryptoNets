@@ -56,29 +56,27 @@ const Ready = () => {
     setReady,
   } = useCamera("userVideo");
 
-   function getUrlParameter(sParam, defaultValue = undefined) {
+  function getUrlParameter(sParam, defaultValue = undefined) {
     const sPageURL = window.location.search.substring(1);
     const sURLVariables = sPageURL.split("&");
     let sParameterName;
     let i;
-  
+
     for (i = 0; i < sURLVariables.length; i++) {
       sParameterName = sURLVariables[i].split("=");
-  
+
       if (sParameterName[0] === sParam) {
-        return typeof sParameterName[1] === undefined
-          ? defaultValue
-          : decodeURIComponent(sParameterName[1]);
+        return typeof sParameterName[1] === undefined ? defaultValue : decodeURIComponent(sParameterName[1]);
       }
     }
     return defaultValue;
   }
-  useEffect(()=>{
-  const debug_type  = getUrlParameter("debug_type", null);
-  if(debug_type){
-    debugContext.setShowDebugOptions(true);
-  }
-  },[])
+  useEffect(() => {
+    const debug_type = getUrlParameter("debug_type", null);
+    if (debug_type) {
+      debugContext.setShowDebugOptions(true);
+    }
+  }, []);
 
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -163,7 +161,7 @@ const Ready = () => {
     hasFinished,
     setHasFinished,
     exposureValue,
-    isValidStatusCode
+    isValidStatusCode,
   } = useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
@@ -577,13 +575,14 @@ const Ready = () => {
   };
 
   // Face Login
-  const { doFaceLogin, faceLoginData, faceLoginFaceDetected, faceLoginMessage, faceLoginStatus, statusCode:faceLoginStatusCode } = useFaceLogin(
-    "userVideo",
-    () => {},
-    null,
-    deviceId,
-    setShowSuccess
-  );
+  const {
+    doFaceLogin,
+    faceLoginData,
+    faceLoginFaceDetected,
+    faceLoginMessage,
+    faceLoginStatus,
+    statusCode: faceLoginStatusCode,
+  } = useFaceLogin("userVideo", () => {}, null, deviceId, setShowSuccess);
 
   const handleFaceLogin = async () => {
     setShowSuccess(false);
@@ -1064,7 +1063,11 @@ const Ready = () => {
               {currentAction === "usePredictAgeWithLiveness" && (
                 <div>
                   <div>{`Estimated Age: ${
-                    predictAgeLivenessResult === -1 || predictAgeLivenessResult === 1 ? "" : Math.round(ageWithLiveness)
+                    predictAgeLivenessResult === -1 || predictAgeLivenessResult === 1
+                      ? ""
+                      : ageWithLiveness > 0
+                      ? Math.round(ageWithLiveness)
+                      : ""
                   }`}</div>
                   <div>{`Liveness Check: ${
                     predictAgeLivenessResult === -1
