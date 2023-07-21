@@ -127,7 +127,7 @@ const useScanBackDocument = (setShowSuccess) => {
     }
   }, [croppedDocumentImage, croppedBarcodeImage, inputImage]);
 
-  const scanBackDocument = async (canvasSize, functionLoop = true) => {
+  const scanBackDocument = async (canvasSize, functionLoop = true, uploadData = undefined) => {
     loop = functionLoop;
     if (canvasSize && canvasSize !== internalCanvasSize) {
       internalCanvasSize = canvasSize;
@@ -137,7 +137,7 @@ const useScanBackDocument = (setShowSuccess) => {
       "PHOTO_ID_BACK",
       documentCallback,
       true,
-      undefined,
+      uploadData,
       { document_scan_barcode_only: true },
       canvasObj
     );

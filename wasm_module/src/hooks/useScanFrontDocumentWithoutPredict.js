@@ -88,7 +88,7 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
     }
   }, [isFound, inputImageData]);
 
-  const scanFrontDocument = async (functionLoop= true) => {
+  const scanFrontDocument = async (functionLoop= true, uploadData = undefined) => {
     loop = functionLoop;
     const {
       result: resultData,
@@ -98,7 +98,10 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
     } = await isValidPhotoID("PHOTO_ID_FRONT", documentCallback, false, undefined, {
       input_image_format:"rgba",
       blur_threshold_enroll_pred: 0,
-    });
+    },
+    false, 
+    uploadData
+    );
 
     setPredictMugshotRaw(croppedMugshot);
     setCroppedDocumentImageData(croppedDocument);
