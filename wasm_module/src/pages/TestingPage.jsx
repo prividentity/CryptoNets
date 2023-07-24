@@ -163,6 +163,7 @@ const Ready = () => {
     setHasFinished,
     exposureValue,
     isValidStatusCode,
+    confidenceScore: isValidConfidenceScore,
   } = useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
