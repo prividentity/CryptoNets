@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { faceLogin } from "@privateid/cryptonets-web-sdk-alpha";
+import { faceLogin } from "@privateid/cryptonets-web-sdk";
 
 const useFaceLoginWithLivenessCheck = (setShowSuccess) => {
   const [faceLoginWithLivenessFaceDetected, setFaceDetected] = useState(false);
