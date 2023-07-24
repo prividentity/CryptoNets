@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { enroll1FA } from "@privateid/cryptonets-web-sdk-alpha";
+import { enroll1FA } from "@privateid/cryptonets-web-sdk-test";
 
 const useEnrollOneFaWithLiveness = (
   element = "userVideo",

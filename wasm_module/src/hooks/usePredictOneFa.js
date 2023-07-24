@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { predict1FA } from "@privateid/cryptonets-web-sdk-alpha";
-let loop = true;
+import { predict1FA } from "@privateid/cryptonets-web-sdk-test";
+
 const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null,setShowSuccess) => {
   const [predictOneFaaceDetected, setFaceDetected] = useState(false);
   const [predictOneFaStatus, setPredictStatus] = useState(null);
