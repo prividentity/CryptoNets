@@ -6,7 +6,7 @@ import {
   closeCamera,
   faceCompareLocal,
   documentMugshoFaceCompare,
-} from "@privateid/cryptonets-web-sdk-alpha";
+} from "@privateid/cryptonets-web-sdk-test";
 
 import {
   useCamera,
@@ -39,7 +39,7 @@ import useEnrollOneFaWithLiveness from "../hooks/useEnrollOneFaWithLivenessCheck
 import useFaceLogin from "../hooks/useFaceLogin";
 import useFaceLoginWithLivenessCheck from "../hooks/useFaceLoginWithLiveness";
 import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
-import { antispoofCheck, getFrontDocumentStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
+import { antispoofCheck, getFrontDocumentStatusMessage } from "@privateid/cryptonets-web-sdk-test/dist/utils";
 import { DebugContext } from "../context/DebugContext";
 import { async } from "q";
 

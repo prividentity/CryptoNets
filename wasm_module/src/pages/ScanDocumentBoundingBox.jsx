@@ -5,7 +5,7 @@
 //   setStopLoopContinuousAuthentication,
 //   closeCamera,
 //   faceCompareLocal,
-// } from "@privateid/cryptonets-web-sdk-alpha";
+// } from "@privateid/cryptonets-web-sdk-test";
 
 // import { useCamera, useWasm, useEnrollOneFa } from "../hooks";
 // import { canvasSizeOptions, isBackCamera, setMax2KForMobile, WIDTH_TO_STANDARDS } from "../utils";
