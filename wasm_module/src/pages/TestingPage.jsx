@@ -38,7 +38,7 @@ import useEnrollOneFaWithLiveness from "../hooks/useEnrollOneFaWithLivenessCheck
 import useFaceLogin from "../hooks/useFaceLogin";
 import useFaceLoginWithLivenessCheck from "../hooks/useFaceLoginWithLiveness";
 import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
-import { antispoofCheck } from "@privateid/cryptonets-web-sdk/dist/utils";
+import { antispoofCheck, getFrontDocumentStatusMessage } from "@privateid/cryptonets-web-sdk/dist/utils";
 
 let callingWasm = false;
 const Ready = () => {
@@ -135,7 +135,8 @@ const Ready = () => {
     isValidCall,
     hasFinished,
     setHasFinished,
-    exposureValue,
+    exposureValue, 
+    confidenceScore: isValidConfidenceScore,
   } = useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
@@ -309,6 +310,7 @@ const Ready = () => {
     isMugshotFound,
     croppedDocumentImage,
     predictMugshotImage,
+    frontScanData,
   } = useScanFrontDocumentWithoutPredict(setShowSuccess);
 
   const handleFrontDLValidity = async () => {
@@ -824,6 +826,7 @@ const Ready = () => {
                 <div>
                   <div>{`Face Valid: ${isValidFaceDetected}`}</div>
                   <div>{`Exposure: ${exposureValue}`}</div>
+                  <div> {`Confidence Score: ${isValidConfidenceScore}`} </div>
                 </div>
               )}
 
@@ -935,6 +938,8 @@ const Ready = () => {
 
               {currentAction === "useScanDocumentFrontValidity" && (
                 <div>
+                  <div>{`Status Code: ${frontScanData ? frontScanData.returnValue.op_status : ""}`}</div>
+                  <div>{`Status Message: ${frontScanData? getFrontDocumentStatusMessage(frontScanData.returnValue.op_status): ""}`} </div>
                   <div>{`Document 4 corners found: ${
                     isfoundValidity ? "Document 4 corners available" : "not found"
                   }`}</div>

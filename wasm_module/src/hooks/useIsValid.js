@@ -5,6 +5,7 @@ const useIsValid = (element = "userVideo", deviceId = null) => {
   const [faceDetected, setFaceDetected] = useState(false);
   const [hasFinished, setHasFinished] = useState(false);
   const [exposureValue, setExposureValue] = useState(0);
+  const [confidenceScore, setConfidenceScore] = useState(0);
   const isValidCall = async () => {
     // eslint-disable-next-line no-unused-vars
     await isValid(callback, null, {
@@ -27,6 +28,7 @@ const useIsValid = (element = "userVideo", deviceId = null) => {
             result.returnValue.faces[0].status === 10
           ) {
             setFaceDetected(true);
+            setConfidenceScore(result.returnValue.faces[0].box.conf_score);
           }
           if (result.returnValue.faces[0].status === -1) {
             setFaceDetected(false);
@@ -39,7 +41,7 @@ const useIsValid = (element = "userVideo", deviceId = null) => {
     }
   };
 
-  return { faceDetected, isValidCall, hasFinished, setHasFinished, exposureValue };
+  return { faceDetected, isValidCall, hasFinished, setHasFinished, exposureValue, confidenceScore };
 };
 
 export default useIsValid;

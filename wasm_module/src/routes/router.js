@@ -6,6 +6,8 @@ import ScanDocumentBoundingBox from "../pages/ScanDocumentBoundingBox";
 import EnrollWithMugshot from "../pages/EnrollWithMugshot";
 import PredictWithMugshot from "../pages/PredictWithMugshot";
 import EnrollWithLabel from "../pages/EnrollWithLabel";
+import EnrollWithFido2 from "../pages/EnrollWithFido2";
+import PredictWithFido2 from "../pages/PredictWithFido2";
 
 const router = createBrowserRouter([
   {
@@ -18,20 +20,28 @@ const router = createBrowserRouter([
   },
   {
     path: "/bounding_box",
-    element: <ScanDocumentBoundingBox />
+    element: <ScanDocumentBoundingBox />,
   },
   {
     path: "/enroll_with_mugshot",
-    element: <EnrollWithMugshot />
+    element: <EnrollWithMugshot />,
   },
   {
     path: "/predict_with_mugshot",
-    element: <PredictWithMugshot />
+    element: <PredictWithMugshot />,
   },
   {
     path: "/enroll_with_label",
-    element: <EnrollWithLabel />
-  }
+    element: <EnrollWithLabel />,
+  },
+  {
+    path: "/enroll_with_fido",
+    element: <EnrollWithFido2 />,
+  },
+  {
+    path: "/predict_with_fido",
+    element: <PredictWithFido2 />,
+  },
 ]);
 
 export default router;

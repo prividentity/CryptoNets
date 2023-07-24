@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { convertCroppedImage, enroll1FA } from "@privateid/cryptonets-web-sdk";
 
-
 const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess) => {
   const [faceDetected, setFaceDetected] = useState(false);
   const [enrollStatus, setEnrollStatus] = useState(null);
