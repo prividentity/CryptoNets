@@ -2,7 +2,7 @@ import React, { createContext, useMemo, useState } from "react"
 
 
 export const DebugContext = createContext({
-    functionLoop: false,
+    functionLoop: true,
     setFuctionLoop: (functionLoop)=>{},
     showDebugOptions: false, 
     setShowDebugOptions: (showDebugOptions)=>{}
@@ -11,7 +11,7 @@ export const DebugContext = createContext({
 
 const DebugContextProvider = ({children})=>{
 
-    const [functionLoop, setFuctionLoop] = useState(false);
+    const [functionLoop, setFuctionLoop] = useState(true);
     const [showDebugOptions, setShowDebugOptions] = useState(false);
     
     const values = {
