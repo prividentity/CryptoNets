@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { predict1FA } from "@privateid/cryptonets-web-sdk-alpha";
-
+let loop = true;
 const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null,setShowSuccess) => {
   const [predictOneFaaceDetected, setFaceDetected] = useState(false);
   const [predictOneFaStatus, setPredictStatus] = useState(null);
@@ -10,7 +10,7 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
 
   const predictUserOneFa = async () => {
     setFaceDetected(false);
-    setPredictData(null);
+    setPredictData(null); 
     // eslint-disable-next-line no-unused-vars
  await predict1FA(
       callback,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
 
+let loop = true;
 const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
   const [scanResult, setScanResult] = useState(null);
   const [scannedIdData, setScannedIdData] = useState(null);
@@ -24,8 +25,7 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
     console.log("Front scan callback result:", result);
     setFrontScanData(result);
     if (
-      // (result.returnValue.op_status === 0 || result.returnValue.op_status === 10) &&
-      result.returnValue.conf_level > 0.95 &&
+      result.returnValue.op_status === 0 &&
       result.returnValue.cropped_doc_width &&
       result.returnValue.cropped_face_width
     ) {
@@ -38,7 +38,9 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
       // setCroppedDocumentWidth(result.returnValue.cropped_doc_width)
     } else {
       setIsFound(false);
-      scanFrontDocument();
+      if(loop){
+        scanFrontDocument();
+      }
     }
   };
 
@@ -86,14 +88,19 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
     }
   }, [isFound, inputImageData]);
 
-  const scanFrontDocument = async () => {
+  const scanFrontDocument = async (functionLoop= true, uploadData = undefined) => {
+    loop = functionLoop;
     const {
       result: resultData,
       croppedDocument,
       croppedMugshot,
       imageData
-    } = await isValidPhotoID("PHOTO_ID_FRONT", documentCallback, false, undefined, {
-    });
+    } = await isValidPhotoID("PHOTO_ID_FRONT", documentCallback, false, uploadData, {
+      input_image_format:"rgba",
+      blur_threshold_enroll_pred: 0,
+    },
+    false
+    );
 
     setPredictMugshotRaw(croppedMugshot);
     setCroppedDocumentImageData(croppedDocument);

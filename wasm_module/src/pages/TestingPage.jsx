@@ -1,10 +1,11 @@
 /* eslint-disable */
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import {
   switchCamera,
   setStopLoopContinuousAuthentication,
   closeCamera,
   faceCompareLocal,
+  documentMugshoFaceCompare,
 } from "@privateid/cryptonets-web-sdk-alpha";
 
 import {
@@ -39,9 +40,12 @@ import useFaceLogin from "../hooks/useFaceLogin";
 import useFaceLoginWithLivenessCheck from "../hooks/useFaceLoginWithLiveness";
 import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
 import { antispoofCheck, getFrontDocumentStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
+import { DebugContext } from "../context/DebugContext";
+import { async } from "q";
 
 let callingWasm = false;
 const Ready = () => {
+  const debugContext = useContext(DebugContext);
   const { ready: wasmReady, deviceSupported, init: initWasm } = useWasm();
   const {
     ready: cameraReady,
@@ -52,6 +56,28 @@ const Ready = () => {
     capabilities,
     setReady,
   } = useCamera("userVideo");
+
+  function getUrlParameter(sParam, defaultValue = undefined) {
+    const sPageURL = window.location.search.substring(1);
+    const sURLVariables = sPageURL.split("&");
+    let sParameterName;
+    let i;
+
+    for (i = 0; i < sURLVariables.length; i++) {
+      sParameterName = sURLVariables[i].split("=");
+
+      if (sParameterName[0] === sParam) {
+        return typeof sParameterName[1] === undefined ? defaultValue : decodeURIComponent(sParameterName[1]);
+      }
+    }
+    return defaultValue;
+  }
+  useEffect(() => {
+    const debug_type = getUrlParameter("debug_type", null);
+    if (debug_type) {
+      debugContext.setShowDebugOptions(true);
+    }
+  }, []);
 
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -64,7 +90,7 @@ const Ready = () => {
     setShouldTriggerCallback,
     scanDocumentFrontMessage,
     resultResponse,
-  } = useScanFrontDocument(setShowSuccess);
+  } = useScanFrontDocument(setShowSuccess, debugContext);
 
   const [deviceCapabilities, setDeviceCapabilities] = useState(capabilities);
   const canvasSizeList = useMemo(() => {
@@ -135,7 +161,8 @@ const Ready = () => {
     isValidCall,
     hasFinished,
     setHasFinished,
-    exposureValue, 
+    exposureValue,
+    isValidStatusCode,
     confidenceScore: isValidConfidenceScore,
   } = useIsValid("userVideo");
   // isValid
@@ -151,16 +178,20 @@ const Ready = () => {
       await isValidCall();
     };
 
-    if (currentAction === "isValid" && hasFinished) {
+    if (debugContext.functionLoop) {
+      if (currentAction === "isValid" && hasFinished) {
+        setHasFinished(false);
+      }
+      if (currentAction === "isValid" && !hasFinished) {
+        doIsValid();
+      }
+      if (currentAction !== "isValid" && hasFinished) {
+        setHasFinished(false);
+      }
+    } else {
       setHasFinished(false);
     }
-    if (currentAction === "isValid" && !hasFinished) {
-      doIsValid();
-    }
-    if (currentAction !== "isValid" && hasFinished) {
-      setHasFinished(false);
-    }
-  }, [currentAction, hasFinished]);
+  }, [currentAction, hasFinished, debugContext.functionLoop]);
 
   // Enroll ONEFA
   const useEnrollSuccess = () => {
@@ -249,27 +280,33 @@ const Ready = () => {
     }
   }, [currentAction, predictOneFaData]);
 
-  // handleDLfront
-  const handleScanDLFront = async () => {
-    setCurrentAction("useScanDocumentFront");
-    // hack to initialize canvas with large memory, so it doesn't cause an issue.
-    if (canvasSize) {
-      await scanFrontDocument(canvasSize);
-    } else {
-      setShowSuccess(false);
-      if (!isMobile) {
-        await scanFrontDocument(canvasSizeOptions[3].value, () => {});
-      }
-      await scanFrontDocument(initialCanvasSize);
-    }
-  };
+  // // handleDLfront
+  // const handleScanDLFront = async () => {
+  //   setCurrentAction("useScanDocumentFront");
+  //   // hack to initialize canvas with large memory, so it doesn't cause an issue.
+  //   if (canvasSize) {
+  //     await scanFrontDocument(canvasSize);
+  //   } else {
+  //     setShowSuccess(false);
+  //     if (!isMobile) {
+  //       await scanFrontDocument(canvasSizeOptions[3].value, () => {});
+  //     }
+  //     await scanFrontDocument(initialCanvasSize);
+  //   }
+  // };
 
   // Scan Document Back
-  const { scanBackDocument, scannedCodeData, barcodeStatusCode, croppedBarcodeImage:croppedBarcodeBase64, croppedDocumentImage:croppedBackDocumentBase64  } = useScanBackDocument(setShowSuccess);
+  const {
+    scanBackDocument,
+    scannedCodeData,
+    barcodeStatusCode,
+    croppedBarcodeImage: croppedBarcodeBase64,
+    croppedDocumentImage: croppedBackDocumentBase64,
+  } = useScanBackDocument(setShowSuccess);
   const handleScanDocumentBack = async () => {
     setShowSuccess(false);
     setCurrentAction("useScanDocumentBack");
-    await scanBackDocument();
+    await scanBackDocument(undefined, debugContext.functionLoop);
   };
 
   const isDocumentOrBackCamera =
@@ -289,16 +326,20 @@ const Ready = () => {
     const doUsePredictAge = async () => {
       await doPredictAge();
     };
-    if (currentAction === "usePredictAge" && predictAgeHasFinished) {
+    if (debugContext.functionLoop) {
+      if (currentAction === "usePredictAge" && predictAgeHasFinished) {
+        setPredictAgeHasFinished(false);
+      }
+      if (currentAction === "usePredictAge" && !predictAgeHasFinished) {
+        doUsePredictAge();
+      }
+      if (currentAction !== "usePredictAge" && predictAgeHasFinished) {
+        setPredictAgeHasFinished(false);
+      }
+    } else {
       setPredictAgeHasFinished(false);
     }
-    if (currentAction === "usePredictAge" && !predictAgeHasFinished) {
-      doUsePredictAge();
-    }
-    if (currentAction !== "usePredictAge" && predictAgeHasFinished) {
-      setPredictAgeHasFinished(false);
-    }
-  }, [currentAction, predictAgeHasFinished]);
+  }, [currentAction, predictAgeHasFinished, debugContext.functionLoop]);
 
   // Scan Front DL without predict
 
@@ -315,7 +356,7 @@ const Ready = () => {
 
   const handleFrontDLValidity = async () => {
     setCurrentAction("useScanDocumentFrontValidity");
-    await scanFrontValidity();
+    await scanFrontValidity(debugContext.functionLoop);
   };
 
   const handleCanvasSize = async (e, skipSwitchCamera = false) => {
@@ -345,7 +386,7 @@ const Ready = () => {
 
   const handlePrividFaceISO = () => {
     setCurrentAction("privid_face_iso");
-    doFaceISO();
+    doFaceISO(debugContext.functionLoop);
   };
 
   const handleReopenCamera = async () => {
@@ -465,7 +506,7 @@ const Ready = () => {
       console.log("COMPARE RESULT", result);
     };
 
-    await faceCompareLocal(callback, uploadImage1, uploadImage2);
+    await documentMugshoFaceCompare(callback, uploadImage1, uploadImage2);
   };
 
   const handleBoundingBox = async () => {
@@ -492,14 +533,16 @@ const Ready = () => {
     const doUsePredictAge = async () => {
       await doPredictAgeWithLiveness();
     };
-    if (currentAction === "usePredictAgeWithLiveness" && predictAgeHasFinishedWithLiveness) {
-      setPredictAgeHasFinishedWithLiveness(false);
-    }
-    if (currentAction === "usePredictAgeWithLiveness" && !predictAgeHasFinishedWithLiveness) {
-      doUsePredictAge();
-    }
-    if (currentAction !== "usePredictAgeWithLiveness" && predictAgeHasFinishedWithLiveness) {
-      setPredictAgeHasFinishedWithLiveness(false);
+    if (debugContext.functionLoop) {
+      if (currentAction === "usePredictAgeWithLiveness" && predictAgeHasFinishedWithLiveness) {
+        setPredictAgeHasFinishedWithLiveness(false);
+      }
+      if (currentAction === "usePredictAgeWithLiveness" && !predictAgeHasFinishedWithLiveness) {
+        doUsePredictAge();
+      }
+      if (currentAction !== "usePredictAgeWithLiveness" && predictAgeHasFinishedWithLiveness) {
+        setPredictAgeHasFinishedWithLiveness(false);
+      }
     }
   }, [currentAction, predictAgeHasFinishedWithLiveness]);
 
@@ -534,12 +577,19 @@ const Ready = () => {
   };
 
   // Face Login
-  const { doFaceLogin, faceLoginData, faceLoginFaceDetected, faceLoginMessage, faceLoginStatus } = useFaceLogin("userVideo", () => {}, null, deviceId, setShowSuccess);
+  const {
+    doFaceLogin,
+    faceLoginData,
+    faceLoginFaceDetected,
+    faceLoginMessage,
+    faceLoginStatus,
+    statusCode: faceLoginStatusCode,
+  } = useFaceLogin("userVideo", () => {}, null, deviceId, setShowSuccess);
 
   const handleFaceLogin = async () => {
     setShowSuccess(false);
     setCurrentAction("useFaceLogin");
-    doFaceLogin();
+    doFaceLogin(debugContext.functionLoop);
   };
 
   // Face Login With Liveness
@@ -559,15 +609,15 @@ const Ready = () => {
   };
 
   // Scan Healthcare Card
-  const { croppedDocumentBase64,doScanHealthcareCard } = useScanHealthcareCard(setShowSuccess);
+  const { croppedDocumentBase64, doScanHealthcareCard } = useScanHealthcareCard(setShowSuccess);
 
   const handleUseScanHealhcareCard = async () => {
     setShowSuccess(false);
     setCurrentAction("useScanHealthcareCard");
-    doScanHealthcareCard();
-  }
+    doScanHealthcareCard(undefined, debugContext.functionLoop);
+  };
 
-  // 
+  //
   const handleUploadImageHealthcare = async (e) => {
     console.log(e.target.files);
     const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
@@ -667,7 +717,75 @@ const Ready = () => {
 
   const handleCopyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-  }
+  };
+
+  const [uploadedImageForScanning, setUploadedImageForScanning] = useState(null);
+
+  const handleUploadImageForScanning = async (e) => {
+    console.log(e.target.files);
+    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
+    if (e.target.files.length > 0) {
+      if (imageRegex.test(e.target.files[0].type)) {
+        const imageUrl = URL.createObjectURL(e.target.files[0]);
+
+        console.log(e.target.files[0]);
+
+        const getBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+
+            reader.onload = function () {
+              resolve(reader.result);
+            };
+            reader.onerror = function (error) {
+              reject(error);
+            };
+          });
+        };
+
+        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
+        var newImg = new Image();
+        newImg.src = base64;
+        newImg.onload = async () => {
+          var imgSize = {
+            w: newImg.width,
+            h: newImg.height,
+          };
+          alert(imgSize.w + " " + imgSize.h);
+          const canvas = document.createElement("canvas");
+          canvas.setAttribute("height", `${imgSize.h}`);
+          canvas.setAttribute("width", `${imgSize.w}`);
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(newImg, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
+          console.log("imageData", imageData);
+          setUploadedImageForScanning(imageData);
+        };
+      } else {
+        console.log("INVALID IMAGE TYPE");
+      }
+    }
+  };
+
+  const frontScanUploadedImageScanning = async () => {
+    if (uploadedImageForScanning) {
+      scanFrontValidity(false, uploadedImageForScanning);
+    }
+  };
+
+  const healthcareScanUploadedImageScanning = async () => {
+    if (uploadedImageForScanning) {
+      doScanHealthcareCard(uploadedImageForScanning, false);
+    }
+  };
+
+  const backScanUploadedImageScanning = async () => {
+    if (uploadedImageForScanning) {
+      scanBackDocument(undefined, false, uploadedImageForScanning);
+    }
+  };
 
   return (
     <>
@@ -677,6 +795,27 @@ const Ready = () => {
         </div>
       ) : !deviceSupported.isChecking && deviceSupported.supported ? (
         <div id="canvasInput" className="container">
+          <span
+            style={{
+              display: debugContext.showDebugOptions ? "flex" : "none",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "5px",
+            }}
+          >
+            Do Loop?
+            <label class="switch">
+              <input
+                type="checkbox"
+                value={debugContext.functionLoop}
+                onChange={() => {
+                  debugContext.setFuctionLoop(!debugContext.functionLoop);
+                }}
+              />
+              <span class="slider round"></span>
+            </label>
+          </span>
+
           <div
             style={{
               height: "100%",
@@ -826,7 +965,7 @@ const Ready = () => {
                 <div>
                   <div>{`Face Valid: ${isValidFaceDetected}`}</div>
                   <div>{`Exposure: ${exposureValue}`}</div>
-                  <div> {`Confidence Score: ${isValidConfidenceScore}`} </div>
+                  <div> {`Status: ${isValidStatusCode}`} </div>
                 </div>
               )}
 
@@ -875,6 +1014,7 @@ const Ready = () => {
               {currentAction === "useFaceLogin" && (
                 <div>
                   <div>{`Face Valid: ${faceLoginFaceDetected ? "Face Detected" : "Face not detected"}`}</div>
+                  <div>{`Face Login Status: ${faceLoginStatusCode}`} </div>
                   <div>{`Message: ${faceLoginMessage || ""}`}</div>
                   <div>{`Face Login GUID: ${faceLoginData ? faceLoginData.PI.guid : ""}`}</div>
                   <div>{`Face Login UUID: ${faceLoginData ? faceLoginData.PI.uuid : ""}`}</div>
@@ -921,17 +1061,27 @@ const Ready = () => {
                   <div>{`Street Address2: ${scannedCodeData ? scannedCodeData.streetAddress2 : ""}`}</div>
                   <div>{`City: ${scannedCodeData ? scannedCodeData.city : ""}`}</div>
                   <div>{`Postal Code: ${scannedCodeData ? scannedCodeData.postCode : ""}`}</div>
-                  <div style={{display:"flex", gap:"5px"}}>
-                    {croppedBarcodeBase64&&
-                      <button className="button" onClick={()=>{handleCopyToClipboard(croppedBarcodeBase64)}}>
+                  <div style={{ display: "flex", gap: "5px" }}>
+                    {croppedBarcodeBase64 && (
+                      <button
+                        className="button"
+                        onClick={() => {
+                          handleCopyToClipboard(croppedBarcodeBase64);
+                        }}
+                      >
                         Copy Cropped Barcode Base64
                       </button>
-                    }  
-                    {croppedBackDocumentBase64&&
-                      <button className="button" onClick={()=>{handleCopyToClipboard(croppedBackDocumentBase64)}}>
+                    )}
+                    {croppedBackDocumentBase64 && (
+                      <button
+                        className="button"
+                        onClick={() => {
+                          handleCopyToClipboard(croppedBackDocumentBase64);
+                        }}
+                      >
                         Copy Cropped Document Base64
                       </button>
-                    }  
+                    )}
                   </div>
                 </div>
               )}
@@ -939,7 +1089,11 @@ const Ready = () => {
               {currentAction === "useScanDocumentFrontValidity" && (
                 <div>
                   <div>{`Status Code: ${frontScanData ? frontScanData.returnValue.op_status : ""}`}</div>
-                  <div>{`Status Message: ${frontScanData? getFrontDocumentStatusMessage(frontScanData.returnValue.op_status): ""}`} </div>
+                  <div>
+                    {`Status Message: ${
+                      frontScanData ? getFrontDocumentStatusMessage(frontScanData.returnValue.op_status) : ""
+                    }`}{" "}
+                  </div>
                   <div>{`Document 4 corners found: ${
                     isfoundValidity ? "Document 4 corners available" : "not found"
                   }`}</div>
@@ -979,7 +1133,11 @@ const Ready = () => {
               {currentAction === "usePredictAgeWithLiveness" && (
                 <div>
                   <div>{`Estimated Age: ${
-                    predictAgeLivenessResult === -1 || predictAgeLivenessResult === 1 ? "" : Math.round(ageWithLiveness)
+                    predictAgeLivenessResult === -1 || predictAgeLivenessResult === 1
+                      ? ""
+                      : ageWithLiveness > 0
+                      ? Math.round(ageWithLiveness)
+                      : ""
                   }`}</div>
                   <div>{`Liveness Check: ${
                     predictAgeLivenessResult === -1
@@ -1044,7 +1202,7 @@ const Ready = () => {
               <button className="button" onClick={handleUseScanHealhcareCard}>
                 Healthcare Card Scan
               </button>
-              
+
               {/* <label>
                 <input
                   type="file"
@@ -1056,7 +1214,7 @@ const Ready = () => {
                 <span className="button">Upload Image Use Healthcare Scan</span>
               </label> */}
 
-               <label>
+              <label>
                 <input
                   type="file"
                   name="upload"
@@ -1067,7 +1225,32 @@ const Ready = () => {
                 <span className="button">Upload Image Use Antispoof Check</span>
               </label>
             </div>
-            <div>
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexDirection:'column', flexWrap:'wrap' }}>
+              <p> Testing Buttons: </p>
+              <label>
+                <input
+                  type="file"
+                  name="upload"
+                  accept="image/png, image/gif, image/jpeg"
+                  onChange={handleUploadImageForScanning}
+                  style={{ display: "none" }}
+                />
+                <span className="button">Upload Image For Scanning</span>
+              </label>
+              <br />
+              <div style={{ display: "flex", gap: "2px" }}>
+                <button className="button" onClick={frontScanUploadedImageScanning}>
+                  Front Document Scan Uploaded Image
+                </button>
+                <button className="button" onClick={healthcareScanUploadedImageScanning}>
+                  Healthcare Card Scan Uploaded Image
+                </button>
+                <button className="button" onClick={backScanUploadedImageScanning}>
+                  Back Document Scan Uploaded Image
+                </button>
+              </div>
+            </div>
+            {/* <div>
               <p> Other Utilities: </p>
               <button
                 className="button"
@@ -1093,7 +1276,7 @@ const Ready = () => {
               >
                 Enroll with Label
               </button>
-            </div>
+            </div> */}
             <div>
               <p> Upload 2 images to use compare: </p>
               <label>

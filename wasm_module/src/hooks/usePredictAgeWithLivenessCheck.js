@@ -7,13 +7,14 @@ const usePredictAgeWithLivenessCheck = () => {
   const [predictAgeLivenessResult, setPredictAgeLivenessResult] = useState(null);
 
   const predictAgeCallback = (response) => {
+    console.log(response);
     const { livenessCheck } = response;
     setPredictAgeLivenessResult(livenessCheck);
     if (livenessCheck === 0) {
       const { faces } = response.returnValue;
 
       if (faces.length === 0) {
-        setAge(null);
+        setAge("");
         setPredictAgeHasFinished(true);
       } else {
         for (let index = 0; faces.length > index; index++) {
@@ -25,13 +26,13 @@ const usePredictAgeWithLivenessCheck = () => {
           }
 
           if (index + 1 === faces.length && age <= 0) {
-            setAge(null);
+            setAge("");
             setPredictAgeHasFinished(true);
           }
         }
       }
     } else {
-      setAge(null);
+      setAge("");
       setPredictAgeHasFinished(true);
     }
   };

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { faceISO, convertCroppedImage } from "@privateid/cryptonets-web-sdk-alpha";
 
+let loop = true;
 const usePrividFaceISO = () => {
   const [faceISOData, setFaceISOData] = useState(null);
   const [faceISOHeight, setFaceISOHeight] = useState(null);
@@ -14,27 +15,27 @@ const usePrividFaceISO = () => {
 
   const faceISOCallback = (response) => {
     console.log("==========> FACE_ISO_RESPONSE", response);
-    try{
+    try {
       setFaceISOStatus(response.returnValue.status);
       setFaceISOError(response.returnValue.error);
-    }
-    catch (e){
+    } catch (e) {
       setFaceISOStatus(null);
     }
-    if(response.returnValue){
+    if (response.returnValue) {
       if (response.returnValue.status === 0) {
         setFaceISOError(response.returnValue.error);
         setFaceISOHeight(response.returnValue.iso_image_height);
         setFaceISOWidth(response.returnValue.iso_image_width);
         // setInputImage(response.portrait);
         setIsSuccess(true);
-        doFaceISO();
       } else {
         setFaceISOHeight(null);
         setFaceISOWidth(null);
         setFaceISOData(null);
         setIsSuccess(false);
         setInputImage(null);
+      }
+      if (loop) {
         doFaceISO();
       }
     }
@@ -64,7 +65,8 @@ const usePrividFaceISO = () => {
     console.log("IMAGE RESULT", { faceISOImageData });
   }, [faceISOImageData]);
 
-  const doFaceISO = async () => {
+  const doFaceISO = async (functionLoop = true) => {
+    loop = functionLoop;
     const { imageOutput } = await faceISO(faceISOCallback, {
       input_image_format: "rgba",
     });

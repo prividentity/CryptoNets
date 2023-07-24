@@ -20,6 +20,8 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
     // eslint-disable-next-line no-unused-vars
    const {imageData, height, width} = await enroll1FA(callback, config || {
       send_original_images: false,
+      threshold_high_vertical_enroll: -0.1,
+      threshold_down_vertical_enroll: 0.1,
     });
    if(imageData) {
      setEnrollImageData(new ImageData(imageData, width, height));
