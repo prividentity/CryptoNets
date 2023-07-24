@@ -1,4 +1,4 @@
-# Private ID Android Sample Application
+# Private ID Android Sample Application [DEPRECATED]
 
 Powered by Private Identity® - https://private.id
 

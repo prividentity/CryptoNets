@@ -7,6 +7,8 @@ const useScanBackDocument = (setShowSuccess) => {
   const [scannedCodeData, setScannedCodeData] = useState(null);
   const [isFound, setIsFound] = useState(false);
 
+
+
   // Input image
   const [inputImageData, setInputImageData] = useState(null);
   const [inputImage, setInputImage] = useState(null);
