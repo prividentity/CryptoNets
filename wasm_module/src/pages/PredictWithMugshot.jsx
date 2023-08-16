@@ -5,7 +5,7 @@ import {
   setStopLoopContinuousAuthentication,
   closeCamera,
   faceCompareLocal,
-} from "@privateid/cryptonets-web-sdk-test";
+} from "@privateid/cryptonets-web-sdk-alpha";
 
 import { useCamera, useWasm } from "../hooks";
 import { canvasSizeOptions, isBackCamera, setMax2KForMobile, WIDTH_TO_STANDARDS } from "../utils";

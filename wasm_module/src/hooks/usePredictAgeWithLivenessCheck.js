@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { predictAge } from "@privateid/cryptonets-web-sdk-test";
+import { predictAge } from "@privateid/cryptonets-web-sdk-alpha";
 
 const usePredictAgeWithLivenessCheck = () => {
   const [age, setAge] = useState(null);

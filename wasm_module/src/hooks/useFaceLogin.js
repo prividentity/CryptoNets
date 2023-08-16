@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { faceLogin } from "@privateid/cryptonets-web-sdk-test";
+import { faceLogin } from "@privateid/cryptonets-web-sdk-alpha";
 
 let loop = true;
 const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess) => {
@@ -43,6 +43,15 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
       // threshold_user_left: 0.99,
       // threshold_user_too_far: 0.4,
       // threshold_user_too_close: 0.8,
+
+      threshold_high_vertical_predict: -0.1,
+      threshold_down_vertical_predict: 0.1,
+      threshold_user_right: 0.01,
+      threshold_user_left: 0.99,
+      threshold_profile_predict: 0.6,
+      threshold_user_too_close: 0.7,
+      threshold_user_too_far: 0.10,
+      auto_zoom_disabled: true,
     });
   };
 
@@ -67,7 +76,7 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
           const { validation_status, message } = result.returnValue;
           setPredictMessage(message);
           let hasValidFace = false;
-          setStatusCode(validation_status? validation_status[0]?.status: null);
+          setStatusCode(validation_status ? validation_status[0]?.status : null);
           for (let i = 0; validation_status.length > i; i++) {
             if (validation_status[i].status === 0) {
               hasValidFace = true;
@@ -93,7 +102,7 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
     faceLoginData,
     doFaceLogin,
     faceLoginMessage,
-    statusCode
+    statusCode,
   };
 };
 

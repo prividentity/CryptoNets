@@ -5,7 +5,7 @@ import {
   setStopLoopContinuousAuthentication,
   closeCamera,
   faceCompareLocal,
-} from "@privateid/cryptonets-web-sdk-test";
+} from "@privateid/cryptonets-web-sdk-alpha";
 import { startRegistration } from "@simplewebauthn/browser";
 import { useCamera, useWasm, useEnrollOneFa, usePredictOneFa } from "../hooks";
 import { canvasSizeOptions, isBackCamera, setMax2KForMobile, WIDTH_TO_STANDARDS } from "../utils";
@@ -95,7 +95,7 @@ const EnrollWithLabel = (props) => {
         "Content-Type": "application/json",
       },
       credentials: "include",
-      body: JSON.stringify({ uuid: enrollData.PI.uuid }), // body data type must match "Content-Type" header
+      body: JSON.stringify({ uuid: enrollData.puid }), // body data type must match "Content-Type" header
     });
     let attResp;
     try {
@@ -118,7 +118,7 @@ const EnrollWithLabel = (props) => {
         "Content-Type": "application/json",
       },
       credentials: "include",
-      body: JSON.stringify({ data: attResp, uuid: enrollData.PI.uuid }),
+      body: JSON.stringify({ data: attResp, uuid: enrollData.puid }),
     });
 
     const verificationJSON = await verificationResp.json();

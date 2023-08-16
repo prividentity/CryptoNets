@@ -6,7 +6,7 @@ import {
   closeCamera,
   faceCompareLocal,
   documentMugshoFaceCompare,
-} from "@privateid/cryptonets-web-sdk-test";
+} from "@privateid/cryptonets-web-sdk-alpha";
 
 import {
   useCamera,
@@ -39,7 +39,7 @@ import useEnrollOneFaWithLiveness from "../hooks/useEnrollOneFaWithLivenessCheck
 import useFaceLogin from "../hooks/useFaceLogin";
 import useFaceLoginWithLivenessCheck from "../hooks/useFaceLoginWithLiveness";
 import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
-import { antispoofCheck, getFrontDocumentStatusMessage } from "@privateid/cryptonets-web-sdk-test/dist/utils";
+import { antispoofCheck, getFrontDocumentStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
 import { DebugContext } from "../context/DebugContext";
 import { async } from "q";
 
@@ -834,6 +834,7 @@ const Ready = () => {
                 width: "47%",
               }}
             >
+              <h3>For testing new backend enroll/predict</h3>
               <div>
                 <div
                   style={{
@@ -917,11 +918,11 @@ const Ready = () => {
                   <div> Progress: {`${enrollOneFaProgress} %`}</div>
                   <div>
                     Enroll GUID:&nbsp;
-                    {`${enrollOneFaData ? enrollOneFaData.PI.guid : ""}`}
+                    {`${enrollOneFaData ? enrollOneFaData.guid : ""}`}
                   </div>
                   <div>
                     Enroll UUID:&nbsp;
-                    {`${enrollOneFaData ? enrollOneFaData.PI.uuid : ""}`}
+                    {`${enrollOneFaData ? enrollOneFaData.puid : ""}`}
                   </div>
                 </div>
               )}

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk-test";
+import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
 import { getScaledBoundingBox } from "../utils";
 
 let loop = true;

@@ -5,7 +5,7 @@ import {
   setStopLoopContinuousAuthentication,
   closeCamera,
   faceCompareLocal,
-} from "@privateid/cryptonets-web-sdk-test";
+} from "@privateid/cryptonets-web-sdk-alpha";
 
 import {
   useCamera,
@@ -252,11 +252,11 @@ const CompareFlow = () => {
                   <div> Progress: {`${enrollOneFaProgress} %`}</div>
                   <div>
                     Enroll GUID:&nbsp;
-                    {`${enrollOneFaData ? enrollOneFaData.PI.guid : ""}`}
+                    {`${enrollOneFaData ? enrollOneFaData.guid : ""}`}
                   </div>
                   <div>
-                    Enroll UUID:&nbsp;
-                    {`${enrollOneFaData ? enrollOneFaData.PI.uuid : ""}`}
+                    Enroll PUID:&nbsp;
+                    {`${enrollOneFaData ? enrollOneFaData.puid : ""}`}
                   </div>
                 </div>
               )}

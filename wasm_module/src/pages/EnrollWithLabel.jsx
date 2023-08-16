@@ -5,7 +5,7 @@ import {
   setStopLoopContinuousAuthentication,
   closeCamera,
   faceCompareLocal,
-} from "@privateid/cryptonets-web-sdk-test";
+} from "@privateid/cryptonets-web-sdk-alpha";
 
 import { useCamera, useWasm, useEnrollOneFa, usePredictOneFa } from "../hooks";
 import { canvasSizeOptions, isBackCamera, setMax2KForMobile, WIDTH_TO_STANDARDS } from "../utils";
@@ -240,11 +240,11 @@ const EnrollWithLabel = () => {
                   <div> Progress: {`${enrollOneFaProgress} %`}</div>
                   <div>
                     Enroll GUID:&nbsp;
-                    {`${enrollOneFaData ? enrollOneFaData.PI.guid : ""}`}
+                    {`${enrollOneFaData ? enrollOneFaData.guid : ""}`}
                   </div>
                   <div>
                     Enroll UUID:&nbsp;
-                    {`${enrollOneFaData ? enrollOneFaData.PI.uuid : ""}`}
+                    {`${enrollOneFaData ? enrollOneFaData.puid : ""}`}
                   </div>
                 </div>
               )}

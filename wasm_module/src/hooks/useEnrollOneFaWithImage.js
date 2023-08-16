@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import React, { useState } from "react";
-import { enroll1FA } from "@privateid/cryptonets-web-sdk-test";
+import { enroll1FA } from "@privateid/cryptonets-web-sdk-alpha";
 
 const useEnroll1FaWithImage = (onSuccess, setShowSuccess, config, image) => {
   const [enroll1FaWithImageData, setEnroll1FaWithImageData] = useState(null);

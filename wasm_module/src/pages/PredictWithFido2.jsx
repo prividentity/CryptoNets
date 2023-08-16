@@ -5,7 +5,7 @@ import {
   setStopLoopContinuousAuthentication,
   closeCamera,
   faceCompareLocal,
-} from "@privateid/cryptonets-web-sdk-test";
+} from "@privateid/cryptonets-web-sdk-alpha";
 import { startAuthentication, startRegistration } from "@simplewebauthn/browser";
 import { useCamera, useWasm, useEnrollOneFa, usePredictOneFa } from "../hooks";
 import { canvasSizeOptions, isBackCamera, setMax2KForMobile, WIDTH_TO_STANDARDS } from "../utils";
@@ -281,11 +281,11 @@ const PredictWithFIDO = (props) => {
                   <div> Progress: {`${enrollOneFaProgress} %`}</div>
                   <div>
                     Enroll GUID:&nbsp;
-                    {`${enrollOneFaData ? enrollOneFaData.PI.guid : ""}`}
+                    {`${enrollOneFaData ? enrollOneFaData.guid : ""}`}
                   </div>
                   <div>
                     Enroll UUID:&nbsp;
-                    {`${enrollOneFaData ? enrollOneFaData.PI.uuid : ""}`}
+                    {`${enrollOneFaData ? enrollOneFaData.puid : ""}`}
                   </div>
                 </div>
               )}
@@ -294,8 +294,8 @@ const PredictWithFIDO = (props) => {
                 <div>
                   <div>{`Face Valid: ${predictOneFaaceDetected ? "Face Detected" : "Face not detected"}`}</div>
                   <div>{`Message: ${predictMessage || ""}`}</div>
-                  <div>{`Predicted GUID: ${predictOneFaData ? predictOneFaData.PI.guid : ""}`}</div>
-                  <div>{`Predicted UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
+                  <div>{`Predicted GUID: ${predictOneFaData ? predictOneFaData.guid : ""}`}</div>
+                  <div>{`Predicted UUID: ${predictOneFaData ? predictOneFaData.puid : ""}`}</div>
                   <div>{JSON.stringify(verificationStatus, null, 2)}</div>
                 </div>
               )}

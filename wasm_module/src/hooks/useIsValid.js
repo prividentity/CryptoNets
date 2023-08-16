@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { isValid } from "@privateid/cryptonets-web-sdk-test";
+import { isValid } from "@privateid/cryptonets-web-sdk-alpha";
 
 const useIsValid = (element = "userVideo", deviceId = null) => {
   const [faceDetected, setFaceDetected] = useState(false);
