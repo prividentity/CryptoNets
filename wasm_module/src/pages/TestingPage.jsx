@@ -275,7 +275,7 @@ const Ready = () => {
   useEffect(() => {
     if (currentAction === "useDelete") {
       if (predictOneFaData) {
-        onDeleteUser(predictOneFaData.PI.uuid);
+        onDeleteUser(predictOneFaData.puid);
       }
     }
   }, [currentAction, predictOneFaData]);
@@ -921,7 +921,7 @@ const Ready = () => {
                     {`${enrollOneFaData ? enrollOneFaData.guid : ""}`}
                   </div>
                   <div>
-                    Enroll UUID:&nbsp;
+                    Enroll PUID:&nbsp;
                     {`${enrollOneFaData ? enrollOneFaData.puid : ""}`}
                   </div>
                 </div>
@@ -943,11 +943,11 @@ const Ready = () => {
                   <div> Progress: {`${enrollOneFaWithLivenessProgress} %`}</div>
                   <div>
                     Enroll GUID:&nbsp;
-                    {`${enrollOneFaWithLivenessData ? enrollOneFaWithLivenessData.PI.guid : ""}`}
+                    {`${enrollOneFaWithLivenessData ? enrollOneFaWithLivenessData.guid : ""}`}
                   </div>
                   <div>
-                    Enroll UUID:&nbsp;
-                    {`${enrollOneFaWithLivenessData ? enrollOneFaWithLivenessData.PI.uuid : ""}`}
+                    Enroll PUID:&nbsp;
+                    {`${enrollOneFaWithLivenessData ? enrollOneFaWithLivenessData.puid : ""}`}
                   </div>
                   <div>
                     Liveness Check:{" "}
@@ -975,7 +975,7 @@ const Ready = () => {
                   <div>{`Face Valid: ${continuousFaceDetected ? "Face Detected" : "Face not detected"}`}</div>
                   <div>{`Message: ${continuousPredictMessage || ""}`}</div>
                   <div>{`Predicted GUID: ${continuousPredictGUID ? continuousPredictGUID : ""}`}</div>
-                  <div>{`Predicted UUID: ${continuousPredictUUID ? continuousPredictUUID : ""}`}</div>
+                  <div>{`Predicted PUID: ${continuousPredictUUID ? continuousPredictUUID : ""}`}</div>
                 </div>
               )}
 
@@ -983,8 +983,8 @@ const Ready = () => {
                 <div>
                   <div>{`Face Valid: ${predictOneFaaceDetected ? "Face Detected" : "Face not detected"}`}</div>
                   <div>{`Message: ${predictMessage || ""}`}</div>
-                  <div>{`Predicted GUID: ${predictOneFaData ? predictOneFaData.PI.guid : ""}`}</div>
-                  <div>{`Predicted UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
+                  <div>{`Predicted GUID: ${predictOneFaData ? predictOneFaData.guid : ""}`}</div>
+                  <div>{`Predicted PUID: ${predictOneFaData ? predictOneFaData.puid : ""}`}</div>
                 </div>
               )}
 
@@ -995,10 +995,10 @@ const Ready = () => {
                   }`}</div>
                   <div>{`Message: ${predictMessageWithLiveness || ""}`}</div>
                   <div>{`Predicted GUID: ${
-                    predictOneFaDataWithLiveness ? predictOneFaDataWithLiveness.PI.guid : ""
+                    predictOneFaDataWithLiveness ? predictOneFaDataWithLiveness.guid : ""
                   }`}</div>
-                  <div>{`Predicted UUID: ${
-                    predictOneFaDataWithLiveness ? predictOneFaDataWithLiveness.PI.uuid : ""
+                  <div>{`Predicted PUID: ${
+                    predictOneFaDataWithLiveness ? predictOneFaDataWithLiveness.puid : ""
                   }`}</div>
                   <div>{`Liveness Check: ${
                     predictLivenessCheck === -1
@@ -1045,7 +1045,7 @@ const Ready = () => {
               {currentAction === "useDelete" && (
                 <div>
                   <div>{`Deletion Status: ${deletionStatus}`}</div>
-                  <div>{`User UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
+                  <div>{`User PUID: ${predictOneFaData ? predictOneFaData.puid : ""}`}</div>
                 </div>
               )}
 
