@@ -12,6 +12,7 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
 
   let showError = false;
 
+
   const enrollUserOneFa = async (config) => {
     setFaceDetected(false);
     setEnrollStatus(null);
@@ -20,8 +21,9 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
     // eslint-disable-next-line no-unused-vars
    const {imageData, height, width} = await enroll1FA(callback, config || {
       send_original_images: false,
-      threshold_high_vertical_enroll: -0.1,
-      threshold_down_vertical_enroll: 0.1,
+      // eyes_blinking_threshold: 0.6, 
+      // mouth_opened_threshold: 0.8,
+      // face_thresholds_rem_bad_emb: 0.86, 
     });
    if(imageData) {
      setEnrollImageData(new ImageData(imageData, width, height));

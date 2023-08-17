@@ -42,6 +42,7 @@ import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
 import { antispoofCheck, getFrontDocumentStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
 import { DebugContext } from "../context/DebugContext";
 import { async } from "q";
+import useLivenessCheck from "../hooks/useLivenessCheck";
 
 let callingWasm = false;
 const Ready = () => {
@@ -787,6 +788,14 @@ const Ready = () => {
     }
   };
 
+
+  const {result, doLivenessCheck, resultMessage} = useLivenessCheck();
+
+  const handleLivenessCheck = async () => {
+    setCurrentAction("livenessCheck");
+    await doLivenessCheck();
+  }
+
   return (
     <>
       {deviceSupported.isChecking ? (
@@ -1153,6 +1162,14 @@ const Ready = () => {
               )}
             </div>
 
+
+            {currentAction === "livenessCheck" && (
+                <div>
+                  <div>{`Status Code: ${result}`}</div>
+                  <div>{`Status Message: ${resultMessage}`}</div>
+                </div>
+              )}
+
             <div id="module_functions" className="buttonContainer">
               <button className="button" onClick={handleIsValid}>
                 Is Valid
@@ -1203,17 +1220,9 @@ const Ready = () => {
               <button className="button" onClick={handleUseScanHealhcareCard}>
                 Healthcare Card Scan
               </button>
-
-              {/* <label>
-                <input
-                  type="file"
-                  name="upload"
-                  accept="image/png, image/gif, image/jpeg"
-                  onChange={handleUploadImageHealthcare}
-                  style={{ display: "none" }}
-                />
-                <span className="button">Upload Image Use Healthcare Scan</span>
-              </label> */}
+              <button className="button" onClick={handleLivenessCheck}>
+                Liveness Check
+              </button>
 
               <label>
                 <input
@@ -1251,33 +1260,7 @@ const Ready = () => {
                 </button>
               </div>
             </div>
-            {/* <div>
-              <p> Other Utilities: </p>
-              <button
-                className="button"
-                onClick={() => {
-                  navigate("/enroll_with_mugshot");
-                }}
-              >
-                Enroll with Mugshot
-              </button>
-              <button
-                className="button"
-                onClick={() => {
-                  navigate("/predict_with_mugshot");
-                }}
-              >
-                Predict with Mugshot
-              </button>
-              <button
-                className="button"
-                onClick={() => {
-                  navigate("/enroll_with_label");
-                }}
-              >
-                Enroll with Label
-              </button>
-            </div> */}
+
             <div>
               <p> Upload 2 images to use compare: </p>
               <label>
