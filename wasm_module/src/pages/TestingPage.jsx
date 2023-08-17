@@ -789,10 +789,11 @@ const Ready = () => {
   };
 
 
-  const {result, doLivenessCheck, resultMessage} = useLivenessCheck();
+  const {result, doLivenessCheck, resultMessage, finalResult, livenessProgress, resetAllLivenessValues} = useLivenessCheck();
 
   const handleLivenessCheck = async () => {
     setCurrentAction("livenessCheck");
+    resetAllLivenessValues();
     await doLivenessCheck();
   }
 
@@ -1165,6 +1166,8 @@ const Ready = () => {
 
             {currentAction === "livenessCheck" && (
                 <div>
+                   <div>{`Progress: ${livenessProgress}`}</div>
+                  <div>{`Final Result: ${finalResult}`}</div>
                   <div>{`Status Code: ${result}`}</div>
                   <div>{`Status Message: ${resultMessage}`}</div>
                 </div>
