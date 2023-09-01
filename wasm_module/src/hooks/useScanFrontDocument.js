@@ -1,146 +1,126 @@
 import { useEffect, useState } from "react";
 import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
-import { CANVAS_SIZE } from "../utils";
 
-let internalCanvasSize;
-let triggerValue;
 let loop = true;
-const useScanFrontDocument = (setShowSuccess) => {
+const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
+  const [scanResult, setScanResult] = useState(null);
+  const [scannedIdData, setScannedIdData] = useState(null);
   const [isFound, setIsFound] = useState(false);
-  const [resultStatus, setResultStatus] = useState(null);
-  const [documentUUID, setDocumentUUID] = useState(null);
-  const [documentGUID, setDocumentGUID] = useState(null);
-  const [scanDocumentFrontMessage, setScanFrontDocumentMessage] = useState('');
-  const [shouldTriggerCallback, setShouldTriggerCallback] = useState(true);
-  triggerValue = shouldTriggerCallback;
-
-  // Input Image
+  const [isMugshotFound, setIsMugshotFound] = useState(null);
   const [inputImageData, setInputImageData] = useState(null);
   const [inputImage, setInputImage] = useState(null);
+  // Getting mugshot from document scan
+  const [predictMugshotRaw, setPredictMugshotRaw] = useState(null);
+  const [predictMugshotImageData, setPredictMugshotImageData] = useState(null);
+  const [predictMugshotImage, setPredictMugshotImage] = useState(null);
 
   // Cropped Front Document
   const [croppedDocumentImageData, setCroppedDocumentImageData] = useState(null);
-  const [croppedDocumentWidth, setCroppedDocumentWidth] = useState(null);
-  const [croppedDocumentHeight, setCroppedDocumentHeight] = useState(null);
   const [croppedDocumentImage, setCroppedDocumentImage] = useState(null);
+  const [returnValue, setResultValue] = useState(null);
 
-  // Cropped Mugshot
-  const [croppedMugshotImageData, setCroppedMugshotImageData] = useState(null);
-  const [croppedMugshotWidth, setCroppedMugshotWidth] = useState(null);
-  const [croppedMugshotHeight, setCroppedMugshotHeight] = useState(null);
-  const [croppedMugshotImage, setCroppedMugshotImage] = useState(null);
+  const [frontScanData, setFrontScanData] = useState(null);
 
-  // confidence value
-  const [resultResponse, setResultResponse] = useState(null);
   const documentCallback = (result) => {
     console.log("Front scan callback result:", result);
-    setScanFrontDocumentMessage(result.returnValue.predict_message);
-    setResultResponse(result.returnValue);
-    if (result.returnValue.predict_status === 0 && result.returnValue.op_status === 0) {
-      const { predict_status, uuid, guid, cropped_face_height, cropped_face_width, cropped_doc_width, cropped_doc_height } =
-        result.returnValue;
-      
+    setFrontScanData(result);
+    if (
+      result.returnValue.op_status === 0 &&
+      result.returnValue.cropped_doc_width &&
+      result.returnValue.cropped_face_width
+    ) {
       setIsFound(true);
-      setResultStatus(predict_status);
-      setDocumentUUID(uuid);
-      setDocumentGUID(guid);
-
-      setCroppedMugshotWidth(cropped_face_width);
-      setCroppedMugshotHeight(cropped_face_height);
-
-      setCroppedDocumentHeight(cropped_doc_height);
-      setCroppedDocumentWidth(cropped_doc_width);
       setShowSuccess(true);
-    } else if (triggerValue) {
-      setInputImageData(null);
-      setCroppedDocumentImageData(null);
-      setCroppedMugshotImageData(null);
-      scanFrontDocument();
+      setResultValue(result.returnValue);
+      // setPredictMugshotHeight(result.returnValue.cropped_face_height);
+      // setPredictMugshotWidth(result.returnValue.cropped_face_width);
+      // setCroppedDocumentHeight(result.returnValue.cropped_doc_height)
+      // setCroppedDocumentWidth(result.returnValue.cropped_doc_width)
+    } else {
+      setIsFound(false);
+      if(loop){
+        scanFrontDocument();
+      }
     }
   };
 
-  const convertImage = async (imageData, width, height, setState) => {
-    if (imageData.length === width * height * 4) {
-      const convertedImage = await convertCroppedImage(imageData, width, height);
-      setState(convertedImage);
-    }
+  const doConvert = async () => {
+    const mugshotBase64 = await convertCroppedImage(predictMugshotRaw, returnValue.cropped_face_width, returnValue.cropped_face_height);
+    console.log("Mugshot image:", mugshotBase64);
+    setPredictMugshotImage(mugshotBase64);
+    return mugshotBase64;
   };
 
-  // InputImage
-  useEffect(() => {
-    if (isFound && inputImageData) {
-      convertImage(inputImageData.data, inputImageData.width, inputImageData.height, setInputImage);
-    }
-  }, [isFound, inputImageData]);
+  const convertCroppedDocument = async () => {
+    const mugshotBase64 = await convertCroppedImage(croppedDocumentImageData, returnValue.cropped_doc_width, returnValue.cropped_doc_height);
+    console.log("Cropped Document:", mugshotBase64);
+    setCroppedDocumentImage(mugshotBase64);
+    return mugshotBase64;
+  }
+
+  const convertImageData = async () => {
+    const inputImageBase64 = await convertCroppedImage(inputImageData, returnValue.image_width, returnValue.image_height);
+    console.log("InputImage:", inputImageBase64);
+    setInputImage(inputImageBase64)
+    return inputImageBase64;
+  }
 
   // Cropped Document
   useEffect(() => {
-    if (isFound && croppedDocumentImageData && croppedDocumentWidth && croppedDocumentHeight) {
-      console.log("before converting cropped face: ", {
-        croppedDocumentImageData,
-        croppedDocumentWidth,
-        croppedDocumentHeight,
-      });
-      convertImage(croppedDocumentImageData, croppedDocumentWidth, croppedDocumentHeight, setCroppedDocumentImage);
+    if (isFound && croppedDocumentImageData && returnValue) {
+      convertCroppedDocument();
     }
-  }, [isFound, croppedDocumentImageData, croppedDocumentWidth, croppedDocumentHeight]);
+  }, [isFound, croppedDocumentImageData, returnValue]);
 
-  // Cropped Mugshot
   useEffect(() => {
-    if (isFound && croppedMugshotImageData && croppedMugshotWidth && croppedMugshotHeight) {
-      console.log("before converting cropped face: ", {
-        croppedMugshotImageData,
-        croppedMugshotWidth,
-        croppedMugshotHeight,
-      });
-      convertImage(croppedMugshotImageData, croppedMugshotWidth, croppedMugshotHeight, setCroppedMugshotImage);
+    if (isFound && predictMugshotRaw && returnValue) {
+      const image = new ImageData(predictMugshotRaw, returnValue.cropped_face_width, returnValue.cropped_face_height);
+      setPredictMugshotImageData(image);
+      setIsMugshotFound(true);
+      doConvert();
     }
-  }, [isFound, croppedMugshotImageData, croppedMugshotWidth, croppedMugshotHeight]);
+  }, [isFound, predictMugshotRaw, returnValue]);
 
-  // Printing images
+  // Cropped Document
   useEffect(() => {
-    if (croppedDocumentImage && croppedMugshotImage && inputImage) {
-      console.log("FRONT DL SCAN IMAGES:", { croppedDocumentImage, croppedMugshotImage, inputImage });
+    if (isFound && inputImageData) {
+      convertImageData();
     }
-  }, [croppedDocumentImage, croppedMugshotImage, inputImage]);
+  }, [isFound, inputImageData]);
 
-  const scanFrontDocument = async (canvasSize, initializeCanvas, functionLoop = true) => {
-    if (canvasSize && canvasSize !== internalCanvasSize) {
-      internalCanvasSize = canvasSize;
-    }
+  const scanFrontDocument = async (functionLoop= true, uploadData = undefined) => {
     loop = functionLoop;
-    const canvasObj = canvasSize ? CANVAS_SIZE[canvasSize] : internalCanvasSize ? CANVAS_SIZE[internalCanvasSize] : {};
-    const { result, imageData, croppedDocument, croppedMugshot } = await isValidPhotoID(
-      "PHOTO_ID_FRONT",
-      documentCallback,
-      true,
-      undefined,
-      {
-        input_image_format: "rgba",
-      },
-      canvasObj
+    const {
+      result: resultData,
+      croppedDocument,
+      croppedMugshot,
+      imageData
+    } = await isValidPhotoID("PHOTO_ID_FRONT", documentCallback, false, uploadData, {
+      input_image_format:"rgba",
+      blur_threshold_enroll_pred: 0,
+    },
+    false
     );
-    setInputImageData(imageData);
-    setCroppedDocumentImageData(croppedDocument);
-    setCroppedMugshotImageData(croppedMugshot);
 
-    // onSuccess({ result, imageData, croppedDocument, croppedMugshot });
+    setPredictMugshotRaw(croppedMugshot);
+    setCroppedDocumentImageData(croppedDocument);
+    setInputImageData(imageData);
+    console.log(croppedDocument, croppedMugshot, imageData);
+
+    console.log("Validate DL", resultData);
   };
 
   return {
+    scanResult,
     scanFrontDocument,
     isFound,
-    setIsFound,
-    resultStatus,
-    documentUUID,
-    documentGUID,
-    setShouldTriggerCallback,
-    inputImage,
+    isMugshotFound,
+    scannedIdData,
+    predictMugshotImageData,
+    predictMugshotImage,
     croppedDocumentImage,
-    croppedMugshotImage,
-    resultResponse,
-    scanDocumentFrontMessage,
+    frontScanData,
   };
 };
 
-export default useScanFrontDocument;
+export default useScanFrontDocumentWithoutPredict;

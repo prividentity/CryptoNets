@@ -2,46 +2,52 @@ import { useState } from "react";
 import { isValid } from "@privateid/cryptonets-web-sdk-alpha";
 
 const useIsValid = (element = "userVideo", deviceId = null) => {
-  const [faceDetected, setFaceDetected] = useState(false);
-  const [hasFinished, setHasFinished] = useState(false);
-  const [exposureValue, setExposureValue] = useState(0);
-  const [isValidStatusCode, setIsValidStatusCode] = useState(null);
-  const [confidenceScore, setConfidenceScore] = useState(0);
+  //   {
+  //     "error": 0,
+  //     "exposure": 0.6864483952522278,
+  //     "faces": [
+  //         {
+  //             "status": -100,
+  //                 "anti_spoof_performed": true,
+  //                 "anti_spoof_status": -4
+  //         }
+  //     ]
+  // }
+
+  const [antispoofPerformed, setAntispoofPerformed] = useState();
+  const [antispoofStatus, setAntispoofStatus] = useState();
+  const [isValidStatus, setIsValidStatus] = useState();
+
+  const callback = (response) => {
+    console.log("isValid Response:", response);
+
+    if (response?.returnValue?.faces?.length > 0) {
+      setAntispoofPerformed(response?.returnValue?.faces[0].anti_spoof_performed);
+      setAntispoofStatus(response?.returnValue?.faces[0].anti_spoof_status);
+      setIsValidStatus(response?.returnValue?.faces[0].status);
+    } else {
+      setAntispoofPerformed("");
+      setAntispoofStatus("");
+      setIsValidStatus("");
+    }
+    isValidCall();
+  };
+
   const isValidCall = async () => {
     // eslint-disable-next-line no-unused-vars
     await isValid(callback, null, {
       input_image_format: "rgba",
+      detect_spoof_only: false,
+      angle_rotation_left_threshold: 5.0,
+      angle_rotation_right_threshold: 5.0,
+      antispoof_face_margin: 1.0,
+      antis_spoof_threshold: 0.5,
+      gray_scale_threshold: 25.0,
+      gray_scale_variance_threshold: 100.0,
     });
   };
 
-  const callback = async (result) => {
-    console.log("callback hook result isValid:", result);
-    switch (result.status) {
-      case "WASM_RESPONSE":
-        if (result.returnValue.faces.length === 0) {
-          setFaceDetected(false);
-          setIsValidStatusCode(result?.returnValue?.faces[0]?.status || null)
-        } else {
-          setIsValidStatusCode(result.returnValue.faces[0].status)
-          if (
-            result.returnValue.faces[0].status === 0 ||
-            result.returnValue.faces[0].status === 11 ||
-            result.returnValue.faces[0].status === 10
-          ) {
-            setFaceDetected(true);
-            setConfidenceScore(result.returnValue.faces[0].box.conf_score);
-          }
-          if (result.returnValue.faces[0].status === -1) {
-            setFaceDetected(false);
-          }
-        }
-        setExposureValue(result?.returnValue?.exposure);
-        setHasFinished(true);
-        break;
-      default:
-    }
-  };
-  return { faceDetected, isValidCall, hasFinished, setHasFinished, exposureValue, isValidStatusCode, confidenceScore };
+  return { antispoofPerformed, antispoofStatus, isValidStatus, isValidCall };
 };
 
 export default useIsValid;

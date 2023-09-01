@@ -2,75 +2,98 @@ import { useState } from "react";
 import { convertCroppedImage, enroll1FA } from "@privateid/cryptonets-web-sdk-alpha";
 
 const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess) => {
-  const [faceDetected, setFaceDetected] = useState(false);
-  const [enrollStatus, setEnrollStatus] = useState(null);
-  const [progress, setProgress] = useState(0);
-  const [enrollData, setEnrollData] = useState(null);
-  const [enrollPortrait, setEnrollPortrait] = useState(null);
+  const [enrollAntispoofPerformed, setEnrollAntispoofPerformed] = useState(false);
+  const [enrollAntispoofStatus, setEnrollAntispoofStatus] = useState(null);
+
+  const [enrollValidationStatus, setEnrollValidationStatus] = useState(null);
+
+  const [enrollGUID, setEnrollGUID] = useState("");
+  const [enrollPUID, setEnrollPUID] = useState("");
+  const [enrollToken, setEnrollToken] = useState("");
 
   const [enrollImageData, setEnrollImageData] = useState(null);
 
   let showError = false;
+  let enrollCount = 0;
 
-
-  const enrollUserOneFa = async (config) => {
-    setFaceDetected(false);
-    setEnrollStatus(null);
-    setProgress(0);
-    setEnrollData(null);
+  const enrollUserOneFa = async (token = "") => {
     // eslint-disable-next-line no-unused-vars
-   const {imageData, height, width} = await enroll1FA(callback, config || {
-      send_original_images: false,
-      // eyes_blinking_threshold: 0.6, 
-      // mouth_opened_threshold: 0.8,
-      // face_thresholds_rem_bad_emb: 0.86, 
+    const bestImage = await enroll1FA(callback, {
+      input_image_format: "rgba",
+      enroll_token: token,
     });
-   if(imageData) {
-     setEnrollImageData(new ImageData(imageData, width, height));
-   }
+
+    if(bestImage){
+      setEnrollImageData(new ImageData(bestImage.imageData, bestImage.width, bestImage.height));
+    }
+      
   };
 
   const callback = async (result) => {
     console.log("enroll callback hook result:", result);
-    switch (result.status) {
-      case "VALID_FACE":
-        setFaceDetected(true);
-        setEnrollStatus("Please Hold Position");
-        setProgress(result.progress);
-        break;
-      case "INVALID_FACE":
-        console.log("INVALID FACE: ", result);
-        if (!showError) {
-          showError = true;
-          setEnrollStatus(result.message);
-          setFaceDetected(false);
-          setTimeout(() => {
-            showError = false;
-          }, 500);
+
+    //   {
+    //     "status": 0,
+    //     "message": "Success",
+    //     "validation_status": [
+    //         {
+    //             "status": 0,
+    //             "conf_score": 0.9540961384773254,
+    //             "anti_spoof_status": 0,
+    //             "anti_spoof_performed": true,
+    //             "enroll_performed": false,
+    //             "enroll_token": "2023-09-01_22-33-16-913000"
+    //         }
+    //     ]
+    // }
+
+    // if (result.returnValue.error == -100) {
+    //   enrollUserOneFa();
+    //   return;
+    // }
+
+    if (result.returnValue.status === 0) {
+      if (result.returnValue.guid && result.returnValue.puid) {
+        setEnrollGUID(result.returnValue.guid);
+        setEnrollPUID(result.returnValue.puid);
+        setShowSuccess(true);
+      } else {
+        if (result.returnValue.validation_status.length > 0) {
+          setEnrollToken(result.returnValue.validation_status[0].enroll_token);
+          setEnrollAntispoofPerformed(result.returnValue.validation_status[0].anti_spoof_performed);
+          setEnrollAntispoofStatus(result.returnValue.validation_status[0].anti_spoof_status);
+          setEnrollValidationStatus(result.returnValue.validation_status[0].status);
+
+          if (
+            result.returnValue.validation_status[0].anti_spoof_performed &&
+            result.returnValue.validation_status[0].anti_spoof_status === 0 &&
+            result.returnValue.validation_status[0].status === 0
+          ) {
+            enrollUserOneFa(result.returnValue.validation_status[0].enroll_token);
+          } else {
+            enrollUserOneFa("");
+          }
+        } else {
+          setEnrollToken("");
+          setEnrollAntispoofPerformed("");
+          setEnrollAntispoofStatus("");
+          setEnrollValidationStatus("");
         }
-        break;
-      case "ENROLLING":
-        setEnrollStatus("ENROLLING");
-        setFaceDetected(true);
-        break;
-      case "WASM_RESPONSE":
-        if (result.returnValue?.status === 0) {
-          setEnrollStatus("ENROLL SUCCESS");
-          setEnrollData(result.returnValue);
-          onSuccess(result.returnValue);
-          // setEnrollPortrait(result.portrait);
-          // convertBase64ToImageData(result.portrait, setEnrollImageData);
-          setShowSuccess(true);
-        }
-        if (
-          result.returnValue?.status === -1 ||
-          result.returnValue?.status === -100 ||
-          result.returnValue?.error === -1
-        ) {
-          setEnrollStatus("ENROLL FAILED, PLEASE TRY AGAIN");
-        }
-        break;
-      default:
+      }
+    } else {
+      if (result.returnValue.validation_status.length > 0) {
+        setEnrollToken(result.returnValue.validation_status[0].enroll_token);
+        setEnrollAntispoofPerformed(result.returnValue.validation_status[0].anti_spoof_performed);
+        setEnrollAntispoofStatus(result.returnValue.validation_status[0].anti_spoof_status);
+        setEnrollValidationStatus(result.returnValue.validation_status[0].status);
+        enrollUserOneFa(result.returnValue.validation_status[0].enroll_token);
+      } else {
+        setEnrollToken("");
+        setEnrollAntispoofPerformed("");
+        setEnrollAntispoofStatus("");
+        setEnrollValidationStatus("");
+        enrollUserOneFa("");
+      }
     }
   };
 
@@ -93,7 +116,15 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
     };
   }
 
-  return { faceDetected, enrollStatus, enrollData, enrollUserOneFa, progress, enrollPortrait, enrollImageData };
+  return {
+    enrollGUID,
+    enrollPUID,
+    enrollAntispoofPerformed,
+    enrollAntispoofStatus,
+    enrollValidationStatus,
+    enrollToken,
+    enrollUserOneFa,
+  };
 };
 
 export default useEnrollOneFa;
