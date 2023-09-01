@@ -44,55 +44,90 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
       // threshold_user_too_far: 0.4,
       // threshold_user_too_close: 0.8,
 
-      threshold_high_vertical_predict: -0.1,
-      threshold_down_vertical_predict: 0.1,
+      context_string: "enroll",
+      threshold_high_vertical_enroll: -0.1,
+      threshold_down_vertical_enroll: 0.1,
       threshold_user_right: 0.01,
       threshold_user_left: 0.99,
-      threshold_profile_predict: 0.6,
+      threshold_profile_enroll: 0.6,
       threshold_user_too_close: 0.7,
-      threshold_user_too_far: 0.10,
+      threshold_user_too_far: 0.2,
+      // eyes_blinking_threshold: 0.6,
       auto_zoom_disabled: true,
     });
   };
 
+  // const callback = async (result) => {
+  //   console.log("facelogin callback hook result:", result);
+  //   switch (result.status) {
+  //     case "WASM_RESPONSE":
+  //       if (result?.returnValue?.error) {
+  //         setFaceDetected(false);
+  //         setPredictMessage("Invalid Image");
+  //         return;
+  //       }
+  //       if (result.returnValue?.status === 0) {
+  //         const { message } = result.returnValue;
+  //         setPredictMessage(message);
+  //         setPredictData(result.returnValue);
+  //         onSuccess(result.returnValue);
+  //         setFaceDetected(true);
+  //         setShowSuccess(true);
+  //       }
+  //       if (result.returnValue?.status !== 0) {
+  //         const { validation_status, message } = result.returnValue;
+  //         setPredictMessage(message);
+  //         let hasValidFace = false;
+  //         setStatusCode(validation_status ? validation_status[0]?.status : null);
+  //         for (let i = 0; validation_status.length > i; i++) {
+  //           if (validation_status[i].status === 0) {
+  //             hasValidFace = true;
+  //             i = validation_status.length;
+  //           }
+  //         }
+  //         setFaceDetected(hasValidFace);
+  //         setPredictStatus(null);
+  //         setFaceDetected(false);
+  //         setPredictData(null);
+  //       }
+  //       break;
+  //     default:
+  //   }
+  //   if (loop) {
+  //     doFaceLogin();
+  //   }
+  // };
+
   const callback = async (result) => {
-    console.log("facelogin callback hook result:", result);
+    console.log("predict callback hook result:", result);
+    setStatusCode(result.returnValue.status);
+    setPredictStatus(result.returnValue.status);
     switch (result.status) {
       case "WASM_RESPONSE":
-        if (result?.returnValue?.error) {
+        if(result?.returnValue?.error) {
           setFaceDetected(false);
           setPredictMessage("Invalid Image");
-          return;
+          return
         }
         if (result.returnValue?.status === 0) {
-          const { message } = result.returnValue;
+          const { message }  = result.returnValue;
           setPredictMessage(message);
           setPredictData(result.returnValue);
           onSuccess(result.returnValue);
           setFaceDetected(true);
           setShowSuccess(true);
+          // if(result?.returnValue?.user_identifier_list){
+          //   setPredictUserIdentifier(result?.returnValue?.user_identifier_list);
+          // }
         }
         if (result.returnValue?.status !== 0) {
-          const { validation_status, message } = result.returnValue;
+          const {status, message}  = result.returnValue;
           setPredictMessage(message);
-          let hasValidFace = false;
-          setStatusCode(validation_status ? validation_status[0]?.status : null);
-          for (let i = 0; validation_status.length > i; i++) {
-            if (validation_status[i].status === 0) {
-              hasValidFace = true;
-              i = validation_status.length;
-            }
-          }
-          setFaceDetected(hasValidFace);
-          setPredictStatus(null);
-          setFaceDetected(false);
-          setPredictData(null);
+          setFaceDetected(status===0);
+          doFaceLogin();
         }
         break;
       default:
-    }
-    if (loop) {
-      doFaceLogin();
     }
   };
 
