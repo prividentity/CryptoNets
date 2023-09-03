@@ -4,9 +4,9 @@ let loop = true;
 const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess, disableButtons) => {
   const [predictMessage, setPredictMessage] = useState("");
 
-  const [predictAntispoofPerformed, setPredictAntispoofPerformed] = useState(null);
-  const [predictAntispoofStatus, setPredictAntispoofStatus] = useState(null);
-  const [predictValidationStatus, setPredictValidationStatus] = useState(null);
+  const [predictAntispoofPerformed, setPredictAntispoofPerformed] = useState("");
+  const [predictAntispoofStatus, setPredictAntispoofStatus] = useState("");
+  const [predictValidationStatus, setPredictValidationStatus] = useState("");
   const [predictGUID, setPredictGUID] = useState("");
   const [predictPUID, setPredictPUID] = useState("");
 
@@ -20,8 +20,8 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
           setPredictMessage(message);
           onSuccess(result.returnValue);
           setShowSuccess(true);
-          setPredictAntispoofPerformed(result.returnValue.anti_spoof_performed);
-          setPredictAntispoofStatus(result.returnValue.anti_spoof_status);
+          setPredictAntispoofPerformed(result.returnValue.anti_spoof_performed || "");
+          setPredictAntispoofStatus(result.returnValue.anti_spoof_status || "");
           setPredictValidationStatus(result.returnValue.status);
           setPredictGUID(result.returnValue.guid);
           setPredictPUID(result.returnValue.puid);
@@ -44,9 +44,9 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
 
   const predictUserOneFa = async () => {
     // eslint-disable-next-line no-unused-vars
-    setPredictAntispoofPerformed(null);
-    setPredictAntispoofStatus(null);
-    setPredictValidationStatus(null);
+    setPredictAntispoofPerformed("");
+    setPredictAntispoofStatus("");
+    setPredictValidationStatus("");
     setPredictGUID("");
     setPredictPUID("");
     disableButtons(true);

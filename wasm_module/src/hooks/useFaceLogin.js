@@ -3,9 +3,9 @@ import { faceLogin } from "@privateid/cryptonets-web-sdk-alpha";
 const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess, disableButtons) => {
   const [faceLoginMessage, setFaceLoginMessage] = useState("");
 
-  const [faceLoginAntispoofPerformed, setFaceLoginAntispoofPerformed] = useState(null);
-  const [faceLoginAntispoofStatus, setFaceLoginAntispoofStatus] = useState(null);
-  const [faceLoginValidationStatus, setFaceLoginValidationStatus] = useState(null);
+  const [faceLoginAntispoofPerformed, setFaceLoginAntispoofPerformed] = useState("");
+  const [faceLoginAntispoofStatus, setFaceLoginAntispoofStatus] = useState("");
+  const [faceLoginValidationStatus, setFaceLoginValidationStatus] = useState("");
   const [faceLoginGUID, setFaceLoginGUID] = useState("");
   const [faceLoginPUID, setFaceLoginPUID] = useState("");
 
@@ -19,8 +19,8 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
           setFaceLoginMessage(message);
           onSuccess(result.returnValue);
           setShowSuccess(true);
-          setFaceLoginAntispoofPerformed(result.returnValue.anti_spoof_performed);
-          setFaceLoginAntispoofStatus(result.returnValue.anti_spoof_status);
+          setFaceLoginAntispoofPerformed(result.returnValue.anti_spoof_performed || "");
+          setFaceLoginAntispoofStatus(result.returnValue.anti_spoof_status || "");
           setFaceLoginValidationStatus(result.returnValue.status);
           setFaceLoginGUID(result.returnValue.guid);
           setFaceLoginPUID(result.returnValue.puid);
@@ -43,9 +43,9 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
 
   const doFaceLogin = async () => {
     // eslint-disable-next-line no-unused-vars
-    setFaceLoginAntispoofPerformed(null);
-    setFaceLoginAntispoofStatus(null);
-    setFaceLoginValidationStatus(null);
+    setFaceLoginAntispoofPerformed("");
+    setFaceLoginAntispoofStatus("");
+    setFaceLoginValidationStatus("");
     setFaceLoginGUID("");
     setFaceLoginPUID("");
     disableButtons(true);

@@ -33,7 +33,10 @@ import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocument";
 import usePrividFaceISO from "../hooks/usePrividFaceISO";
 import useFaceLogin from "../hooks/useFaceLogin";
 import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
-import { getFaceValidationMessage, getFrontDocumentStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
+import {
+  getFaceValidationMessage,
+  getFrontDocumentStatusMessage,
+} from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
 import { DebugContext } from "../context/DebugContext";
 import useLivenessCheck from "../hooks/useLivenessCheck";
 
@@ -481,7 +484,6 @@ const Ready = () => {
     navigator.clipboard.writeText(text);
   };
 
-
   const { result, doLivenessCheck, resultMessage, finalResult, livenessProgress, resetAllLivenessValues } =
     useLivenessCheck();
 
@@ -784,87 +786,164 @@ const Ready = () => {
             </div>
 
             <div id="module_functions" className="buttonContainer">
-              <button className="button" onClick={handleIsValid} disabled={disableButtons}>
+              <button
+                className="button"
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                onClick={handleIsValid}
+                disabled={disableButtons}
+              >
                 Is Valid
               </button>
-              <button className="button" onClick={handlePredictAge} disabled={disableButtons}>
+              <button
+                className="button"
+                onClick={handlePredictAge}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Predict Age
               </button>
-              <button className="button" onClick={handleEnrollOneFa} disabled={disableButtons}>
+              <button
+                className="button"
+                onClick={handleEnrollOneFa}
+                style={
+                  disableButtons && currentAction !== "useEnrollOneFa"
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Enroll
               </button>
-              <button className="button" onClick={handlePredictOneFa} disabled={disableButtons}>
-                Predict
+              <button
+                className="button"
+                onClick={handlePredictOneFa}
+                style={
+                  disableButtons && currentAction !== "usePredictOneFa"
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Predict With Liveness
               </button>
-              <button className="button" onClick={handleFaceLogin} disabled={disableButtons}>
+              <button
+                className="button"
+                onClick={handleFaceLogin}
+                style={
+                  disableButtons && currentAction !== "useFaceLogin"
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Face Login
               </button>
               {/* <button className="button" onClick={handleContinuousPredict}>
                 Continuous Authentication
               </button> */}
-              <button className="button" onClick={handleDelete} disabled={disableButtons}>
+              <button
+                className="button"
+                onClick={handleDelete}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Delete
               </button>
-              <button className="button" onClick={handleFrontDLValidity} disabled={disableButtons}>
+              <button
+                className="button"
+                onClick={handleFrontDLValidity}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Scan Front Document
               </button>
-              <button className="button" onClick={handleScanDocumentBack} disabled={disableButtons}>
+              <button
+                className="button"
+                onClick={handleScanDocumentBack}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Scan Back Document
               </button>
-              <button className="button" onClick={handlePrividFaceISO} disabled={disableButtons}>
+              <button
+                className="button"
+                onClick={handlePrividFaceISO}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Face ISO
               </button>
-              <button className="button" onClick={handleUseScanHealhcareCard} disabled={disableButtons}>
+              <button
+                className="button"
+                onClick={handleUseScanHealhcareCard}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Healthcare Card Scan
               </button>
-              <button className="button" onClick={handleLivenessCheck} disabled={disableButtons}>
+              <button
+                className="button"
+                onClick={handleLivenessCheck}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Liveness Check
               </button>
-
-              {/* <label>
-                <input
-                  type="file"
-                  name="upload"
-                  accept="image/png, image/gif, image/jpeg"
-                  onChange={handleUploadDoAntispoofCheck}
-                  style={{ display: "none" }}
-                />
-                <span className="button">Upload Image Use Antispoof Check</span>
-              </label> */}
             </div>
-            {/* <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "column",
-                flexWrap: "wrap",
-              }}
-            >
-              <p> Testing Buttons: </p>
-              <label>
-                <input
-                  type="file"
-                  name="upload"
-                  accept="image/png, image/gif, image/jpeg"
-                  onChange={handleUploadImageForScanning}
-                  style={{ display: "none" }}
-                />
-                <span className="button">Upload Image For Scanning</span>
-              </label>
-              <br />
-              <div style={{ display: "flex", gap: "2px" }}>
-                <button className="button" onClick={frontScanUploadedImageScanning}>
-                  Front Document Scan Uploaded Image
-                </button>
-                <button className="button" onClick={healthcareScanUploadedImageScanning}>
-                  Healthcare Card Scan Uploaded Image
-                </button>
-                <button className="button" onClick={backScanUploadedImageScanning}>
-                  Back Document Scan Uploaded Image
-                </button>
-              </div>
-            </div> */}
 
             <div>
               <p> Upload 2 images to use compare: </p>

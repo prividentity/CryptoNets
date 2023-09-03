@@ -4,8 +4,8 @@ import { predictAge } from "@privateid/cryptonets-web-sdk-alpha";
 const usePredictAge = () => {
   const [age, setAge] = useState(null);
   const [antispoofPerformed, setAntispoofPerformed] = useState(false);
-  const [antispoofStatus, setAntispoofStatus] = useState(null);
-  const [validationStatus, setValidationStatus] = useState(null);
+  const [antispoofStatus, setAntispoofStatus] = useState("");
+  const [validationStatus, setValidationStatus] = useState("");
 
   const callback = (response) => {
     console.log("predict Age Callback", response);
@@ -26,29 +26,10 @@ const usePredictAge = () => {
   };
 
   const doPredictAge = async () => {
-    //   {
-    //     "error": 0,
-    //     "faces": [
-    //         {
-    //             "status": 0,
-    //             "age": -1,
-    //             "conf_score": 69.52000427246094,
-    //             "anti_spoof_performed": true,
-    //             "anti_spoof_status": -4,
-    //             "box": {
-    //                 "top_left": {
-    //                     "x": 224,
-    //                     "y": 205
-    //                 },
-    //                 "bottom_right": {
-    //                     "x": 377,
-    //                     "y": 356
-    //                 }
-    //             }
-    //         }
-    //     ]
-    // }
-
+    setAge("");
+      setAntispoofPerformed("");
+      setAntispoofStatus("");
+      setValidationStatus("");
     await predictAge(callback, {
       input_image_format: "rgba",
     });

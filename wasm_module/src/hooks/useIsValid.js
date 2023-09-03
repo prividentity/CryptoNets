@@ -2,21 +2,9 @@ import { useState } from "react";
 import { isValid } from "@privateid/cryptonets-web-sdk-alpha";
 
 const useIsValid = (element = "userVideo", deviceId = null) => {
-  //   {
-  //     "error": 0,
-  //     "exposure": 0.6864483952522278,
-  //     "faces": [
-  //         {
-  //             "status": -100,
-  //                 "anti_spoof_performed": true,
-  //                 "anti_spoof_status": -4
-  //         }
-  //     ]
-  // }
-
-  const [antispoofPerformed, setAntispoofPerformed] = useState();
-  const [antispoofStatus, setAntispoofStatus] = useState();
-  const [isValidStatus, setIsValidStatus] = useState();
+  const [antispoofPerformed, setAntispoofPerformed] = useState("");
+  const [antispoofStatus, setAntispoofStatus] = useState("");
+  const [isValidStatus, setIsValidStatus] = useState("");
 
   const callback = (response) => {
     console.log("isValid Response:", response);

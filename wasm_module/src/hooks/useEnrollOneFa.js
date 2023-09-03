@@ -3,15 +3,15 @@ import { convertCroppedImage, enroll1FA } from "@privateid/cryptonets-web-sdk-al
 
 const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess, disableButtons) => {
   const [enrollAntispoofPerformed, setEnrollAntispoofPerformed] = useState(false);
-  const [enrollAntispoofStatus, setEnrollAntispoofStatus] = useState(null);
+  const [enrollAntispoofStatus, setEnrollAntispoofStatus] = useState("");
 
-  const [enrollValidationStatus, setEnrollValidationStatus] = useState(null);
+  const [enrollValidationStatus, setEnrollValidationStatus] = useState("");
 
   const [enrollGUID, setEnrollGUID] = useState("");
   const [enrollPUID, setEnrollPUID] = useState("");
   const [enrollToken, setEnrollToken] = useState("");
 
-  const [enrollImageData, setEnrollImageData] = useState(null);
+  const [enrollImageData, setEnrollImageData] = useState("");
 
 
   const enrollUserOneFa = async (token = "") => {
