@@ -31,10 +31,9 @@ import "./styles.css";
 import usePredictAge from "../hooks/usePredictAge";
 import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocument";
 import usePrividFaceISO from "../hooks/usePrividFaceISO";
-import { useNavigate } from "react-router-dom";
 import useFaceLogin from "../hooks/useFaceLogin";
 import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
-import { antispoofCheck, getFaceValidationMessage, getFrontDocumentStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
+import { getFaceValidationMessage, getFrontDocumentStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
 import { DebugContext } from "../context/DebugContext";
 import useLivenessCheck from "../hooks/useLivenessCheck";
 
@@ -51,6 +50,8 @@ const Ready = () => {
     capabilities,
     setReady,
   } = useCamera("userVideo");
+
+  const [disableButtons, setDisableButtons] = useState(false);
 
   function getUrlParameter(sParam, defaultValue = undefined) {
     const sPageURL = window.location.search.substring(1);
@@ -107,17 +108,6 @@ const Ready = () => {
     setContinuousPredictUUID(null);
     setContinuousPredictGUID(null);
   };
-  // const {
-  //   faceDetected: continuousFaceDetected,
-  //   predictUser: continuousPredictUser,
-  //   continuousPredictMessage,
-  // } = useContinuousPredict(
-  //   "userVideo",
-  //   continuousPredictSuccess,
-  //   continuousOnNotFoundAndFailure,
-  //   continuousOnNotFoundAndFailure,
-  //   predictRetryTimes
-  // );
 
   const [currentAction, setCurrentAction] = useState(null);
 
@@ -166,7 +156,7 @@ const Ready = () => {
     enrollValidationStatus,
     enrollToken,
     enrollUserOneFa,
-  } = useEnrollOneFa("userVideo", useEnrollSuccess, null, deviceId, setShowSuccess);
+  } = useEnrollOneFa("userVideo", useEnrollSuccess, null, deviceId, setShowSuccess, setDisableButtons);
   const handleEnrollOneFa = async () => {
     setShowSuccess(false);
     setCurrentAction("useEnrollOneFa");
@@ -356,11 +346,6 @@ const Ready = () => {
     await closeCamera();
   };
 
-  const navigate = useNavigate();
-  const handleCompareImages = async () => {
-    navigate("/compare");
-  };
-
   const [uploadImage1, setUploadImage1] = useState(null);
   const [uploadImage2, setUploadImage2] = useState(null);
 
@@ -475,7 +460,7 @@ const Ready = () => {
     faceLoginMessage,
     faceLoginPUID,
     faceLoginValidationStatus,
-  } = useFaceLogin("userVideo", () => {}, null, deviceId, setShowSuccess);
+  } = useFaceLogin("userVideo", () => {}, null, deviceId, setShowSuccess, setDisableButtons);
 
   const handleFaceLogin = async () => {
     setShowSuccess(false);
@@ -492,175 +477,10 @@ const Ready = () => {
     doScanHealthcareCard(undefined, debugContext.functionLoop);
   };
 
-  //
-  const handleUploadImageHealthcare = async (e) => {
-    console.log(e.target.files);
-    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
-    if (e.target.files.length > 0) {
-      if (imageRegex.test(e.target.files[0].type)) {
-        const imageUrl = URL.createObjectURL(e.target.files[0]);
-
-        console.log(e.target.files[0]);
-
-        const getBase64 = (file) => {
-          return new Promise((resolve, reject) => {
-            var reader = new FileReader();
-            reader.readAsDataURL(file);
-
-            reader.onload = function () {
-              resolve(reader.result);
-            };
-            reader.onerror = function (error) {
-              reject(error);
-            };
-          });
-        };
-
-        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
-        var newImg = new Image();
-        newImg.src = base64;
-        newImg.onload = async () => {
-          var imgSize = {
-            w: newImg.width,
-            h: newImg.height,
-          };
-          alert(imgSize.w + " " + imgSize.h);
-          const canvas = document.createElement("canvas");
-          canvas.setAttribute("height", `${imgSize.h}`);
-          canvas.setAttribute("width", `${imgSize.w}`);
-          var ctx = canvas.getContext("2d");
-          ctx.drawImage(newImg, 0, 0);
-
-          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
-          console.log("imageData", imageData);
-          doScanHealthcareCard(imageData);
-        };
-      } else {
-        console.log("INVALID IMAGE TYPE");
-      }
-    }
-  };
-
-  const handleUploadDoAntispoofCheck = async (e) => {
-    console.log(e.target.files);
-    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
-    if (e.target.files.length > 0) {
-      if (imageRegex.test(e.target.files[0].type)) {
-        const imageUrl = URL.createObjectURL(e.target.files[0]);
-
-        console.log(e.target.files[0]);
-
-        const getBase64 = (file) => {
-          return new Promise((resolve, reject) => {
-            var reader = new FileReader();
-            reader.readAsDataURL(file);
-
-            reader.onload = function () {
-              resolve(reader.result);
-            };
-            reader.onerror = function (error) {
-              reject(error);
-            };
-          });
-        };
-
-        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
-        var newImg = new Image();
-        newImg.src = base64;
-        newImg.onload = async () => {
-          var imgSize = {
-            w: newImg.width,
-            h: newImg.height,
-          };
-          alert(imgSize.w + " " + imgSize.h);
-          const canvas = document.createElement("canvas");
-          canvas.setAttribute("height", `${imgSize.h}`);
-          canvas.setAttribute("width", `${imgSize.w}`);
-          var ctx = canvas.getContext("2d");
-          ctx.drawImage(newImg, 0, 0);
-
-          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
-          console.log("imageData", imageData);
-          const livenssResult = await antispoofCheck(imageData.data, imageData.width, imageData.height);
-          console.log("LIVENESS: ", livenssResult);
-        };
-      } else {
-        console.log("INVALID IMAGE TYPE");
-      }
-    }
-  };
-
   const handleCopyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
   };
 
-  const [uploadedImageForScanning, setUploadedImageForScanning] = useState(null);
-
-  const handleUploadImageForScanning = async (e) => {
-    console.log(e.target.files);
-    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
-    if (e.target.files.length > 0) {
-      if (imageRegex.test(e.target.files[0].type)) {
-        const imageUrl = URL.createObjectURL(e.target.files[0]);
-
-        console.log(e.target.files[0]);
-
-        const getBase64 = (file) => {
-          return new Promise((resolve, reject) => {
-            var reader = new FileReader();
-            reader.readAsDataURL(file);
-
-            reader.onload = function () {
-              resolve(reader.result);
-            };
-            reader.onerror = function (error) {
-              reject(error);
-            };
-          });
-        };
-
-        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
-        var newImg = new Image();
-        newImg.src = base64;
-        newImg.onload = async () => {
-          var imgSize = {
-            w: newImg.width,
-            h: newImg.height,
-          };
-          alert(imgSize.w + " " + imgSize.h);
-          const canvas = document.createElement("canvas");
-          canvas.setAttribute("height", `${imgSize.h}`);
-          canvas.setAttribute("width", `${imgSize.w}`);
-          var ctx = canvas.getContext("2d");
-          ctx.drawImage(newImg, 0, 0);
-
-          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
-          console.log("imageData", imageData);
-          setUploadedImageForScanning(imageData);
-        };
-      } else {
-        console.log("INVALID IMAGE TYPE");
-      }
-    }
-  };
-
-  const frontScanUploadedImageScanning = async () => {
-    if (uploadedImageForScanning) {
-      scanFrontValidity(false, uploadedImageForScanning);
-    }
-  };
-
-  const healthcareScanUploadedImageScanning = async () => {
-    if (uploadedImageForScanning) {
-      doScanHealthcareCard(uploadedImageForScanning, false);
-    }
-  };
-
-  const backScanUploadedImageScanning = async () => {
-    if (uploadedImageForScanning) {
-      scanBackDocument(undefined, false, uploadedImageForScanning);
-    }
-  };
 
   const { result, doLivenessCheck, resultMessage, finalResult, livenessProgress, resetAllLivenessValues } =
     useLivenessCheck();
@@ -964,40 +784,40 @@ const Ready = () => {
             </div>
 
             <div id="module_functions" className="buttonContainer">
-              <button className="button" onClick={handleIsValid}>
+              <button className="button" onClick={handleIsValid} disabled={disableButtons}>
                 Is Valid
               </button>
-              <button className="button" onClick={handlePredictAge}>
+              <button className="button" onClick={handlePredictAge} disabled={disableButtons}>
                 Predict Age
               </button>
-              <button className="button" onClick={handleEnrollOneFa}>
+              <button className="button" onClick={handleEnrollOneFa} disabled={disableButtons}>
                 Enroll
               </button>
-              <button className="button" onClick={handlePredictOneFa}>
+              <button className="button" onClick={handlePredictOneFa} disabled={disableButtons}>
                 Predict
               </button>
-              <button className="button" onClick={handleFaceLogin}>
+              <button className="button" onClick={handleFaceLogin} disabled={disableButtons}>
                 Face Login
               </button>
               {/* <button className="button" onClick={handleContinuousPredict}>
                 Continuous Authentication
               </button> */}
-              <button className="button" onClick={handleDelete}>
+              <button className="button" onClick={handleDelete} disabled={disableButtons}>
                 Delete
               </button>
-              <button className="button" onClick={handleFrontDLValidity}>
+              <button className="button" onClick={handleFrontDLValidity} disabled={disableButtons}>
                 Scan Front Document
               </button>
-              <button className="button" onClick={handleScanDocumentBack}>
+              <button className="button" onClick={handleScanDocumentBack} disabled={disableButtons}>
                 Scan Back Document
               </button>
-              <button className="button" onClick={handlePrividFaceISO}>
+              <button className="button" onClick={handlePrividFaceISO} disabled={disableButtons}>
                 Face ISO
               </button>
-              <button className="button" onClick={handleUseScanHealhcareCard}>
+              <button className="button" onClick={handleUseScanHealhcareCard} disabled={disableButtons}>
                 Healthcare Card Scan
               </button>
-              <button className="button" onClick={handleLivenessCheck}>
+              <button className="button" onClick={handleLivenessCheck} disabled={disableButtons}>
                 Liveness Check
               </button>
 
