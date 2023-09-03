@@ -21,11 +21,11 @@ const useIsValid = (element = "userVideo", deviceId = null) => {
     isValidCall();
   };
 
-  const isValidCall = async () => {
+  const isValidCall = async (skipAntispoof = true) => {
     // eslint-disable-next-line no-unused-vars
     await isValid(callback, null, {
       input_image_format: "rgba",
-      detect_spoof_only: false,
+      skip_antispoof: skipAntispoof,
       angle_rotation_left_threshold: 5.0,
       angle_rotation_right_threshold: 5.0,
       antispoof_face_margin: 1.0,

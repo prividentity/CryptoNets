@@ -42,7 +42,7 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
     }
   };
 
-  const predictUserOneFa = async () => {
+  const predictUserOneFa = async (skipAntispoof = true) => {
     // eslint-disable-next-line no-unused-vars
     setPredictAntispoofPerformed("");
     setPredictAntispoofStatus("");
@@ -53,6 +53,7 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
     await predict1FA(callback, {
       input_image_format: "rgba",
       eyes_blinking_threshold: 0.4,
+      skip_antispoof: skipAntispoof,
     });
   };
 

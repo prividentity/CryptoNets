@@ -41,7 +41,7 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
     }
   };
 
-  const doFaceLogin = async () => {
+  const doFaceLogin = async (skipAntispoof=true) => {
     // eslint-disable-next-line no-unused-vars
     setFaceLoginAntispoofPerformed("");
     setFaceLoginAntispoofStatus("");
@@ -52,6 +52,7 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
     await faceLogin(callback, {
       input_image_format: "rgba",
       eyes_blinking_threshold: 0.4,
+      skip_antispoof: skipAntispoof,
     });
   };
 
