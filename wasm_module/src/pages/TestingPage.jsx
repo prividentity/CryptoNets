@@ -34,7 +34,7 @@ import usePrividFaceISO from "../hooks/usePrividFaceISO";
 import { useNavigate } from "react-router-dom";
 import useFaceLogin from "../hooks/useFaceLogin";
 import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
-import { antispoofCheck, getFrontDocumentStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
+import { antispoofCheck, getFaceValidationMessage, getFrontDocumentStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
 import { DebugContext } from "../context/DebugContext";
 import useLivenessCheck from "../hooks/useLivenessCheck";
 
@@ -176,13 +176,15 @@ const Ready = () => {
   const handlePreidctSuccess = (result) => {
     console.log("======PREDICT SUCCESS========");
   };
-  const { predictOneFaData, predictOneFaaceDetected, predictMessage, predictUserOneFa } = usePredictOneFa(
-    "userVideo",
-    handlePreidctSuccess,
-    4,
-    null,
-    setShowSuccess
-  );
+  const {
+    predictAntispoofPerformed,
+    predictAntispoofStatus,
+    predictGUID,
+    predictPUID,
+    predictValidationStatus,
+    predictMessage,
+    predictUserOneFa,
+  } = usePredictOneFa("userVideo", handlePreidctSuccess, 4, null, setShowSuccess);
   const handlePredictOneFa = async () => {
     setShowSuccess(false);
     setCurrentAction("usePredictOneFa");
@@ -234,13 +236,13 @@ const Ready = () => {
   };
 
   // deleting
-  useEffect(() => {
-    if (currentAction === "useDelete") {
-      if (predictOneFaData) {
-        onDeleteUser(predictOneFaData.puid);
-      }
-    }
-  }, [currentAction, predictOneFaData]);
+  // useEffect(() => {
+  //   if (currentAction === "useDelete") {
+  //     if (predictOneFaData) {
+  //       onDeleteUser(predictOneFaData.puid);
+  //     }
+  //   }
+  // }, [currentAction, predictOneFaData]);
 
   // Scan Document Back
   const {
@@ -467,11 +469,12 @@ const Ready = () => {
   // Face Login
   const {
     doFaceLogin,
-    faceLoginData,
-    faceLoginFaceDetected,
+    faceLoginAntispoofPerformed,
+    faceLoginAntispoofStatus,
+    faceLoginGUID,
     faceLoginMessage,
-    faceLoginStatus,
-    statusCode: faceLoginStatusCode,
+    faceLoginPUID,
+    faceLoginValidationStatus,
   } = useFaceLogin("userVideo", () => {}, null, deviceId, setShowSuccess);
 
   const handleFaceLogin = async () => {
@@ -757,7 +760,17 @@ const Ready = () => {
             <div className={"cameraContainer"}>
               {currentAction === "useEnrollOneFa" && (
                 <div className="enrollDisplay">
-                  <span> {enrollValidationStatus} </span>
+                  <span> {getFaceValidationMessage(enrollValidationStatus)} </span>
+                </div>
+              )}
+              {currentAction === "useFaceLogin" && (
+                <div className="enrollDisplay">
+                  <span> {getFaceValidationMessage(faceLoginValidationStatus)} </span>
+                </div>
+              )}
+              {currentAction === "usePredictOneFa" && (
+                <div className="enrollDisplay">
+                  <span> {getFaceValidationMessage(predictValidationStatus)} </span>
                 </div>
               )}
               <video
@@ -822,10 +835,12 @@ const Ready = () => {
 
               {currentAction === "usePredictOneFa" && (
                 <div>
-                  <div>{`Face Valid: ${predictOneFaaceDetected ? "Face Detected" : "Face not detected"}`}</div>
+                  <div>{`Status: ${predictValidationStatus}`} </div>
                   <div>{`Message: ${predictMessage || ""}`}</div>
-                  <div>{`Predicted GUID: ${predictOneFaData ? predictOneFaData.guid : ""}`}</div>
-                  <div>{`Predicted PUID: ${predictOneFaData ? predictOneFaData.puid : ""}`}</div>
+                  <div>{`Antispoof Performed: ${predictAgeAntispoofPerformed}`}</div>
+                  <div>{`Antispoof Status: ${predictAntispoofStatus}`}</div>
+                  <div>{`Predicted GUID: ${predictGUID}`}</div>
+                  <div>{`Predicted PUID: ${predictPUID}`}</div>
                 </div>
               )}
 
@@ -840,20 +855,21 @@ const Ready = () => {
 
               {currentAction === "useFaceLogin" && (
                 <div>
-                  <div>{`Face Valid: ${faceLoginFaceDetected ? "Face Detected" : "Face not detected"}`}</div>
-                  <div>{`Face Login Status: ${faceLoginStatusCode}`} </div>
+                  <div>{`Face Login Status: ${faceLoginValidationStatus}`} </div>
                   <div>{`Message: ${faceLoginMessage || ""}`}</div>
-                  <div>{`Face Login GUID: ${faceLoginData ? faceLoginData.guid : ""}`}</div>
-                  <div>{`Face Login UUID: ${faceLoginData ? faceLoginData.puid : ""}`}</div>
+                  <div>{`Antispoof Performed: ${faceLoginAntispoofPerformed}`} </div>
+                  <div>{`Antispoof Status: ${faceLoginAntispoofStatus}`} </div>
+                  <div>{`Face Login GUID: ${faceLoginGUID}`}</div>
+                  <div>{`Face Login PUID: ${faceLoginPUID}`}</div>
                 </div>
               )}
 
-              {currentAction === "useDelete" && (
+              {/* {currentAction === "useDelete" && (
                 <div>
                   <div>{`Deletion Status: ${deletionStatus}`}</div>
                   <div>{`User PUID: ${predictOneFaData ? predictOneFaData.puid : ""}`}</div>
                 </div>
-              )}
+              )} */}
 
               {currentAction === "useScanDocumentBack" && (
                 <div>
