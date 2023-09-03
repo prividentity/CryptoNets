@@ -357,6 +357,8 @@ const FHE_predictOnefa = async (originalImages, simd, config, cb) => {
   // create a pointer to interger to hold the length of the output buffer
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
+  console.log("config:", JSON.parse(config));
+
   try {
     await wasmPrivModule._privid_face_predict_onefa(
       wasmSession /* session pointer */,
