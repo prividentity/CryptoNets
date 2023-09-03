@@ -7,7 +7,6 @@ const usePredictAge = () => {
   const [antispoofStatus, setAntispoofStatus] = useState(null);
   const [validationStatus, setValidationStatus] = useState(null);
 
-
   const callback = (response) => {
     console.log("predict Age Callback", response);
 
@@ -20,12 +19,11 @@ const usePredictAge = () => {
       setAge("");
       setAntispoofPerformed("");
       setAntispoofStatus("");
-      setValidationStatus("");  
+      setValidationStatus("");
     }
 
     doPredictAge();
-  }
-
+  };
 
   const doPredictAge = async () => {
     //   {
@@ -51,18 +49,9 @@ const usePredictAge = () => {
     //     ]
     // }
 
-    await predictAge(callback,
-      {
+    await predictAge(callback, {
       input_image_format: "rgba",
-      antispoof_face_margin: 2,
-      angle_rotation_left_threshold: 5.0,
-      angle_rotation_right_threshold: 5.0,
-      detect_spoof_only: false,
-      gray_scale_threshold: 25.0,
-      gray_scale_variance_threshold: 100.0,
     });
-
-    
   };
 
   return { doPredictAge, age, antispoofPerformed, antispoofStatus, validationStatus };

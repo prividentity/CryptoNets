@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { convertCroppedImage, enroll1FA } from "@privateid/cryptonets-web-sdk-alpha";
 
-const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess) => {
+const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess, disableButtons) => {
   const [enrollAntispoofPerformed, setEnrollAntispoofPerformed] = useState(false);
   const [enrollAntispoofStatus, setEnrollAntispoofStatus] = useState(null);
 
@@ -13,10 +13,9 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
 
   const [enrollImageData, setEnrollImageData] = useState(null);
 
-  let showError = false;
-  let enrollCount = 0;
 
   const enrollUserOneFa = async (token = "") => {
+    disableButtons(true);
     // eslint-disable-next-line no-unused-vars
     const bestImage = await enroll1FA(callback, {
       input_image_format: "rgba",
@@ -32,31 +31,12 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
   const callback = async (result) => {
     console.log("enroll callback hook result:", result);
 
-    //   {
-    //     "status": 0,
-    //     "message": "Success",
-    //     "validation_status": [
-    //         {
-    //             "status": 0,
-    //             "conf_score": 0.9540961384773254,
-    //             "anti_spoof_status": 0,
-    //             "anti_spoof_performed": true,
-    //             "enroll_performed": false,
-    //             "enroll_token": "2023-09-01_22-33-16-913000"
-    //         }
-    //     ]
-    // }
-
-    // if (result.returnValue.error == -100) {
-    //   enrollUserOneFa();
-    //   return;
-    // }
-
     if (result.returnValue.status === 0) {
       if (result.returnValue.guid && result.returnValue.puid) {
         setEnrollGUID(result.returnValue.guid);
         setEnrollPUID(result.returnValue.puid);
         setShowSuccess(true);
+        disableButtons(false);
       } else {
         if (result.returnValue.validation_status.length > 0) {
           setEnrollToken(result.returnValue.validation_status[0].enroll_token);

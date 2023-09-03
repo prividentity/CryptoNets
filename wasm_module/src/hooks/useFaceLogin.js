@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { faceLogin } from "@privateid/cryptonets-web-sdk-alpha";
-const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess) => {
+const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess, disableButtons) => {
   const [faceLoginMessage, setFaceLoginMessage] = useState("");
 
   const [faceLoginAntispoofPerformed, setFaceLoginAntispoofPerformed] = useState(null);
@@ -24,6 +24,7 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
           setFaceLoginValidationStatus(result.returnValue.status);
           setFaceLoginGUID(result.returnValue.guid);
           setFaceLoginPUID(result.returnValue.puid);
+          disableButtons(false);
         }
         if (result.returnValue?.status !== 0) {
           const { status, message } = result.returnValue;
@@ -42,8 +43,15 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
 
   const doFaceLogin = async () => {
     // eslint-disable-next-line no-unused-vars
+    setFaceLoginAntispoofPerformed(null);
+    setFaceLoginAntispoofStatus(null);
+    setFaceLoginValidationStatus(null);
+    setFaceLoginGUID("");
+    setFaceLoginPUID("");
+    disableButtons(true);
     await faceLogin(callback, {
       input_image_format: "rgba",
+      eyes_blinking_threshold: 0.4,
     });
   };
 
