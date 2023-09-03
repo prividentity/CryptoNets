@@ -174,7 +174,7 @@ const Ready = () => {
     predictValidationStatus,
     predictMessage,
     predictUserOneFa,
-  } = usePredictOneFa("userVideo", handlePreidctSuccess, 4, null, setShowSuccess);
+  } = usePredictOneFa("userVideo", handlePreidctSuccess, 4, null, setShowSuccess, setDisableButtons);
   const handlePredictOneFa = async () => {
     setShowSuccess(false);
     setCurrentAction("usePredictOneFa");
