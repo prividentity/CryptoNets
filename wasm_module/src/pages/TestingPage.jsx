@@ -670,7 +670,7 @@ const Ready = () => {
                 <div>
                   <div>{`Status: ${predictValidationStatus}`} </div>
                   <div>{`Message: ${predictMessage || ""}`}</div>
-                  <div>{`Antispoof Performed: ${predictAgeAntispoofPerformed}`}</div>
+                  <div>{`Antispoof Performed: ${predictAntispoofPerformed}`}</div>
                   <div>{`Antispoof Status: ${predictAntispoofStatus}`}</div>
                   <div>{`Predicted GUID: ${predictGUID}`}</div>
                   <div>{`Predicted PUID: ${predictPUID}`}</div>
@@ -697,12 +697,12 @@ const Ready = () => {
                 </div>
               )}
 
-              {/* {currentAction === "useDelete" && (
+              {currentAction === "useDelete" && (
                 <div>
                   <div>{`Deletion Status: ${deletionStatus}`}</div>
-                  <div>{`User PUID: ${predictOneFaData ? predictOneFaData.puid : ""}`}</div>
+                  <div>{`User PUID: ${predictPUID}`}</div>
                 </div>
-              )} */}
+              )}
 
               {currentAction === "useScanDocumentBack" && (
                 <div>

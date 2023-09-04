@@ -22,7 +22,7 @@ const useEnrollOneFa = (
 
   let skipAntispoofProcess = false;
 
-  const enrollUserOneFa = async (token = "", skipAntispoof = true) => {
+  const enrollUserOneFa = async (token = "", skipAntispoof = false) => {
     skipAntispoofProcess = skipAntispoof;
     disableButtons(true);
     // eslint-disable-next-line no-unused-vars
@@ -39,12 +39,11 @@ const useEnrollOneFa = (
 
   const callback = async (result) => {
     console.log("enroll callback hook result:", result);
-
     if (result.returnValue.status === 0) {
       if (result.returnValue.guid && result.returnValue.puid) {
         setEnrollGUID(result.returnValue.guid);
         setEnrollPUID(result.returnValue.puid);
-        setEnrollAntispoofPerformed();
+        setEnrollAntispoofPerformed();  
         setEnrollAntispoofStatus("");
         setEnrollValidationStatus("");
         setShowSuccess(true);

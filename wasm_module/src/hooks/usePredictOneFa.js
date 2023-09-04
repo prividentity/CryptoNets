@@ -10,6 +10,8 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
   const [predictGUID, setPredictGUID] = useState("");
   const [predictPUID, setPredictPUID] = useState("");
 
+  let skipAntispoofProcess = false;
+
   const callback = async (result) => {
     console.log("predict callback hook result:", result);
 
@@ -35,21 +37,24 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
           setPredictValidationStatus(result.returnValue.status);
           setPredictGUID(result.returnValue.guid);
           setPredictPUID(result.returnValue.puid);
-          predictUserOneFa();
+          predictUserOneFa(skipAntispoofProcess, true);
         }
         break;
       default:
     }
   };
 
-  const predictUserOneFa = async (skipAntispoof = true) => {
+  const predictUserOneFa = async (skipAntispoof = true, isRunning = false) => {
+    skipAntispoofProcess = skipAntispoof;
     // eslint-disable-next-line no-unused-vars
-    setPredictAntispoofPerformed("");
-    setPredictAntispoofStatus("");
-    setPredictValidationStatus("");
-    setPredictGUID("");
-    setPredictPUID("");
-    disableButtons(true);
+    if(!isRunning){
+      setPredictAntispoofPerformed("");
+      setPredictAntispoofStatus("");
+      setPredictValidationStatus("");
+      setPredictGUID("");
+      setPredictPUID("");
+      disableButtons(true);
+    }
     await predict1FA(callback, {
       input_image_format: "rgba",
       eyes_blinking_threshold: 0.4,
