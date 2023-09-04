@@ -21,8 +21,10 @@ const useEnrollOneFa = (
   const [enrollImageData, setEnrollImageData] = useState("");
 
   let skipAntispoofProcess = false;
-
+  let enrollCount = 0;
+  let enrollTokenCurrent;
   const enrollUserOneFa = async (token = "", skipAntispoof = false) => {
+    enrollTokenCurrent = token;
     skipAntispoofProcess = skipAntispoof;
     disableButtons(true);
     // eslint-disable-next-line no-unused-vars
@@ -48,6 +50,8 @@ const useEnrollOneFa = (
         setEnrollValidationStatus("");
         setShowSuccess(true);
         disableButtons(false);
+        enrollCount++;
+        console.log("Enroll Count:", enrollCount);
       } else {
         if (result.returnValue.validation_status.length > 0) {
           setEnrollToken(result.returnValue.validation_status[0].enroll_token);
@@ -67,6 +71,12 @@ const useEnrollOneFa = (
               result.returnValue.validation_status[0].anti_spoof_status === 0 &&
               result.returnValue.validation_status[0].status === 0
             ) {
+              if(result.returnValue.validation_status[0].enroll_token === enrollTokenCurrent && enrollTokenCurrent){
+                enrollCount++;
+              }
+              else{
+                enrollCount = 1;
+              }
               enrollUserOneFa(result.returnValue.validation_status[0].enroll_token,skipAntispoofProcess);
             } else {
               enrollUserOneFa("",skipAntispoofProcess);
