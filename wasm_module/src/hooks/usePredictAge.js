@@ -25,13 +25,14 @@ const usePredictAge = () => {
     doPredictAge();
   };
 
-  const doPredictAge = async () => {
+  const doPredictAge = async (skipAntispoof = true) => {
     setAge("");
       setAntispoofPerformed("");
       setAntispoofStatus("");
       setValidationStatus("");
     await predictAge(callback, {
       input_image_format: "rgba",
+      skip_antispoof: skipAntispoof,
     });
   };
 

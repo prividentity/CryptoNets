@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { convertCroppedImage, enroll1FA } from "@privateid/cryptonets-web-sdk-alpha";
 
-const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess, disableButtons) => {
+const useEnrollOneFa = (
+  element = "userVideo",
+  onSuccess,
+  retryTimes = 4,
+  deviceId = null,
+  setShowSuccess,
+  disableButtons
+) => {
   const [enrollAntispoofPerformed, setEnrollAntispoofPerformed] = useState(false);
   const [enrollAntispoofStatus, setEnrollAntispoofStatus] = useState("");
 
@@ -13,28 +20,32 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
 
   const [enrollImageData, setEnrollImageData] = useState("");
 
+  let skipAntispoofProcess = false;
 
-  const enrollUserOneFa = async (token = "") => {
+  const enrollUserOneFa = async (token = "", skipAntispoof = false) => {
+    skipAntispoofProcess = skipAntispoof;
     disableButtons(true);
     // eslint-disable-next-line no-unused-vars
     const bestImage = await enroll1FA(callback, {
       input_image_format: "rgba",
       enroll_token: token,
+      skip_antispoof: skipAntispoof,
     });
 
-    if(bestImage){
+    if (bestImage) {
       setEnrollImageData(new ImageData(bestImage.imageData, bestImage.width, bestImage.height));
     }
-      
   };
 
   const callback = async (result) => {
     console.log("enroll callback hook result:", result);
-
     if (result.returnValue.status === 0) {
       if (result.returnValue.guid && result.returnValue.puid) {
         setEnrollGUID(result.returnValue.guid);
         setEnrollPUID(result.returnValue.puid);
+        setEnrollAntispoofPerformed();  
+        setEnrollAntispoofStatus("");
+        setEnrollValidationStatus("");
         setShowSuccess(true);
         disableButtons(false);
       } else {
@@ -44,14 +55,22 @@ const useEnrollOneFa = (element = "userVideo", onSuccess, retryTimes = 4, device
           setEnrollAntispoofStatus(result.returnValue.validation_status[0].anti_spoof_status);
           setEnrollValidationStatus(result.returnValue.validation_status[0].status);
 
-          if (
-            result.returnValue.validation_status[0].anti_spoof_performed &&
-            result.returnValue.validation_status[0].anti_spoof_status === 0 &&
-            result.returnValue.validation_status[0].status === 0
-          ) {
-            enrollUserOneFa(result.returnValue.validation_status[0].enroll_token);
+          if (skipAntispoofProcess) {
+            if (result.returnValue.validation_status[0].status === 0) {
+              enrollUserOneFa(result.returnValue.validation_status[0].enroll_token);
+            } else {
+              enrollUserOneFa("",skipAntispoofProcess);
+            }
           } else {
-            enrollUserOneFa("");
+            if (
+              result.returnValue.validation_status[0].anti_spoof_performed &&
+              result.returnValue.validation_status[0].anti_spoof_status === 0 &&
+              result.returnValue.validation_status[0].status === 0
+            ) {
+              enrollUserOneFa(result.returnValue.validation_status[0].enroll_token,skipAntispoofProcess);
+            } else {
+              enrollUserOneFa("",skipAntispoofProcess);
+            }
           }
         } else {
           setEnrollToken("");

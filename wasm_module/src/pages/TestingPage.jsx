@@ -34,6 +34,7 @@ import usePrividFaceISO from "../hooks/usePrividFaceISO";
 import useFaceLogin from "../hooks/useFaceLogin";
 import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
 import {
+  getEnrollFaceMessage,
   getFaceValidationMessage,
   getFrontDocumentStatusMessage,
 } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
@@ -113,6 +114,7 @@ const Ready = () => {
   };
 
   const [currentAction, setCurrentAction] = useState(null);
+  const [skipAntiSpoof, setSkipAntispoof] = useState(false);
 
   useEffect(() => {
     console.log("useEffect starting wasm and camera");
@@ -143,7 +145,7 @@ const Ready = () => {
   const handleIsValid = async () => {
     setShowSuccess(false);
     setCurrentAction("isValid");
-    await isValidCall();
+    await isValidCall(skipAntiSpoof);
   };
 
   // Enroll ONEFA
@@ -163,7 +165,7 @@ const Ready = () => {
   const handleEnrollOneFa = async () => {
     setShowSuccess(false);
     setCurrentAction("useEnrollOneFa");
-    enrollUserOneFa();
+    enrollUserOneFa("", skipAntiSpoof);
   };
 
   const handlePreidctSuccess = (result) => {
@@ -181,23 +183,8 @@ const Ready = () => {
   const handlePredictOneFa = async () => {
     setShowSuccess(false);
     setCurrentAction("usePredictOneFa");
-    predictUserOneFa();
+    predictUserOneFa(skipAntiSpoof);
   };
-
-  // const handleContinuousPredict = async () => {
-  //   setShowSuccess(false);
-  //   setCurrentAction("useContinuousPredict");
-  //   continuousPredictUser();
-  // };
-
-  // stop Continuous predict
-  // useEffect(() => {
-  //   if (currentAction !== "useContinuousPredict") {
-  //     setStopLoopContinuousAuthentication(true);
-  //   } else {
-  //     setStopLoopContinuousAuthentication(false);
-  //   }
-  // }, [currentAction]);
 
   const handleSwitchCamera = async (e) => {
     setDeviceId(e.target.value);
@@ -229,13 +216,13 @@ const Ready = () => {
   };
 
   // deleting
-  // useEffect(() => {
-  //   if (currentAction === "useDelete") {
-  //     if (predictOneFaData) {
-  //       onDeleteUser(predictOneFaData.puid);
-  //     }
-  //   }
-  // }, [currentAction, predictOneFaData]);
+  useEffect(() => {
+    if (currentAction === "useDelete") {
+      if (predictPUID) {
+        onDeleteUser(predictPUID);
+      }
+    }
+  }, [currentAction, predictPUID]);
 
   // Scan Document Back
   const {
@@ -268,7 +255,7 @@ const Ready = () => {
   const handlePredictAge = async () => {
     setShowSuccess(false);
     setCurrentAction("usePredictAge");
-    await doPredictAge();
+    await doPredictAge(skipAntiSpoof);
   };
 
   // to start and stop predictAge call when on loop
@@ -468,7 +455,7 @@ const Ready = () => {
   const handleFaceLogin = async () => {
     setShowSuccess(false);
     setCurrentAction("useFaceLogin");
-    doFaceLogin(debugContext.functionLoop);
+    doFaceLogin(skipAntiSpoof);
   };
 
   // Scan Healthcare Card
@@ -540,7 +527,6 @@ const Ready = () => {
                 width: "47%",
               }}
             >
-              <h3>For testing new backend enroll/predict</h3>
               <div>
                 <div
                   style={{
@@ -582,7 +568,7 @@ const Ready = () => {
             <div className={"cameraContainer"}>
               {currentAction === "useEnrollOneFa" && (
                 <div className="enrollDisplay">
-                  <span> {getFaceValidationMessage(enrollValidationStatus)} </span>
+                  <span> {getEnrollFaceMessage(enrollValidationStatus)} </span>
                 </div>
               )}
               {currentAction === "useFaceLogin" && (
@@ -616,6 +602,31 @@ const Ready = () => {
                   <div>{Math.round(age)}</div>
                 </div>
               )}
+            </div>
+
+            <div>
+              <span
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: "5px",
+                }}
+              >
+                Skip antispoof?:
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    value={skipAntiSpoof}
+                    defaultValue={true}
+                    onChange={() => {
+                      setSkipAntispoof(!skipAntiSpoof);
+                      console.log("skip", !skipAntiSpoof);
+                    }}
+                  />
+                  <span class="slider round"></span>
+                </label>
+              </span>
             </div>
 
             <div>
@@ -659,7 +670,7 @@ const Ready = () => {
                 <div>
                   <div>{`Status: ${predictValidationStatus}`} </div>
                   <div>{`Message: ${predictMessage || ""}`}</div>
-                  <div>{`Antispoof Performed: ${predictAgeAntispoofPerformed}`}</div>
+                  <div>{`Antispoof Performed: ${predictAntispoofPerformed}`}</div>
                   <div>{`Antispoof Status: ${predictAntispoofStatus}`}</div>
                   <div>{`Predicted GUID: ${predictGUID}`}</div>
                   <div>{`Predicted PUID: ${predictPUID}`}</div>
@@ -686,12 +697,12 @@ const Ready = () => {
                 </div>
               )}
 
-              {/* {currentAction === "useDelete" && (
+              {currentAction === "useDelete" && (
                 <div>
                   <div>{`Deletion Status: ${deletionStatus}`}</div>
-                  <div>{`User PUID: ${predictOneFaData ? predictOneFaData.puid : ""}`}</div>
+                  <div>{`User PUID: ${predictPUID}`}</div>
                 </div>
-              )} */}
+              )}
 
               {currentAction === "useScanDocumentBack" && (
                 <div>
@@ -840,7 +851,7 @@ const Ready = () => {
                 }
                 disabled={disableButtons}
               >
-                Predict With Liveness
+                Predict
               </button>
               <button
                 className="button"
@@ -901,7 +912,7 @@ const Ready = () => {
               >
                 Scan Back Document
               </button>
-              <button
+              {/* <button
                 className="button"
                 onClick={handlePrividFaceISO}
                 style={
@@ -914,7 +925,7 @@ const Ready = () => {
                 disabled={disableButtons}
               >
                 Face ISO
-              </button>
+              </button> */}
               <button
                 className="button"
                 onClick={handleUseScanHealhcareCard}

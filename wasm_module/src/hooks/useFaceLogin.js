@@ -8,6 +8,7 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
   const [faceLoginValidationStatus, setFaceLoginValidationStatus] = useState("");
   const [faceLoginGUID, setFaceLoginGUID] = useState("");
   const [faceLoginPUID, setFaceLoginPUID] = useState("");
+  let skipAntispoofProcess = false;
 
   const callback = async (result) => {
     console.log("faceLogin callback hook result:", result);
@@ -34,24 +35,29 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
           setFaceLoginValidationStatus(result.returnValue.status);
           setFaceLoginGUID(result.returnValue.guid);
           setFaceLoginPUID(result.returnValue.puid);
-          doFaceLogin();
+          doFaceLogin(skipAntispoofProcess, true);
         }
         break;
       default:
     }
   };
 
-  const doFaceLogin = async () => {
+  const doFaceLogin = async (skipAntispoof=true, isRunning = false) => {
     // eslint-disable-next-line no-unused-vars
-    setFaceLoginAntispoofPerformed("");
-    setFaceLoginAntispoofStatus("");
-    setFaceLoginValidationStatus("");
-    setFaceLoginGUID("");
-    setFaceLoginPUID("");
-    disableButtons(true);
+    skipAntispoofProcess = skipAntispoof;
+    if(!isRunning){
+      setFaceLoginAntispoofPerformed("");
+      setFaceLoginAntispoofStatus("");
+      setFaceLoginValidationStatus("");
+      setFaceLoginGUID("");
+      setFaceLoginPUID("");
+      disableButtons(true);
+    }
+   
     await faceLogin(callback, {
       input_image_format: "rgba",
       eyes_blinking_threshold: 0.4,
+      skip_antispoof: skipAntispoof,
     });
   };
 
