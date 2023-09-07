@@ -56,7 +56,7 @@ const isLoad = (simd, url, key, debug_type, cacheConfig = true, liveness = false
         await initializeWasmSession(url, key, debugType);
         checkWasmLoaded = true;
       }
-      console.log('WASM SINGULAR MODULES:', wasmPrivModule);
+      // console.log('WASM MODULES:', wasmPrivModule);
       resolve('Loaded');
     }
   });
@@ -267,7 +267,6 @@ const getBufferFromPtrImage = (bufferPtr, outputBufferSize) => {
 };
 
 const FHE_enrollOnefa = async (imageData, simd, config, cb) => {
-  console.log('config:', config);
   privid_wasm_result = cb;
 
   if (!wasmPrivModule) {
@@ -356,8 +355,6 @@ const FHE_predictOnefa = async (originalImages, simd, config, cb) => {
   const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   // create a pointer to interger to hold the length of the output buffer
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-
-  console.log("config:", JSON.parse(config));
 
   try {
     await wasmPrivModule._privid_face_predict_onefa(
@@ -960,7 +957,6 @@ const prividDocumentMugshotFaceCompare = (imageInputA, imageInputB, simd, debug_
     // await initializeWasmSession(apiUrl, apiKey);
 
     let result = null;
-    console.log('All Modules:', wasmPrivModule);
     try {
       result = wasmPrivModule._privid_compare_mugshot_and_face(
         wasmSession,

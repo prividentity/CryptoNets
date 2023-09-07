@@ -37,9 +37,11 @@ import {
   getEnrollFaceMessage,
   getFaceValidationMessage,
   getFrontDocumentStatusMessage,
+  getRawFaceValidationStatus,
 } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
 import { DebugContext } from "../context/DebugContext";
 import useLivenessCheck from "../hooks/useLivenessCheck";
+import useContinuousPredictWithoutRestrictions from "../hooks/useContinuousPredictWithoutRestriction";
 
 let callingWasm = false;
 const Ready = () => {
@@ -480,6 +482,19 @@ const Ready = () => {
     await doLivenessCheck();
   };
 
+  const {
+    continuousPredictWithoutRestrictionsGUID,
+    continuousPredictWithoutRestrictionsMessage,
+    continuousPredictWithoutRestrictionsPUID,
+    continuousPredictWithoutRestrictionsValidationStatus,
+    doContinuousPredictWithoutRestrictions,
+  } = useContinuousPredictWithoutRestrictions(setShowSuccess);
+
+  const handleBurningMan = () => {
+    setCurrentAction("useContinuousPredictWithoutRestrictions");
+    doContinuousPredictWithoutRestrictions();
+  };
+
   return (
     <>
       {deviceSupported.isChecking ? (
@@ -568,17 +583,22 @@ const Ready = () => {
             <div className={"cameraContainer"}>
               {currentAction === "useEnrollOneFa" && (
                 <div className="enrollDisplay">
-                  <span> {getEnrollFaceMessage(enrollValidationStatus)} </span>
+                  <span> {getRawFaceValidationStatus(enrollValidationStatus)} </span>
                 </div>
               )}
               {currentAction === "useFaceLogin" && (
                 <div className="enrollDisplay">
-                  <span> {getFaceValidationMessage(faceLoginValidationStatus)} </span>
+                  <span> {getRawFaceValidationStatus(faceLoginValidationStatus)} </span>
                 </div>
               )}
               {currentAction === "usePredictOneFa" && (
                 <div className="enrollDisplay">
-                  <span> {getFaceValidationMessage(predictValidationStatus)} </span>
+                  <span> {getRawFaceValidationStatus(predictValidationStatus)} </span>
+                </div>
+              )}
+              {currentAction === "useContinuousPredictWithoutRestrictions" && (
+                <div className="enrollDisplay">
+                  <span> {getRawFaceValidationStatus(continuousPredictWithoutRestrictionsValidationStatus)} </span>
                 </div>
               )}
               <video
@@ -674,6 +694,15 @@ const Ready = () => {
                   <div>{`Antispoof Status: ${predictAntispoofStatus}`}</div>
                   <div>{`Predicted GUID: ${predictGUID}`}</div>
                   <div>{`Predicted PUID: ${predictPUID}`}</div>
+                </div>
+              )}
+
+              {currentAction === "useContinuousPredictWithoutRestrictions" && (
+                <div>
+                  <div>{`Status: ${continuousPredictWithoutRestrictionsValidationStatus}`} </div>
+                  <div>{`Message: ${continuousPredictWithoutRestrictionsMessage || ""}`}</div>
+                  <div>{`Predicted GUID: ${continuousPredictWithoutRestrictionsGUID}`}</div>
+                  <div>{`Predicted PUID: ${continuousPredictWithoutRestrictionsPUID}`}</div>
                 </div>
               )}
 
@@ -870,6 +899,22 @@ const Ready = () => {
               {/* <button className="button" onClick={handleContinuousPredict}>
                 Continuous Authentication
               </button> */}
+
+              <button
+                className="button"
+                onClick={handleBurningMan}
+                style={
+                  disableButtons && currentAction !== "useContinuousPredictWithoutRestrictions"
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Burning Man
+              </button>
+
               <button
                 className="button"
                 onClick={handleDelete}
