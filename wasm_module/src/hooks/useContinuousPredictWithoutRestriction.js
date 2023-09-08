@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { continuousPredictWithoutRestrictions } from "@privateid/cryptonets-web-sdk-alpha";
 let loop = true;
-const useContinuousPredictWithoutRestrictions = (
-  setShowSuccess,
-) => {
+const useContinuousPredictWithoutRestrictions = (setShowSuccess) => {
   const [continuousPredictWithoutRestrictionsMessage, setContinuousPredictWithoutRestrictionsMessage] = useState("");
 
   const [
@@ -43,6 +41,10 @@ const useContinuousPredictWithoutRestrictions = (
     await continuousPredictWithoutRestrictions(callback, {
       input_image_format: "rgba",
       skip_antispoof: true,
+      FACE_THRESHOLDS_MIN: 0.3,
+      FACE_THRESHOLDS_MED: 0.98,
+      FACE_THRESHOLDS_MAX: 1.05,
+      FACE_THRESHOLDS_REM_BAD_EMB_DEFAULT: 0.5,
     });
   };
 
