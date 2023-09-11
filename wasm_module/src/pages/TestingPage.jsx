@@ -985,7 +985,7 @@ const Ready = () => {
               >
                 Healthcare Card Scan
               </button>
-              <button
+              {/* <button
                 className="button"
                 onClick={handleLivenessCheck}
                 style={
@@ -998,11 +998,11 @@ const Ready = () => {
                 disabled={disableButtons}
               >
                 Liveness Check
-              </button>
+              </button> */}
             </div>
 
             <div>
-              <p> Upload 2 images to use compare: </p>
+              <p> Upload 2 images to use document and face compare: </p>
               <label>
                 <input
                   type="file"
