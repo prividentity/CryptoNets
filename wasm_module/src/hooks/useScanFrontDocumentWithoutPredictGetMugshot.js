@@ -23,8 +23,6 @@ const useScanFrontDocumentWithoutPredictGetMugShot = (setShowSuccess, onMugshotS
   let running = false;
 
   const documentCallback = (result) => {
-    console.log("Status code:", result.returnValue.op_status);
-    console.log("Result:", result);
     if (result.status === "WASM_RESPONSE") {
       if (result.returnValue.op_status === 0 && result.returnValue.cropped_face_height) {
         setIsFound(true);

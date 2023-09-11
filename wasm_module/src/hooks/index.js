@@ -8,4 +8,4 @@ export { default as useScanBackDocument } from "./useScanBackDocument";
 export { default as useScanFrontDocument } from "./useScanFrontDocument";
 export { default as useWasm } from "./useWasm";
 export { default as usePredictAge } from "./usePredictAge";
-export { default as useScanFrontDocumentWithoutPredict } from "./useScanFrontDocumentWithoutPredict";
+export { default as useScanFrontDocumentWithoutPredict } from "./useScanFrontDocument";

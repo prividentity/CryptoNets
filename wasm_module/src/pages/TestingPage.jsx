@@ -1,10 +1,11 @@
 /* eslint-disable */
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import {
   switchCamera,
   setStopLoopContinuousAuthentication,
   closeCamera,
   faceCompareLocal,
+  documentMugshoFaceCompare,
 } from "@privateid/cryptonets-web-sdk";
 
 import {
@@ -14,7 +15,6 @@ import {
   useIsValid,
   useEnrollOneFa,
   usePredictOneFa,
-  useContinuousPredict,
   useScanFrontDocument,
   useScanBackDocument,
 } from "../hooks";
@@ -29,19 +29,23 @@ import {
 
 import "./styles.css";
 import usePredictAge from "../hooks/usePredictAge";
-import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocumentWithoutPredict";
+import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocument";
 import usePrividFaceISO from "../hooks/usePrividFaceISO";
-import { useNavigate } from "react-router-dom";
-import usePredictAgeWithLivenessCheck from "../hooks/usePredictAgeWithLivenessCheck";
-import usePredictOneFaWithLivenessCheck from "../hooks/usePredictOneFaWithLivenessCheck";
-import useEnrollOneFaWithLiveness from "../hooks/useEnrollOneFaWithLivenessCheck";
 import useFaceLogin from "../hooks/useFaceLogin";
-import useFaceLoginWithLivenessCheck from "../hooks/useFaceLoginWithLiveness";
 import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
-import { antispoofCheck, getFrontDocumentStatusMessage } from "@privateid/cryptonets-web-sdk/dist/utils";
+import {
+  getEnrollFaceMessage,
+  getFaceValidationMessage,
+  getFrontDocumentStatusMessage,
+  getRawFaceValidationStatus,
+} from "@privateid/cryptonets-web-sdk/dist/utils";
+import { DebugContext } from "../context/DebugContext";
+import useLivenessCheck from "../hooks/useLivenessCheck";
+import useContinuousPredictWithoutRestrictions from "../hooks/useContinuousPredictWithoutRestriction";
 
 let callingWasm = false;
 const Ready = () => {
+  const debugContext = useContext(DebugContext);
   const { ready: wasmReady, deviceSupported, init: initWasm } = useWasm();
   const {
     ready: cameraReady,
@@ -53,18 +57,31 @@ const Ready = () => {
     setReady,
   } = useCamera("userVideo");
 
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [disableButtons, setDisableButtons] = useState(false);
 
-  const {
-    scanFrontDocument,
-    isFound,
-    resultStatus,
-    documentUUID,
-    documentGUID,
-    setShouldTriggerCallback,
-    scanDocumentFrontMessage,
-    resultResponse,
-  } = useScanFrontDocument(setShowSuccess);
+  function getUrlParameter(sParam, defaultValue = undefined) {
+    const sPageURL = window.location.search.substring(1);
+    const sURLVariables = sPageURL.split("&");
+    let sParameterName;
+    let i;
+
+    for (i = 0; i < sURLVariables.length; i++) {
+      sParameterName = sURLVariables[i].split("=");
+
+      if (sParameterName[0] === sParam) {
+        return typeof sParameterName[1] === undefined ? defaultValue : decodeURIComponent(sParameterName[1]);
+      }
+    }
+    return defaultValue;
+  }
+  useEffect(() => {
+    const debug_type = getUrlParameter("debug_type", null);
+    if (debug_type) {
+      debugContext.setShowDebugOptions(true);
+    }
+  }, []);
+
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const [deviceCapabilities, setDeviceCapabilities] = useState(capabilities);
   const canvasSizeList = useMemo(() => {
@@ -97,19 +114,9 @@ const Ready = () => {
     setContinuousPredictUUID(null);
     setContinuousPredictGUID(null);
   };
-  const {
-    faceDetected: continuousFaceDetected,
-    predictUser: continuousPredictUser,
-    continuousPredictMessage,
-  } = useContinuousPredict(
-    "userVideo",
-    continuousPredictSuccess,
-    continuousOnNotFoundAndFailure,
-    continuousOnNotFoundAndFailure,
-    predictRetryTimes
-  );
 
   const [currentAction, setCurrentAction] = useState(null);
+  const [skipAntiSpoof, setSkipAntispoof] = useState(false);
 
   useEffect(() => {
     console.log("useEffect starting wasm and camera");
@@ -131,36 +138,17 @@ const Ready = () => {
   }, [wasmReady, cameraReady]);
 
   const {
-    faceDetected: isValidFaceDetected,
     isValidCall,
-    hasFinished,
-    setHasFinished,
-    exposureValue, 
-    confidenceScore: isValidConfidenceScore,
+    antispoofPerformed: isValidAntispoofPerformed,
+    antispoofStatus: isValidAntispoofStatus,
+    isValidStatus: isValidStatus,
   } = useIsValid("userVideo");
   // isValid
   const handleIsValid = async () => {
     setShowSuccess(false);
     setCurrentAction("isValid");
-    await isValidCall();
+    await isValidCall(skipAntiSpoof);
   };
-
-  // to start and stop isValid call when on loop
-  useEffect(() => {
-    const doIsValid = async () => {
-      await isValidCall();
-    };
-
-    if (currentAction === "isValid" && hasFinished) {
-      setHasFinished(false);
-    }
-    if (currentAction === "isValid" && !hasFinished) {
-      doIsValid();
-    }
-    if (currentAction !== "isValid" && hasFinished) {
-      setHasFinished(false);
-    }
-  }, [currentAction, hasFinished]);
 
   // Enroll ONEFA
   const useEnrollSuccess = () => {
@@ -168,48 +156,37 @@ const Ready = () => {
     setShowSuccess(true);
   };
   const {
-    faceDetected: enrollOneFaFaceDetected,
-    enrollStatus: enrollOneFaStatus,
-    enrollData: enrollOneFaData,
+    enrollGUID,
+    enrollPUID,
+    enrollAntispoofPerformed,
+    enrollAntispoofStatus,
+    enrollValidationStatus,
+    enrollToken,
     enrollUserOneFa,
-    progress: enrollOneFaProgress,
-  } = useEnrollOneFa("userVideo", useEnrollSuccess, null, deviceId, setShowSuccess);
+  } = useEnrollOneFa("userVideo", useEnrollSuccess, null, deviceId, setShowSuccess, setDisableButtons);
   const handleEnrollOneFa = async () => {
     setShowSuccess(false);
     setCurrentAction("useEnrollOneFa");
-    enrollUserOneFa();
+    enrollUserOneFa("", skipAntiSpoof);
   };
 
   const handlePreidctSuccess = (result) => {
     console.log("======PREDICT SUCCESS========");
   };
-  const { predictOneFaData, predictOneFaaceDetected, predictMessage, predictUserOneFa } = usePredictOneFa(
-    "userVideo",
-    handlePreidctSuccess,
-    4,
-    null,
-    setShowSuccess
-  );
+  const {
+    predictAntispoofPerformed,
+    predictAntispoofStatus,
+    predictGUID,
+    predictPUID,
+    predictValidationStatus,
+    predictMessage,
+    predictUserOneFa,
+  } = usePredictOneFa("userVideo", handlePreidctSuccess, 4, null, setShowSuccess, setDisableButtons);
   const handlePredictOneFa = async () => {
     setShowSuccess(false);
     setCurrentAction("usePredictOneFa");
-    predictUserOneFa();
+    predictUserOneFa(skipAntiSpoof);
   };
-
-  const handleContinuousPredict = async () => {
-    setShowSuccess(false);
-    setCurrentAction("useContinuousPredict");
-    continuousPredictUser();
-  };
-
-  // stop Continuous predict
-  useEffect(() => {
-    if (currentAction !== "useContinuousPredict") {
-      setStopLoopContinuousAuthentication(true);
-    } else {
-      setStopLoopContinuousAuthentication(false);
-    }
-  }, [currentAction]);
 
   const handleSwitchCamera = async (e) => {
     setDeviceId(e.target.value);
@@ -243,45 +220,44 @@ const Ready = () => {
   // deleting
   useEffect(() => {
     if (currentAction === "useDelete") {
-      if (predictOneFaData) {
-        onDeleteUser(predictOneFaData.PI.uuid);
+      if (predictPUID) {
+        onDeleteUser(predictPUID);
       }
     }
-  }, [currentAction, predictOneFaData]);
-
-  // handleDLfront
-  const handleScanDLFront = async () => {
-    setCurrentAction("useScanDocumentFront");
-    // hack to initialize canvas with large memory, so it doesn't cause an issue.
-    if (canvasSize) {
-      await scanFrontDocument(canvasSize);
-    } else {
-      setShowSuccess(false);
-      if (!isMobile) {
-        await scanFrontDocument(canvasSizeOptions[3].value, () => {});
-      }
-      await scanFrontDocument(initialCanvasSize);
-    }
-  };
+  }, [currentAction, predictPUID]);
 
   // Scan Document Back
-  const { scanBackDocument, scannedCodeData, barcodeStatusCode, croppedBarcodeImage:croppedBarcodeBase64, croppedDocumentImage:croppedBackDocumentBase64  } = useScanBackDocument(setShowSuccess);
+  const {
+    scanBackDocument,
+    scannedCodeData,
+    barcodeStatusCode,
+    croppedBarcodeImage: croppedBarcodeBase64,
+    croppedDocumentImage: croppedBackDocumentBase64,
+  } = useScanBackDocument(setShowSuccess);
   const handleScanDocumentBack = async () => {
     setShowSuccess(false);
     setCurrentAction("useScanDocumentBack");
-    await scanBackDocument();
+    await scanBackDocument(undefined, debugContext.functionLoop);
   };
 
   const isDocumentOrBackCamera =
     ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) || isBack;
 
   // Predict Age
-  const { doPredictAge, age, predictAgeHasFinished, setPredictAgeHasFinished } = usePredictAge();
+  const {
+    doPredictAge,
+    age,
+    predictAgeHasFinished,
+    setPredictAgeHasFinished,
+    antispoofPerformed: predictAgeAntispoofPerformed,
+    antispoofStatus: predictAgeAntispoofStatus,
+    validationStatus: predictAgeValidationStatus,
+  } = usePredictAge();
 
   const handlePredictAge = async () => {
     setShowSuccess(false);
     setCurrentAction("usePredictAge");
-    await doPredictAge();
+    await doPredictAge(skipAntiSpoof);
   };
 
   // to start and stop predictAge call when on loop
@@ -289,16 +265,20 @@ const Ready = () => {
     const doUsePredictAge = async () => {
       await doPredictAge();
     };
-    if (currentAction === "usePredictAge" && predictAgeHasFinished) {
+    if (debugContext.functionLoop) {
+      if (currentAction === "usePredictAge" && predictAgeHasFinished) {
+        setPredictAgeHasFinished(false);
+      }
+      if (currentAction === "usePredictAge" && !predictAgeHasFinished) {
+        doUsePredictAge();
+      }
+      if (currentAction !== "usePredictAge" && predictAgeHasFinished) {
+        setPredictAgeHasFinished(false);
+      }
+    } else {
       setPredictAgeHasFinished(false);
     }
-    if (currentAction === "usePredictAge" && !predictAgeHasFinished) {
-      doUsePredictAge();
-    }
-    if (currentAction !== "usePredictAge" && predictAgeHasFinished) {
-      setPredictAgeHasFinished(false);
-    }
-  }, [currentAction, predictAgeHasFinished]);
+  }, [currentAction, predictAgeHasFinished, debugContext.functionLoop]);
 
   // Scan Front DL without predict
 
@@ -315,7 +295,7 @@ const Ready = () => {
 
   const handleFrontDLValidity = async () => {
     setCurrentAction("useScanDocumentFrontValidity");
-    await scanFrontValidity();
+    await scanFrontValidity(debugContext.functionLoop);
   };
 
   const handleCanvasSize = async (e, skipSwitchCamera = false) => {
@@ -345,7 +325,7 @@ const Ready = () => {
 
   const handlePrividFaceISO = () => {
     setCurrentAction("privid_face_iso");
-    doFaceISO();
+    doFaceISO(debugContext.functionLoop);
   };
 
   const handleReopenCamera = async () => {
@@ -356,11 +336,6 @@ const Ready = () => {
 
   const handleCloseCamera = async () => {
     await closeCamera();
-  };
-
-  const navigate = useNavigate();
-  const handleCompareImages = async () => {
-    navigate("/compare");
   };
 
   const [uploadImage1, setUploadImage1] = useState(null);
@@ -465,209 +440,60 @@ const Ready = () => {
       console.log("COMPARE RESULT", result);
     };
 
-    await faceCompareLocal(callback, uploadImage1, uploadImage2);
-  };
-
-  const handleBoundingBox = async () => {
-    navigate("/bounding_box");
-  };
-
-  // usePredictAge with Liveness
-  const {
-    age: ageWithLiveness,
-    doPredictAge: doPredictAgeWithLiveness,
-    setPredictAgeHasFinished: setPredictAgeHasFinishedWithLiveness,
-    predictAgeLivenessResult,
-    predictAgeHasFinished: predictAgeHasFinishedWithLiveness,
-  } = usePredictAgeWithLivenessCheck();
-
-  const handleDoPredictAgeWithLiveness = async () => {
-    setShowSuccess(false);
-    setCurrentAction("usePredictAgeWithLiveness");
-    await doPredictAgeWithLiveness();
-  };
-
-  // to start and stop predictAge call when on loop
-  useEffect(() => {
-    const doUsePredictAge = async () => {
-      await doPredictAgeWithLiveness();
-    };
-    if (currentAction === "usePredictAgeWithLiveness" && predictAgeHasFinishedWithLiveness) {
-      setPredictAgeHasFinishedWithLiveness(false);
-    }
-    if (currentAction === "usePredictAgeWithLiveness" && !predictAgeHasFinishedWithLiveness) {
-      doUsePredictAge();
-    }
-    if (currentAction !== "usePredictAgeWithLiveness" && predictAgeHasFinishedWithLiveness) {
-      setPredictAgeHasFinishedWithLiveness(false);
-    }
-  }, [currentAction, predictAgeHasFinishedWithLiveness]);
-
-  // predict1Fa with liveness
-  const {
-    predictMessage: predictMessageWithLiveness,
-    predictOneFaData: predictOneFaDataWithLiveness,
-    predictOneFaaceDetected: predictOneFaaceDetectedWithLiveness,
-    predictUserOneFa: predictUserOneFaWithLiveness,
-    predictLivenessCheck,
-  } = usePredictOneFaWithLivenessCheck(setShowSuccess);
-
-  const handlePredict1FaWithLiveness = async () => {
-    setShowSuccess(false);
-    setCurrentAction("usePredictOneFaWithLiveness");
-    predictUserOneFaWithLiveness();
-  };
-
-  const {
-    enrollOneFaWithLivenessFaceDetected,
-    enrollOneFaWithLivenessStatus,
-    enrollOneFaWithLivenessData,
-    enrollUserOneFaWithLiveness,
-    enrollOneFaWithLivenessProgress,
-    enrollOneFaWithLivenessCheckStatus,
-  } = useEnrollOneFaWithLiveness("userVideo", () => {}, null, deviceId, setShowSuccess);
-
-  const handleEnrollOneFaWithLiveness = async () => {
-    setShowSuccess(false);
-    setCurrentAction("useEnrollOneFaWithLiveness");
-    enrollUserOneFaWithLiveness();
+    await documentMugshoFaceCompare(callback, uploadImage1, uploadImage2);
   };
 
   // Face Login
-  const { doFaceLogin, faceLoginData, faceLoginFaceDetected, faceLoginMessage, faceLoginStatus } = useFaceLogin("userVideo", () => {}, null, deviceId, setShowSuccess);
+  const {
+    doFaceLogin,
+    faceLoginAntispoofPerformed,
+    faceLoginAntispoofStatus,
+    faceLoginGUID,
+    faceLoginMessage,
+    faceLoginPUID,
+    faceLoginValidationStatus,
+  } = useFaceLogin("userVideo", () => {}, null, deviceId, setShowSuccess, setDisableButtons);
 
   const handleFaceLogin = async () => {
     setShowSuccess(false);
     setCurrentAction("useFaceLogin");
-    doFaceLogin();
-  };
-
-  // Face Login With Liveness
-  const {
-    faceLoginLivenessCheck,
-    faceLoginWithLiveness,
-    faceLoginWithLivenessData,
-    faceLoginWithLivenessFaceDetected,
-    faceLoginWithLivenessMessage,
-    faceLoginWithLivenessStatus,
-  } = useFaceLoginWithLivenessCheck(setShowSuccess);
-
-  const handleFaceLoginWithLiveness = async () => {
-    setShowSuccess(false);
-    setCurrentAction("useFaceLoginWithLiveness");
-    faceLoginWithLiveness();
+    doFaceLogin(skipAntiSpoof);
   };
 
   // Scan Healthcare Card
-  const { croppedDocumentBase64,doScanHealthcareCard } = useScanHealthcareCard(setShowSuccess);
+  const { croppedDocumentBase64, doScanHealthcareCard } = useScanHealthcareCard(setShowSuccess);
 
   const handleUseScanHealhcareCard = async () => {
     setShowSuccess(false);
     setCurrentAction("useScanHealthcareCard");
-    doScanHealthcareCard();
-  }
-
-  // 
-  const handleUploadImageHealthcare = async (e) => {
-    console.log(e.target.files);
-    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
-    if (e.target.files.length > 0) {
-      if (imageRegex.test(e.target.files[0].type)) {
-        const imageUrl = URL.createObjectURL(e.target.files[0]);
-
-        console.log(e.target.files[0]);
-
-        const getBase64 = (file) => {
-          return new Promise((resolve, reject) => {
-            var reader = new FileReader();
-            reader.readAsDataURL(file);
-
-            reader.onload = function () {
-              resolve(reader.result);
-            };
-            reader.onerror = function (error) {
-              reject(error);
-            };
-          });
-        };
-
-        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
-        var newImg = new Image();
-        newImg.src = base64;
-        newImg.onload = async () => {
-          var imgSize = {
-            w: newImg.width,
-            h: newImg.height,
-          };
-          alert(imgSize.w + " " + imgSize.h);
-          const canvas = document.createElement("canvas");
-          canvas.setAttribute("height", `${imgSize.h}`);
-          canvas.setAttribute("width", `${imgSize.w}`);
-          var ctx = canvas.getContext("2d");
-          ctx.drawImage(newImg, 0, 0);
-
-          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
-          console.log("imageData", imageData);
-          doScanHealthcareCard(imageData);
-        };
-      } else {
-        console.log("INVALID IMAGE TYPE");
-      }
-    }
-  };
-
-  const handleUploadDoAntispoofCheck = async (e) => {
-    console.log(e.target.files);
-    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
-    if (e.target.files.length > 0) {
-      if (imageRegex.test(e.target.files[0].type)) {
-        const imageUrl = URL.createObjectURL(e.target.files[0]);
-
-        console.log(e.target.files[0]);
-
-        const getBase64 = (file) => {
-          return new Promise((resolve, reject) => {
-            var reader = new FileReader();
-            reader.readAsDataURL(file);
-
-            reader.onload = function () {
-              resolve(reader.result);
-            };
-            reader.onerror = function (error) {
-              reject(error);
-            };
-          });
-        };
-
-        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
-        var newImg = new Image();
-        newImg.src = base64;
-        newImg.onload = async () => {
-          var imgSize = {
-            w: newImg.width,
-            h: newImg.height,
-          };
-          alert(imgSize.w + " " + imgSize.h);
-          const canvas = document.createElement("canvas");
-          canvas.setAttribute("height", `${imgSize.h}`);
-          canvas.setAttribute("width", `${imgSize.w}`);
-          var ctx = canvas.getContext("2d");
-          ctx.drawImage(newImg, 0, 0);
-
-          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
-          console.log("imageData", imageData);
-          const livenssResult = await antispoofCheck(imageData.data, imageData.width, imageData.height);
-          console.log("LIVENESS: ", livenssResult);
-        };
-      } else {
-        console.log("INVALID IMAGE TYPE");
-      }
-    }
+    doScanHealthcareCard(undefined, debugContext.functionLoop);
   };
 
   const handleCopyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-  }
+  };
+
+  const { result, doLivenessCheck, resultMessage, finalResult, livenessProgress, resetAllLivenessValues } =
+    useLivenessCheck();
+
+  const handleLivenessCheck = async () => {
+    setCurrentAction("livenessCheck");
+    resetAllLivenessValues();
+    await doLivenessCheck();
+  };
+
+  const {
+    continuousPredictWithoutRestrictionsGUID,
+    continuousPredictWithoutRestrictionsMessage,
+    continuousPredictWithoutRestrictionsPUID,
+    continuousPredictWithoutRestrictionsValidationStatus,
+    doContinuousPredictWithoutRestrictions,
+  } = useContinuousPredictWithoutRestrictions(setShowSuccess);
+
+  const handleBurningMan = () => {
+    setCurrentAction("useContinuousPredictWithoutRestrictions");
+    doContinuousPredictWithoutRestrictions();
+  };
 
   return (
     <>
@@ -677,6 +503,27 @@ const Ready = () => {
         </div>
       ) : !deviceSupported.isChecking && deviceSupported.supported ? (
         <div id="canvasInput" className="container">
+          <span
+            style={{
+              display: debugContext.showDebugOptions ? "flex" : "none",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "5px",
+            }}
+          >
+            Do Loop?
+            <label class="switch">
+              <input
+                type="checkbox"
+                value={debugContext.functionLoop}
+                onChange={() => {
+                  debugContext.setFuctionLoop(!debugContext.functionLoop);
+                }}
+              />
+              <span class="slider round"></span>
+            </label>
+          </span>
+
           <div
             style={{
               height: "100%",
@@ -734,9 +581,24 @@ const Ready = () => {
               )}
             </div>
             <div className={"cameraContainer"}>
-              {currentAction === "useEnrollOneFa" && !enrollOneFaFaceDetected && (
+              {currentAction === "useEnrollOneFa" && (
                 <div className="enrollDisplay">
-                  <span> {enrollOneFaStatus} </span>
+                  <span> {getRawFaceValidationStatus(enrollValidationStatus)} </span>
+                </div>
+              )}
+              {currentAction === "useFaceLogin" && (
+                <div className="enrollDisplay">
+                  <span> {getRawFaceValidationStatus(faceLoginValidationStatus)} </span>
+                </div>
+              )}
+              {currentAction === "usePredictOneFa" && (
+                <div className="enrollDisplay">
+                  <span> {getRawFaceValidationStatus(predictValidationStatus)} </span>
+                </div>
+              )}
+              {currentAction === "useContinuousPredictWithoutRestrictions" && (
+                <div className="enrollDisplay">
+                  <span> {getRawFaceValidationStatus(continuousPredictWithoutRestrictionsValidationStatus)} </span>
                 </div>
               )}
               <video
@@ -760,151 +622,114 @@ const Ready = () => {
                   <div>{Math.round(age)}</div>
                 </div>
               )}
-              {currentAction === "usePredictAgeWithLiveness" && ageWithLiveness > 0 && (
-                <div className="age-box">
-                  <div>{Math.round(ageWithLiveness)}</div>
-                </div>
-              )}
+            </div>
+
+            <div>
+              <span
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: "5px",
+                }}
+              >
+                Skip antispoof?:
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    value={skipAntiSpoof}
+                    defaultValue={true}
+                    onChange={() => {
+                      setSkipAntispoof(!skipAntiSpoof);
+                      console.log("skip", !skipAntiSpoof);
+                    }}
+                  />
+                  <span class="slider round"></span>
+                </label>
+              </span>
             </div>
 
             <div>
               {currentAction === "useEnrollOneFa" && (
                 <div>
+                  <div> Enroll Token: {enrollToken} </div>
                   <div>
-                    Enroll Face Detected:
-                    {enrollOneFaFaceDetected ? "Face Detected" : "No Face Detected"}
+                    Antispoof Performed:
+                    {JSON.stringify(enrollAntispoofPerformed)}
                   </div>
-                  <div> Enroll Status: {enrollOneFaStatus} </div>
-                  <div> Progress: {`${enrollOneFaProgress} %`}</div>
+                  <div> Antispoof Status: {enrollAntispoofStatus} </div>
+                  <div> Validation Status: {enrollValidationStatus} </div>
                   <div>
                     Enroll GUID:&nbsp;
-                    {`${enrollOneFaData ? enrollOneFaData.PI.guid : ""}`}
+                    {`${enrollGUID}`}
                   </div>
                   <div>
-                    Enroll UUID:&nbsp;
-                    {`${enrollOneFaData ? enrollOneFaData.PI.uuid : ""}`}
-                  </div>
-                </div>
-              )}
-
-              {currentAction === "useEnrollOneFaWithLiveness" && (
-                <div>
-                  {console.log("HERE", {
-                    enrollOneFaWithLivenessFaceDetected,
-                    enrollOneFaWithLivenessStatus,
-                    enrollOneFaWithLivenessProgress,
-                    enrollOneFaWithLivenessData,
-                  })}
-                  <div>
-                    Enroll Face Detected:
-                    {enrollOneFaWithLivenessFaceDetected ? "Face Detected" : "No Face Detected"}
-                  </div>
-                  <div> Enroll Status: {enrollOneFaWithLivenessStatus} </div>
-                  <div> Progress: {`${enrollOneFaWithLivenessProgress} %`}</div>
-                  <div>
-                    Enroll GUID:&nbsp;
-                    {`${enrollOneFaWithLivenessData ? enrollOneFaWithLivenessData.PI.guid : ""}`}
-                  </div>
-                  <div>
-                    Enroll UUID:&nbsp;
-                    {`${enrollOneFaWithLivenessData ? enrollOneFaWithLivenessData.PI.uuid : ""}`}
-                  </div>
-                  <div>
-                    Liveness Check:{" "}
-                    {`${
-                      enrollOneFaWithLivenessCheckStatus === 0
-                        ? "Real"
-                        : enrollOneFaWithLivenessCheckStatus === 1
-                        ? "Spoof"
-                        : "Face not found"
-                    }`}
+                    Enroll PUID:&nbsp;
+                    {`${enrollPUID}`}
                   </div>
                 </div>
               )}
 
               {currentAction === "isValid" && (
                 <div>
-                  <div>{`Face Valid: ${isValidFaceDetected}`}</div>
-                  <div>{`Exposure: ${exposureValue}`}</div>
-                  <div> {`Confidence Score: ${isValidConfidenceScore}`} </div>
+                  <div>{`Antispoof Performed: ${isValidAntispoofPerformed}`}</div>
+                  <div>{`Antispoof Status: ${isValidAntispoofStatus}`}</div>
+                  <div> {`Is Valid Status Code: ${isValidStatus}`} </div>
                 </div>
               )}
 
-              {currentAction === "useContinuousPredict" && (
+              {currentAction === "usePredictAge" && (
                 <div>
-                  <div>{`Face Valid: ${continuousFaceDetected ? "Face Detected" : "Face not detected"}`}</div>
-                  <div>{`Message: ${continuousPredictMessage || ""}`}</div>
-                  <div>{`Predicted GUID: ${continuousPredictGUID ? continuousPredictGUID : ""}`}</div>
-                  <div>{`Predicted UUID: ${continuousPredictUUID ? continuousPredictUUID : ""}`}</div>
+                  <div>{`Antispoof Performed: ${predictAgeAntispoofPerformed}`}</div>
+                  <div>{`Antispoof Status: ${predictAgeAntispoofStatus}`}</div>
+                  <div>{`Validataion Status: ${predictAgeValidationStatus}`}</div>
                 </div>
               )}
 
               {currentAction === "usePredictOneFa" && (
                 <div>
-                  <div>{`Face Valid: ${predictOneFaaceDetected ? "Face Detected" : "Face not detected"}`}</div>
+                  <div>{`Status: ${predictValidationStatus}`} </div>
                   <div>{`Message: ${predictMessage || ""}`}</div>
-                  <div>{`Predicted GUID: ${predictOneFaData ? predictOneFaData.PI.guid : ""}`}</div>
-                  <div>{`Predicted UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
+                  <div>{`Antispoof Performed: ${predictAntispoofPerformed}`}</div>
+                  <div>{`Antispoof Status: ${predictAntispoofStatus}`}</div>
+                  <div>{`Predicted GUID: ${predictGUID}`}</div>
+                  <div>{`Predicted PUID: ${predictPUID}`}</div>
                 </div>
               )}
 
-              {currentAction === "usePredictOneFaWithLiveness" && (
+              {currentAction === "useContinuousPredictWithoutRestrictions" && (
                 <div>
-                  <div>{`Face Valid: ${
-                    predictOneFaaceDetectedWithLiveness ? "Face Detected" : "Face not detected"
-                  }`}</div>
-                  <div>{`Message: ${predictMessageWithLiveness || ""}`}</div>
-                  <div>{`Predicted GUID: ${
-                    predictOneFaDataWithLiveness ? predictOneFaDataWithLiveness.PI.guid : ""
-                  }`}</div>
-                  <div>{`Predicted UUID: ${
-                    predictOneFaDataWithLiveness ? predictOneFaDataWithLiveness.PI.uuid : ""
-                  }`}</div>
-                  <div>{`Liveness Check: ${
-                    predictLivenessCheck === -1
-                      ? "No Face Detected"
-                      : predictLivenessCheck === 0
-                      ? "Real"
-                      : predictLivenessCheck === 1
-                      ? "Spoof"
-                      : ""
-                  }`}</div>
+                  <div>{`Status: ${continuousPredictWithoutRestrictionsValidationStatus}`} </div>
+                  <div>{`Message: ${continuousPredictWithoutRestrictionsMessage || ""}`}</div>
+                  <div>{`Predicted GUID: ${continuousPredictWithoutRestrictionsGUID}`}</div>
+                  <div>{`Predicted PUID: ${continuousPredictWithoutRestrictionsPUID}`}</div>
                 </div>
               )}
+
+              {/* {currentAction === "useContinuousPredict" && (
+                <div>
+                  <div>{`Face Valid: ${continuousFaceDetected ? "Face Detected" : "Face not detected"}`}</div>
+                  <div>{`Message: ${continuousPredictMessage || ""}`}</div>
+                  <div>{`Predicted GUID: ${continuousPredictGUID ? continuousPredictGUID : ""}`}</div>
+                  <div>{`Predicted PUID: ${continuousPredictUUID ? continuousPredictUUID : ""}`}</div>
+                </div>
+              )} */}
 
               {currentAction === "useFaceLogin" && (
                 <div>
-                  <div>{`Face Valid: ${faceLoginFaceDetected ? "Face Detected" : "Face not detected"}`}</div>
+                  <div>{`Face Login Status: ${faceLoginValidationStatus}`} </div>
                   <div>{`Message: ${faceLoginMessage || ""}`}</div>
-                  <div>{`Face Login GUID: ${faceLoginData ? faceLoginData.PI.guid : ""}`}</div>
-                  <div>{`Face Login UUID: ${faceLoginData ? faceLoginData.PI.uuid : ""}`}</div>
-                </div>
-              )}
-
-              {currentAction === "useFaceLoginWithLiveness" && (
-                <div>
-                  <div>{`Face Valid: ${
-                    faceLoginWithLivenessFaceDetected ? "Face Detected" : "Face not detected"
-                  }`}</div>
-                  <div>{`Message: ${faceLoginWithLivenessMessage || ""}`}</div>
-                  <div>{`Face Login GUID: ${faceLoginWithLivenessData ? faceLoginWithLivenessData.PI.guid : ""}`}</div>
-                  <div>{`Face Login UUID: ${faceLoginWithLivenessData ? faceLoginWithLivenessData.PI.uuid : ""}`}</div>
-                  <div>{`Liveness Check: ${
-                    faceLoginLivenessCheck === -1
-                      ? "No Face Detected"
-                      : faceLoginLivenessCheck === 0
-                      ? "Real"
-                      : faceLoginLivenessCheck === 1
-                      ? "Spoof"
-                      : ""
-                  }`}</div>
+                  <div>{`Antispoof Performed: ${faceLoginAntispoofPerformed}`} </div>
+                  <div>{`Antispoof Status: ${faceLoginAntispoofStatus}`} </div>
+                  <div>{`Face Login GUID: ${faceLoginGUID}`}</div>
+                  <div>{`Face Login PUID: ${faceLoginPUID}`}</div>
                 </div>
               )}
 
               {currentAction === "useDelete" && (
                 <div>
                   <div>{`Deletion Status: ${deletionStatus}`}</div>
-                  <div>{`User UUID: ${predictOneFaData ? predictOneFaData.PI.uuid : ""}`}</div>
+                  <div>{`User PUID: ${predictPUID}`}</div>
                 </div>
               )}
 
@@ -921,17 +746,27 @@ const Ready = () => {
                   <div>{`Street Address2: ${scannedCodeData ? scannedCodeData.streetAddress2 : ""}`}</div>
                   <div>{`City: ${scannedCodeData ? scannedCodeData.city : ""}`}</div>
                   <div>{`Postal Code: ${scannedCodeData ? scannedCodeData.postCode : ""}`}</div>
-                  <div style={{display:"flex", gap:"5px"}}>
-                    {croppedBarcodeBase64&&
-                      <button className="button" onClick={()=>{handleCopyToClipboard(croppedBarcodeBase64)}}>
+                  <div style={{ display: "flex", gap: "5px" }}>
+                    {croppedBarcodeBase64 && (
+                      <button
+                        className="button"
+                        onClick={() => {
+                          handleCopyToClipboard(croppedBarcodeBase64);
+                        }}
+                      >
                         Copy Cropped Barcode Base64
                       </button>
-                    }  
-                    {croppedBackDocumentBase64&&
-                      <button className="button" onClick={()=>{handleCopyToClipboard(croppedBackDocumentBase64)}}>
+                    )}
+                    {croppedBackDocumentBase64 && (
+                      <button
+                        className="button"
+                        onClick={() => {
+                          handleCopyToClipboard(croppedBackDocumentBase64);
+                        }}
+                      >
                         Copy Cropped Document Base64
                       </button>
-                    }  
+                    )}
                   </div>
                 </div>
               )}
@@ -939,7 +774,11 @@ const Ready = () => {
               {currentAction === "useScanDocumentFrontValidity" && (
                 <div>
                   <div>{`Status Code: ${frontScanData ? frontScanData.returnValue.op_status : ""}`}</div>
-                  <div>{`Status Message: ${frontScanData? getFrontDocumentStatusMessage(frontScanData.returnValue.op_status): ""}`} </div>
+                  <div>
+                    {`Status Message: ${
+                      frontScanData ? getFrontDocumentStatusMessage(frontScanData.returnValue.op_status) : ""
+                    }`}{" "}
+                  </div>
                   <div>{`Document 4 corners found: ${
                     isfoundValidity ? "Document 4 corners available" : "not found"
                   }`}</div>
@@ -976,124 +815,192 @@ const Ready = () => {
                 </div>
               )}
 
-              {currentAction === "usePredictAgeWithLiveness" && (
+              {currentAction === "livenessCheck" && (
                 <div>
-                  <div>{`Estimated Age: ${
-                    predictAgeLivenessResult === -1 || predictAgeLivenessResult === 1 ? "" : Math.round(ageWithLiveness)
-                  }`}</div>
-                  <div>{`Liveness Check: ${
-                    predictAgeLivenessResult === -1
-                      ? "No Face Detected"
-                      : predictAgeLivenessResult === 0
-                      ? "Real"
-                      : predictAgeLivenessResult === 1
-                      ? "Spoof"
-                      : ""
-                  }`}</div>
+                  <div>{`Progress: ${livenessProgress}`}</div>
+                  <div>{`Final Result: ${finalResult}`}</div>
+                  <div>{`Status Code: ${result}`}</div>
+                  <div>{`Status Message: ${resultMessage}`}</div>
                 </div>
               )}
             </div>
 
             <div id="module_functions" className="buttonContainer">
-              <button className="button" onClick={handleIsValid}>
+              <button
+                className="button"
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                onClick={handleIsValid}
+                disabled={disableButtons}
+              >
                 Is Valid
               </button>
-              <button className="button" onClick={handlePredictAge}>
+              <button
+                className="button"
+                onClick={handlePredictAge}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Predict Age
               </button>
-              <button className="button" onClick={handleDoPredictAgeWithLiveness}>
-                Predict Age with Liveness
-              </button>
-              <button className="button" onClick={handleEnrollOneFa}>
+              <button
+                className="button"
+                onClick={handleEnrollOneFa}
+                style={
+                  disableButtons && currentAction !== "useEnrollOneFa"
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Enroll
               </button>
-              <button className="button" onClick={handleEnrollOneFaWithLiveness}>
-                Enroll with Liveness
-              </button>
-
-              <button className="button" onClick={handlePredictOneFa}>
+              <button
+                className="button"
+                onClick={handlePredictOneFa}
+                style={
+                  disableButtons && currentAction !== "usePredictOneFa"
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Predict
               </button>
-              <button className="button" onClick={handlePredict1FaWithLiveness}>
-                Predict with Liveness
-              </button>
-              <button className="button" onClick={handleFaceLogin}>
+              <button
+                className="button"
+                onClick={handleFaceLogin}
+                style={
+                  disableButtons && currentAction !== "useFaceLogin"
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Face Login
               </button>
-              <button className="button" onClick={handleFaceLoginWithLiveness}>
-                Face Login with Liveness
-              </button>
-              <button className="button" onClick={handleContinuousPredict}>
+              {/* <button className="button" onClick={handleContinuousPredict}>
                 Continuous Authentication
+              </button> */}
+
+              <button
+                className="button"
+                onClick={handleBurningMan}
+                style={
+                  disableButtons && currentAction !== "useContinuousPredictWithoutRestrictions"
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Burning Man
               </button>
-              <button className="button" onClick={handleDelete}>
+
+              <button
+                className="button"
+                onClick={handleDelete}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Delete
               </button>
-              <button className="button" onClick={handleFrontDLValidity}>
-                Scan Front Document Validity
+              <button
+                className="button"
+                onClick={handleFrontDLValidity}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Scan Front Document
               </button>
-              <button className="button" onClick={handleScanDocumentBack}>
+              <button
+                className="button"
+                onClick={handleScanDocumentBack}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Scan Back Document
               </button>
-              <button className="button" onClick={handlePrividFaceISO}>
+              {/* <button
+                className="button"
+                onClick={handlePrividFaceISO}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Face ISO
-              </button>
-              <button className="button" onClick={handleCompareImages}>
-                Compare Flow
-              </button>
-              <button className="button" onClick={handleUseScanHealhcareCard}>
+              </button> */}
+              <button
+                className="button"
+                onClick={handleUseScanHealhcareCard}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
                 Healthcare Card Scan
               </button>
-              
-              {/* <label>
-                <input
-                  type="file"
-                  name="upload"
-                  accept="image/png, image/gif, image/jpeg"
-                  onChange={handleUploadImageHealthcare}
-                  style={{ display: "none" }}
-                />
-                <span className="button">Upload Image Use Healthcare Scan</span>
-              </label> */}
+              <button
+                className="button"
+                onClick={handleLivenessCheck}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Liveness Check
+              </button>
+            </div>
 
-               <label>
-                <input
-                  type="file"
-                  name="upload"
-                  accept="image/png, image/gif, image/jpeg"
-                  onChange={handleUploadDoAntispoofCheck}
-                  style={{ display: "none" }}
-                />
-                <span className="button">Upload Image Use Antispoof Check</span>
-              </label>
-            </div>
-            <div>
-              <p> Other Utilities: </p>
-              <button
-                className="button"
-                onClick={() => {
-                  navigate("/enroll_with_mugshot");
-                }}
-              >
-                Enroll with Mugshot
-              </button>
-              <button
-                className="button"
-                onClick={() => {
-                  navigate("/predict_with_mugshot");
-                }}
-              >
-                Predict with Mugshot
-              </button>
-              <button
-                className="button"
-                onClick={() => {
-                  navigate("/enroll_with_label");
-                }}
-              >
-                Enroll with Label
-              </button>
-            </div>
             <div>
               <p> Upload 2 images to use compare: </p>
               <label>
