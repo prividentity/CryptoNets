@@ -900,7 +900,7 @@ const Ready = () => {
                 Continuous Authentication
               </button> */}
 
-              <button
+              {/* <button
                 className="button"
                 onClick={handleBurningMan}
                 style={
@@ -913,7 +913,7 @@ const Ready = () => {
                 disabled={disableButtons}
               >
                 Burning Man
-              </button>
+              </button> */}
 
               <button
                 className="button"
