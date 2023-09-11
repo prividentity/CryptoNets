@@ -1011,7 +1011,7 @@ const Ready = () => {
                   onChange={handleUploadImage1}
                   style={{ display: "none" }}
                 />
-                <span className="button">Upload Image 1</span>
+                <span className="button">Cropped Document Image</span>
               </label>
               <label>
                 <input
@@ -1021,7 +1021,7 @@ const Ready = () => {
                   onChange={handleUploadImage2}
                   style={{ display: "none" }}
                 />
-                <span className="button">Upload Image 2</span>
+                <span className="button">Face Image</span>
               </label>
 
               <button className="button" onClick={handleDoCompare}>
