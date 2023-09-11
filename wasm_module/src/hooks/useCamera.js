@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { openCamera } from "@privateid/cryptonets-web-sdk-alpha";
 import { mapDevices } from "../utils";
+import platform, { os } from "platform";
 
 const useCamera = (element = "userVideo", resolution = null) => {
   // Initialize the state
@@ -32,6 +33,35 @@ const useCamera = (element = "userVideo", resolution = null) => {
         setDevice(settings.deviceId);
       }
       setReady(true);
+      console.log(platform.os.family)
+      if (
+        ["Windows", "Windows Server 2008 R2 / 7", "Windows Server 2008 / Vista", "Windows XP"].includes(
+          platform.os.family
+        )
+      ) {
+        const setCameraFocus = async () => {
+          try {
+            const video = document.getElementById("userVideo");
+            const mediaStream = video.srcObject;
+            const track = await mediaStream.getTracks()[0];
+            const capabilities = track.getCapabilities();
+            if (typeof capabilities.focusDistance !== "undefined") {
+              await track.applyConstraints({
+                advanced: [
+                  {
+                    focusMode: capabilities.focusMode.includes("continuous") ? "continuous" : "manual",
+                    focusDistance: 100,
+                  },
+                ],
+              });
+            }
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.log(e);
+          }
+        };
+        await setCameraFocus();
+      }
     } catch (e) {
       console.log("Error Message", e);
     }

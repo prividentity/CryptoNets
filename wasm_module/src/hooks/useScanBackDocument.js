@@ -136,7 +136,6 @@ const useScanBackDocument = (setShowSuccess) => {
     const { result, croppedBarcode, croppedDocument, imageData } = await isValidPhotoID(
       "PHOTO_ID_BACK",
       documentCallback,
-      true,
       uploadData,
       { document_scan_barcode_only: true },
       canvasObj
