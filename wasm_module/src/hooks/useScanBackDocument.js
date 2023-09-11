@@ -28,7 +28,7 @@ const useScanBackDocument = (setShowSuccess) => {
     console.log("--------- returnedValue:", result.returnValue);
     if (result.status === "WASM_RESPONSE") {
       setBarcodeStatusCode(result.returnValue.op_status);
-      if (result.returnValue.op_status === 0) {
+      if (result.returnValue.op_status === 0 || result.returnValue.op_status === 3) {
         const {
           firstName,
           middleName,
@@ -104,7 +104,7 @@ const useScanBackDocument = (setShowSuccess) => {
   }, [isFound, croppedDocumentImageData, returnValue]);
 
   useEffect(() => {
-    if (isFound && croppedBarcodeImageData && returnValue) {
+    if (croppedBarcodeImageData && returnValue) {
       convertImageData(
         croppedBarcodeImageData,
         returnValue.crop_barcode_width,
