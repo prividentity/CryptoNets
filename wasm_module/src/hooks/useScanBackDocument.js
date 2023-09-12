@@ -28,7 +28,7 @@ const useScanBackDocument = (setShowSuccess) => {
     console.log("--------- returnedValue:", result.returnValue);
     if (result.status === "WASM_RESPONSE") {
       setBarcodeStatusCode(result.returnValue.op_status);
-      if (result.returnValue.op_status === 0 || result.returnValue.op_status === 3) {
+      if (result.returnValue.op_status === 0) {
         const {
           firstName,
           middleName,
