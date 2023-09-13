@@ -14,7 +14,7 @@
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
     -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" crossorigin="use-credentials" />
     <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.
@@ -62,7 +62,7 @@
       -ms-transform: rotate(90deg);
       /* IE 9 */
       -webkit-transform: rotate(90deg);
-      /* Safari */      
+      /* Safari */
       transform: rotate(90deg);
     }
 
@@ -111,7 +111,7 @@
     .myLiIgFileItem {
       background-color: #ccc;
       padding: 4px;
-      margin: 12px; 
+      margin: 12px;
     }
 
   </style>
@@ -200,17 +200,17 @@
             const div_root = document.createElement('div');
             div_root.className="myLiIgFileItem";
             if (key.endsWith('.png')){
-              const img_div = document.createElement('div');            
-            
+              const img_div = document.createElement('div');
+
               div_root.appendChild(img_div);
               const b64encoded = blobToBase64(node.data.contents,(base64)=>{
               const src = "data:image/png;base64," + base64;
               const img = document.createElement('img');
               img['src'] = src;
               img['alt'] = key;
-              img.className='myImg';            
+              img.className='myImg';
               img_div.appendChild(img);
-            });             
+            });
           }
               const a_div = document.createElement('div');
               const blob = new Blob([node.data.contents], { type: 'application/octet-stream' });
@@ -220,10 +220,10 @@
             link.download = key;
             a_div.appendChild(link);
             div_root.appendChild(a_div);
-            
-             
+
+
             listItem.appendChild(div_root);
-            
+
           } else {
             const span = document.createElement('span');
             span.textContent = key;

@@ -106,7 +106,7 @@ const useScanBackDocument = (setShowSuccess) => {
   }, [isFound, croppedDocumentImageData, returnValue]);
 
   useEffect(() => {
-    if (isFound && croppedBarcodeImageData && returnValue) {
+    if (croppedBarcodeImageData && returnValue) {
       convertImageData(
         croppedBarcodeImageData,
         returnValue.crop_barcode_width,
@@ -139,7 +139,9 @@ const useScanBackDocument = (setShowSuccess) => {
       "PHOTO_ID_BACK",
       documentCallback,
       uploadData,
-      { document_scan_barcode_only: true },
+      { document_scan_barcode_only: true,
+        blur_threshold_barcode: 1700,
+      },
       canvasObj
     );
     console.log({ croppedBarcode, croppedDocument, imageData });
