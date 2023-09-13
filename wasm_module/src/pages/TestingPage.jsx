@@ -900,7 +900,7 @@ const Ready = () => {
                 Continuous Authentication
               </button> */}
 
-              <button
+              {/* <button
                 className="button"
                 onClick={handleBurningMan}
                 style={
@@ -913,7 +913,7 @@ const Ready = () => {
                 disabled={disableButtons}
               >
                 Burning Man
-              </button>
+              </button> */}
 
               <button
                 className="button"
@@ -985,7 +985,7 @@ const Ready = () => {
               >
                 Healthcare Card Scan
               </button>
-              <button
+              {/* <button
                 className="button"
                 onClick={handleLivenessCheck}
                 style={
@@ -998,11 +998,11 @@ const Ready = () => {
                 disabled={disableButtons}
               >
                 Liveness Check
-              </button>
+              </button> */}
             </div>
 
             <div>
-              <p> Upload 2 images to use compare: </p>
+              <p> Upload 2 images to use document and face compare: </p>
               <label>
                 <input
                   type="file"
@@ -1011,7 +1011,7 @@ const Ready = () => {
                   onChange={handleUploadImage1}
                   style={{ display: "none" }}
                 />
-                <span className="button">Upload Image 1</span>
+                <span className="button">Cropped Document Image</span>
               </label>
               <label>
                 <input
@@ -1021,7 +1021,7 @@ const Ready = () => {
                   onChange={handleUploadImage2}
                   style={{ display: "none" }}
                 />
-                <span className="button">Upload Image 2</span>
+                <span className="button">Face Image</span>
               </label>
 
               <button className="button" onClick={handleDoCompare}>
