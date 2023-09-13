@@ -97,7 +97,6 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
       imageData
     } = await isValidPhotoID("PHOTO_ID_FRONT", documentCallback, uploadData, {
       input_image_format:"rgba",
-      blur_threshold_enroll_pred: 0,
     },
     false
     );
