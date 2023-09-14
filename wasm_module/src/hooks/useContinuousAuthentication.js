@@ -1,5 +1,5 @@
 // import { useState } from "react";
-// import { continuousAuthentication } from "@privateid/cryptonets-web-sdk";
+// import { continuousAuthentication } from "@privateid/cryptonets-web-sdk-alpha";
 
 // const useContinuousPredict = (
 //   element,

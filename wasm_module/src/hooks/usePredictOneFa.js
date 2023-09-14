@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { predict1FA } from "@privateid/cryptonets-web-sdk";
+import { predict1FA } from "@privateid/cryptonets-web-sdk-alpha";
 let loop = true;
 const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess, disableButtons) => {
   const [predictMessage, setPredictMessage] = useState("");

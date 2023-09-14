@@ -6,7 +6,7 @@ import {
   closeCamera,
   faceCompareLocal,
   documentMugshoFaceCompare,
-} from "@privateid/cryptonets-web-sdk";
+} from "@privateid/cryptonets-web-sdk-alpha";
 
 import {
   useCamera,
@@ -38,7 +38,7 @@ import {
   getFaceValidationMessage,
   getFrontDocumentStatusMessage,
   getRawFaceValidationStatus,
-} from "@privateid/cryptonets-web-sdk/dist/utils";
+} from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
 import { DebugContext } from "../context/DebugContext";
 import useContinuousPredictWithoutRestrictions from "../hooks/useContinuousPredictWithoutRestriction";
 
@@ -261,22 +261,22 @@ const Ready = () => {
 
   // to start and stop predictAge call when on loop
   useEffect(() => {
-    const doUsePredictAge = async () => {
-      await doPredictAge();
-    };
-    if (debugContext.functionLoop) {
-      if (currentAction === "usePredictAge" && predictAgeHasFinished) {
-        setPredictAgeHasFinished(false);
-      }
-      if (currentAction === "usePredictAge" && !predictAgeHasFinished) {
-        doUsePredictAge();
-      }
-      if (currentAction !== "usePredictAge" && predictAgeHasFinished) {
-        setPredictAgeHasFinished(false);
-      }
-    } else {
-      setPredictAgeHasFinished(false);
-    }
+    // const doUsePredictAge = async () => {
+    //   await doPredictAge(skipAntiSpoof);
+    // };
+    // if (debugContext.functionLoop) {
+    //   if (currentAction === "usePredictAge" && predictAgeHasFinished) {
+    //     setPredictAgeHasFinished(false);
+    //   }
+    //   if (currentAction === "usePredictAge" && !predictAgeHasFinished) {
+    //     doUsePredictAge();
+    //   }
+    //   if (currentAction !== "usePredictAge" && predictAgeHasFinished) {
+    //     setPredictAgeHasFinished(false);
+    //   }
+    // } else {
+    //   setPredictAgeHasFinished(false);
+    // }
   }, [currentAction, predictAgeHasFinished, debugContext.functionLoop]);
 
   // Scan Front DL without predict

@@ -5,7 +5,7 @@
 //   setStopLoopContinuousAuthentication,
 //   closeCamera,
 //   faceCompareLocal,
-// } from "@privateid/cryptonets-web-sdk";
+// } from "@privateid/cryptonets-web-sdk-alpha";
 // import { startAuthentication, startRegistration } from "@simplewebauthn/browser";
 // import { useCamera, useWasm, useEnrollOneFa, usePredictOneFa } from "../hooks";
 // import { canvasSizeOptions, isBackCamera, setMax2KForMobile, WIDTH_TO_STANDARDS } from "../utils";
