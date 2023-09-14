@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { predictAge } from "@privateid/cryptonets-web-sdk";
 
+let skipAntispoofGlobal = false;
 const usePredictAge = () => {
   const [age, setAge] = useState(null);
   const [antispoofPerformed, setAntispoofPerformed] = useState(false);
@@ -22,13 +23,13 @@ const usePredictAge = () => {
       setValidationStatus("");
     }
 
-    doPredictAge();
+    doPredictAge(skipAntispoofGlobal);
   };
 
-  const doPredictAge = async (skipAntispoof = true) => {
-
+  const doPredictAge = async (skipAntispoof=false) => {
+    skipAntispoofGlobal = skipAntispoof;
     await predictAge(callback, {
-      skip_antispoof: true,
+      skip_antispoof: skipAntispoofGlobal,
     });
   };
 
