@@ -38,14 +38,7 @@ const useContinuousPredictWithoutRestrictions = (setShowSuccess) => {
 
   const doContinuousPredictWithoutRestrictions = async () => {
     // eslint-disable-next-line no-unused-vars
-    await continuousPredictWithoutRestrictions(callback, {
-      input_image_format: "rgba",
-      skip_antispoof: true,
-      FACE_THRESHOLDS_MIN: 0.3,
-      FACE_THRESHOLDS_MED: 0.98,
-      FACE_THRESHOLDS_MAX: 1.05,
-      FACE_THRESHOLDS_REM_BAD_EMB_DEFAULT: 0.5,
-    });
+    await continuousPredictWithoutRestrictions(callback);
   };
 
   return {
