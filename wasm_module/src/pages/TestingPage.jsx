@@ -40,7 +40,6 @@ import {
   getRawFaceValidationStatus,
 } from "@privateid/cryptonets-web-sdk/dist/utils";
 import { DebugContext } from "../context/DebugContext";
-import useLivenessCheck from "../hooks/useLivenessCheck";
 import useContinuousPredictWithoutRestrictions from "../hooks/useContinuousPredictWithoutRestriction";
 
 let callingWasm = false;
@@ -472,9 +471,6 @@ const Ready = () => {
   const handleCopyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
   };
-
-  const { result, doLivenessCheck, resultMessage, finalResult, livenessProgress, resetAllLivenessValues } =
-    useLivenessCheck();
 
   const handleLivenessCheck = async () => {
     setCurrentAction("livenessCheck");
