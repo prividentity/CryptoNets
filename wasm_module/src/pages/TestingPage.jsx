@@ -41,6 +41,7 @@ import {
 } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
 import { DebugContext } from "../context/DebugContext";
 import useContinuousPredictWithoutRestrictions from "../hooks/useContinuousPredictWithoutRestriction";
+import useMultiFramePredictAge from "../hooks/useMultiFramePredictAge";
 
 let callingWasm = false;
 const Ready = () => {
@@ -243,6 +244,16 @@ const Ready = () => {
     ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) || isBack;
 
   // Predict Age
+  // const {
+  //   doPredictAge,
+  //   age,
+  //   predictAgeHasFinished,
+  //   setPredictAgeHasFinished,
+  //   antispoofPerformed: predictAgeAntispoofPerformed,
+  //   antispoofStatus: predictAgeAntispoofStatus,
+  //   validationStatus: predictAgeValidationStatus,
+  // } = usePredictAge();
+
   const {
     doPredictAge,
     age,
@@ -251,7 +262,7 @@ const Ready = () => {
     antispoofPerformed: predictAgeAntispoofPerformed,
     antispoofStatus: predictAgeAntispoofStatus,
     validationStatus: predictAgeValidationStatus,
-  } = usePredictAge();
+  } = useMultiFramePredictAge();
 
   const handlePredictAge = async () => {
     setShowSuccess(false);
