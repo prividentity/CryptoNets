@@ -183,6 +183,7 @@ const Ready = () => {
     predictUserOneFa,
   } = usePredictOneFa("userVideo", handlePreidctSuccess, 4, null, setShowSuccess, setDisableButtons);
   const handlePredictOneFa = async () => {
+    console.log("PREDICTING");
     setShowSuccess(false);
     setCurrentAction("usePredictOneFa");
     predictUserOneFa(skipAntiSpoof);
@@ -634,7 +635,7 @@ const Ready = () => {
             <div>
               <span
                 style={{
-                  display: "flex",
+                  display: currentAction === "useContinuousPredictWithoutRestrictions" ? "none" : "flex",
                   justifyContent: "center",
                   alignItems: "center",
                   gap: "5px",
@@ -907,7 +908,7 @@ const Ready = () => {
                 Continuous Authentication
               </button> */}
 
-              {/* <button
+              <button
                 className="button"
                 onClick={handleBurningMan}
                 style={
@@ -919,8 +920,8 @@ const Ready = () => {
                 }
                 disabled={disableButtons}
               >
-                Burning Man
-              </button> */}
+                Continuous Authentication (No Restrictions)
+              </button>
 
               <button
                 className="button"
