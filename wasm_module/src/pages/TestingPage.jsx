@@ -40,8 +40,8 @@ import {
   getRawFaceValidationStatus,
 } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
 import { DebugContext } from "../context/DebugContext";
-import useLivenessCheck from "../hooks/useLivenessCheck";
 import useContinuousPredictWithoutRestrictions from "../hooks/useContinuousPredictWithoutRestriction";
+import useMultiFramePredictAge from "../hooks/useMultiFramePredictAge";
 
 let callingWasm = false;
 const Ready = () => {
@@ -183,6 +183,7 @@ const Ready = () => {
     predictUserOneFa,
   } = usePredictOneFa("userVideo", handlePreidctSuccess, 4, null, setShowSuccess, setDisableButtons);
   const handlePredictOneFa = async () => {
+    console.log("PREDICTING");
     setShowSuccess(false);
     setCurrentAction("usePredictOneFa");
     predictUserOneFa(skipAntiSpoof);
@@ -244,6 +245,16 @@ const Ready = () => {
     ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) || isBack;
 
   // Predict Age
+  // const {
+  //   doPredictAge,
+  //   age,
+  //   predictAgeHasFinished,
+  //   setPredictAgeHasFinished,
+  //   antispoofPerformed: predictAgeAntispoofPerformed,
+  //   antispoofStatus: predictAgeAntispoofStatus,
+  //   validationStatus: predictAgeValidationStatus,
+  // } = usePredictAge();
+
   const {
     doPredictAge,
     age,
@@ -252,7 +263,7 @@ const Ready = () => {
     antispoofPerformed: predictAgeAntispoofPerformed,
     antispoofStatus: predictAgeAntispoofStatus,
     validationStatus: predictAgeValidationStatus,
-  } = usePredictAge();
+  } = useMultiFramePredictAge();
 
   const handlePredictAge = async () => {
     setShowSuccess(false);
@@ -262,22 +273,22 @@ const Ready = () => {
 
   // to start and stop predictAge call when on loop
   useEffect(() => {
-    const doUsePredictAge = async () => {
-      await doPredictAge();
-    };
-    if (debugContext.functionLoop) {
-      if (currentAction === "usePredictAge" && predictAgeHasFinished) {
-        setPredictAgeHasFinished(false);
-      }
-      if (currentAction === "usePredictAge" && !predictAgeHasFinished) {
-        doUsePredictAge();
-      }
-      if (currentAction !== "usePredictAge" && predictAgeHasFinished) {
-        setPredictAgeHasFinished(false);
-      }
-    } else {
-      setPredictAgeHasFinished(false);
-    }
+    // const doUsePredictAge = async () => {
+    //   await doPredictAge(skipAntiSpoof);
+    // };
+    // if (debugContext.functionLoop) {
+    //   if (currentAction === "usePredictAge" && predictAgeHasFinished) {
+    //     setPredictAgeHasFinished(false);
+    //   }
+    //   if (currentAction === "usePredictAge" && !predictAgeHasFinished) {
+    //     doUsePredictAge();
+    //   }
+    //   if (currentAction !== "usePredictAge" && predictAgeHasFinished) {
+    //     setPredictAgeHasFinished(false);
+    //   }
+    // } else {
+    //   setPredictAgeHasFinished(false);
+    // }
   }, [currentAction, predictAgeHasFinished, debugContext.functionLoop]);
 
   // Scan Front DL without predict
@@ -473,9 +484,6 @@ const Ready = () => {
     navigator.clipboard.writeText(text);
   };
 
-  const { result, doLivenessCheck, resultMessage, finalResult, livenessProgress, resetAllLivenessValues } =
-    useLivenessCheck();
-
   const handleLivenessCheck = async () => {
     setCurrentAction("livenessCheck");
     resetAllLivenessValues();
@@ -627,7 +635,7 @@ const Ready = () => {
             <div>
               <span
                 style={{
-                  display: "flex",
+                  display: currentAction === "useContinuousPredictWithoutRestrictions" ? "none" : "flex",
                   justifyContent: "center",
                   alignItems: "center",
                   gap: "5px",
@@ -912,7 +920,7 @@ const Ready = () => {
                 }
                 disabled={disableButtons}
               >
-                Burning Man
+                Continuous Authentication (No Restrictions)
               </button>
 
               <button
@@ -985,7 +993,7 @@ const Ready = () => {
               >
                 Healthcare Card Scan
               </button>
-              <button
+              {/* <button
                 className="button"
                 onClick={handleLivenessCheck}
                 style={
@@ -998,11 +1006,11 @@ const Ready = () => {
                 disabled={disableButtons}
               >
                 Liveness Check
-              </button>
+              </button> */}
             </div>
 
             <div>
-              <p> Upload 2 images to use compare: </p>
+              <p> Upload 2 images to use document and face compare: </p>
               <label>
                 <input
                   type="file"
@@ -1011,7 +1019,7 @@ const Ready = () => {
                   onChange={handleUploadImage1}
                   style={{ display: "none" }}
                 />
-                <span className="button">Upload Image 1</span>
+                <span className="button">Cropped Document Image</span>
               </label>
               <label>
                 <input
@@ -1021,7 +1029,7 @@ const Ready = () => {
                   onChange={handleUploadImage2}
                   style={{ display: "none" }}
                 />
-                <span className="button">Upload Image 2</span>
+                <span className="button">Face Image</span>
               </label>
 
               <button className="button" onClick={handleDoCompare}>

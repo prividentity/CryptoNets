@@ -33,10 +33,6 @@ const useEnrollOneFa = (
       input_image_format: "rgba",
       enroll_token: token,
       skip_antispoof: skipAntispoof,
-      angle_rotation_left_threshold: 20.0,
-      angle_rotation_right_threshold: 20.0,
-      eyes_blinking_threshold: 0,
-      antispoof_face_margin: 1,
     });
 
     if (bestImage) {
