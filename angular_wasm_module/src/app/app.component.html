@@ -1,0 +1,117 @@
+<div class="wrapper">
+  <div class="buttons-wrap">
+    <button (click)="onOpenCamera()">Open camera</button>
+    <button (click)="onCloseCamera()">Close camera</button>
+  </div>
+
+  <div class="select-wrap">
+    <label>Select Camera:</label>
+    <select (change)="onCameraChange($event)" [(ngModel)]="selectedCamera">
+      <option value="" disabled selected>Select Camera</option>
+      <option *ngFor="let device of devices" [value]="device?.value">
+        {{ device.label }}
+      </option>
+    </select>
+
+<!--    <div class="canvas-wrap" *ngIf="isShowBackDocument">-->
+<!--      <label>Canvas Size:</label>-->
+<!--      <select [(ngModel)]="initialCanvasSize">-->
+<!--        <option value="" disabled selected>Select Canvas Size</option>-->
+<!--        <option *ngFor="let canvas of canvasSizeList" [value]="canvas?.value">-->
+<!--          {{ canvas.label }}-->
+<!--        </option>-->
+<!--      </select>-->
+<!--    </div>-->
+  </div>
+
+  <div
+    class="camera-container"
+    [class.cameraDisplaySuccess]="
+      scannedCodeData || frontDocumentData?.op_status === 0
+    "
+  >
+    <video
+      id="userVideo"
+      class="videoCamera"
+      muted
+      autoplay
+      playsinline
+    ></video>
+  </div>
+
+  <div class="select-wrap">
+    <label>Skip antispoof?</label>
+    <label class="switch">
+      <input type="checkbox" />
+      <span class="slider round"></span>
+    </label>
+  </div>
+
+  <div class="back-document-content" *ngIf="isShowFrontDocument">
+    <p>Status Code: {{ frontDocumentData?.op_status }}</p>
+    <p>
+      Status Message:
+      {{ getFrontDocumentStatusMessage[frontDocumentData?.op_status] }}
+    </p>
+    <p>
+      Document 4 corners found:
+      {{
+        frontDocumentData?.op_status === 0 &&
+        frontDocumentData?.cropped_doc_width &&
+        frontDocumentData?.cropped_face_width
+          ? "Document 4 corners available"
+          : "not found"
+      }}
+    </p>
+    <p>
+      Mugshot found:
+      {{
+        frontDocumentData?.op_status === 0 &&
+        frontDocumentData?.cropped_doc_width &&
+        frontDocumentData?.cropped_face_width
+          ? "Mugshot Available"
+          : "not found"
+      }}
+    </p>
+  </div>
+
+  <div
+    class="footer-wrap"
+    *ngIf="
+      frontDocumentData?.op_status === 0 &&
+      frontDocumentData?.cropped_doc_width &&
+      frontDocumentData?.cropped_face_width
+    "
+  >
+    <button (click)="onMugshotImage()">Copy Mugshot Image String</button>
+    <button (click)="onDocumentImage()">Copy Document Image String</button>
+  </div>
+
+  <div class="back-document-content" *ngIf="isShowBackDocument">
+    <h4>Barcode Status Code: {{ barcodeStatusCode }}</h4>
+    <p>Scanned code data: {{ scannedCodeData ? "success" : "not found" }}</p>
+    <p>First Name: {{ scannedCodeData?.firstName || "" }}</p>
+    <p>Middle Name: {{ scannedCodeData?.middleName || "" }}</p>
+    <p>Last Name: {{ scannedCodeData?.lastName || "" }}</p>
+    <p>Date of Birth: {{ scannedCodeData?.dateOfBirth || "" }}</p>
+    <p>Gender: {{ scannedCodeData?.gender || "" }}</p>
+    <p>Street Address1: {{ scannedCodeData?.streetAddress1 || "" }}</p>
+    <p>Street Address2: {{ scannedCodeData?.streetAddress2 || "" }}</p>
+    <p>City: {{ scannedCodeData?.city || "" }}</p>
+    <p>Postal Code: {{ scannedCodeData?.postCode || "" }}</p>
+  </div>
+
+  <div class="back-document-content" *ngIf="isShowValid">
+    <p>Antispoof Performed: {{ antiSpoofPerformed }}</p>
+    <p>Antispoof Status: {{ antiSpoofStatus }}</p>
+    <p>Is Valid Status Code: {{ isvalidStatus }}</p>
+  </div>
+
+  <div class="footer-wrap">
+    <button (click)="onIsValid()">Is Valid</button>
+    <button (click)="onFrontDocumentScan()">Scan front document</button>
+    <button (click)="onBackDocumentScan()">Scan back document</button>
+  </div>
+</div>
+
+<router-outlet></router-outlet>

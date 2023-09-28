@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="16dd2e7b-13f8-4432-aaa7-d3f919ca2401" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../../wasmsample-angular/src/environments/environment.dev.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../wasmsample-angular/src/environments/environment.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/wasm/face_mask/noSimd/privid_fhe.js" beforeDir="false" afterPath="$PROJECT_DIR$/public/wasm/face_mask/noSimd/privid_fhe.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/wasm/face_mask/noSimd/privid_fhe.wasm" beforeDir="false" afterPath="$PROJECT_DIR$/public/wasm/face_mask/noSimd/privid_fhe.wasm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/wasm/face_mask/noSimd/version.json" beforeDir="false" afterPath="$PROJECT_DIR$/public/wasm/face_mask/noSimd/version.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/wasm/face_mask/simd/privid_fhe.js" beforeDir="false" afterPath="$PROJECT_DIR$/public/wasm/face_mask/simd/privid_fhe.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/wasm/face_mask/simd/privid_fhe.wasm" beforeDir="false" afterPath="$PROJECT_DIR$/public/wasm/face_mask/simd/privid_fhe.wasm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/wasm/face_mask/simd/version.json" beforeDir="false" afterPath="$PROJECT_DIR$/public/wasm/face_mask/simd/version.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../privIDFHEModules/dist/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../privIDFHEModules/dist/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../privIDFHEModules/dist/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/../../privIDFHEModules/dist/index.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../privIDFHEModules/src/envUtils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../privIDFHEModules/src/envUtils.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../privIDFHEModules/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../privIDFHEModules/src/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../wasmsample-angular/angular.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../wasmsample-angular/angular.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../wasmsample-angular/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../wasmsample-angular/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../wasmsample-angular/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../wasmsample-angular/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../wasmsample-angular/src/hooks/useCamera.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../wasmsample-angular/src/hooks/useCamera.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../wasmsample-angular/src/hooks/useWasm.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../wasmsample-angular/src/hooks/useWasm.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../wasmsample-angular" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2VIqpMCr4wWHAD9iyL2Zd2tMIlQ" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "main",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "prettierjs.PrettierConfiguration.Package": "/Users/shivenjuneja/Desktop/MyProjects/privateId/privIDFHEModules/node_modules/prettier",
+    "settings.editor.selected.configurable": "settings.javascript.prettier",
+    "ts.external.directory.path": "/Users/shivenjuneja/Desktop/MyProjects/privateId/wasmsample-angular/node_modules/typescript/lib",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="ReactDesignerToolWindowState">
+    <option name="myId2Visible">
+      <map>
+        <entry key="com.haulmont.rcb.reactComponents" value="false" />
+        <entry key="com.haulmont.rcb.reactInspector" value="false" />
+      </map>
+    </option>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="16dd2e7b-13f8-4432-aaa7-d3f919ca2401" name="Changes" comment="" />
+      <created>1694534123886</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1694534123886</updated>
+      <workItem from="1694534125307" duration="298000" />
+      <workItem from="1694695218606" duration="3000" />
+      <workItem from="1695744267499" duration="21000" />
+      <workItem from="1695744295326" duration="2770000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
