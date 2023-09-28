@@ -54,7 +54,9 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
       disableButtons(true);
     }
    
-    await faceLogin(callback);
+    await faceLogin(callback, {
+      skipAntispoof: skipAntispoof
+    });
   };
 
   return {
