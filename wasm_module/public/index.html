@@ -148,7 +148,9 @@
           debug_panel.removeChild(debug_panel.firstChild);
 
         const transaction = db.transaction(storeName, 'readonly');
+        console.log(transaction);
         const objectStore = transaction.objectStore(storeName);
+        console.log("object store", objectStore);
         objectStore.openCursor().onsuccess = (event) => {
           const cursor = event.target.result;
           if (cursor) {
