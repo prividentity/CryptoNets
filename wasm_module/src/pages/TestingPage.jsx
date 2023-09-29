@@ -940,20 +940,6 @@ const Ready = () => {
               </button>
               <button
                 className="button"
-                onClick={handleFaceLogin}
-                style={
-                  disableButtons && currentAction !== "useFaceLogin"
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
-              >
-                Face Login
-              </button>
-              <button
-                className="button"
                 onClick={handleOscarLogin}
                 style={
                   disableButtons && currentAction !== "useOscarLogin"
