@@ -42,6 +42,7 @@ import {
 import { DebugContext } from "../context/DebugContext";
 import useContinuousPredictWithoutRestrictions from "../hooks/useContinuousPredictWithoutRestriction";
 import useMultiFramePredictAge from "../hooks/useMultiFramePredictAge";
+import useOscarLogin from "../hooks/useOscarLogin";
 
 let callingWasm = false;
 const Ready = () => {
@@ -471,6 +472,23 @@ const Ready = () => {
     doFaceLogin(skipAntiSpoof);
   };
 
+  // Face Login
+  const {
+    doOscarLogin,
+    oscarLoginAntispoofPerformed,
+    oscarLoginAntispoofStatus,
+    oscarLoginGUID,
+    oscarLoginMessage,
+    oscarLoginPUID,
+    oscarLoginValidationStatus,
+  } = useOscarLogin("userVideo", () => {}, null, deviceId, setShowSuccess, setDisableButtons);
+
+  const handleOscarLogin = async () => {
+    setShowSuccess(false);
+    setCurrentAction("useOscarLogin");
+    doOscarLogin(skipAntiSpoof);
+  };
+
   // Scan Healthcare Card
   const { croppedDocumentBase64, doScanHealthcareCard } = useScanHealthcareCard(setShowSuccess);
 
@@ -599,6 +617,11 @@ const Ready = () => {
                   <span> {getRawFaceValidationStatus(faceLoginValidationStatus)} </span>
                 </div>
               )}
+               {currentAction === "useOscarLogin" && (
+                <div className="enrollDisplay">
+                  <span> {getRawFaceValidationStatus(oscarLoginValidationStatus)} </span>
+                </div>
+              )}
               {currentAction === "usePredictOneFa" && (
                 <div className="enrollDisplay">
                   <span> {getRawFaceValidationStatus(predictValidationStatus)} </span>
@@ -615,7 +638,7 @@ const Ready = () => {
                   (currentAction === "useScanDocumentFront" ||
                   currentAction === "useScanDocumentBack" ||
                   currentAction === "useScanDocumentFrontValidity" ||
-                  currentAction === "useScanHealthcareCard"
+                  currentAction === "useScanHealthcareCard" 
                     ? `cameraDisplay`
                     : `cameraDisplay mirrored`) +
                   " " +
@@ -731,6 +754,17 @@ const Ready = () => {
                   <div>{`Antispoof Status: ${faceLoginAntispoofStatus}`} </div>
                   <div>{`Face Login GUID: ${faceLoginGUID}`}</div>
                   <div>{`Face Login PUID: ${faceLoginPUID}`}</div>
+                </div>
+              )}
+
+              {currentAction === "useOscarLogin" && (
+                <div>
+                  <div>{`Face Login Status: ${oscarLoginValidationStatus}`} </div>
+                  <div>{`Message: ${oscarLoginMessage || ""}`}</div>
+                  <div>{`Antispoof Performed: ${oscarLoginAntispoofPerformed}`} </div>
+                  <div>{`Antispoof Status: ${oscarLoginAntispoofStatus}`} </div>
+                  <div>{`Face Login GUID: ${oscarLoginGUID}`}</div>
+                  <div>{`Face Login PUID: ${oscarLoginPUID}`}</div>
                 </div>
               )}
 
@@ -903,6 +937,34 @@ const Ready = () => {
                 disabled={disableButtons}
               >
                 Face Login
+              </button>
+              <button
+                className="button"
+                onClick={handleFaceLogin}
+                style={
+                  disableButtons && currentAction !== "useFaceLogin"
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Face Login
+              </button>
+              <button
+                className="button"
+                onClick={handleFaceLogin}
+                style={
+                  disableButtons && currentAction !== "useFaceLogin"
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Oscar Login
               </button>
               {/* <button className="button" onClick={handleContinuousPredict}>
                 Continuous Authentication
