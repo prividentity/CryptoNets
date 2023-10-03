@@ -70,8 +70,7 @@ const useEnrollOneFa = (
             if (
               result.returnValue.validation_status[0].anti_spoof_performed &&
               result.returnValue.validation_status[0].anti_spoof_status === 0 &&
-              (result.returnValue.validation_status[0].status === 0 ||
-                result.returnValue.validation_status[0].status === 20)
+              result.returnValue.validation_status[0].status === 0 
             ) {
               if (result.returnValue.validation_status[0].enroll_token === enrollTokenCurrent && enrollTokenCurrent) {
                 enrollCount++;
