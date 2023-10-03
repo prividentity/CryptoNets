@@ -21,7 +21,6 @@ const useEnrollOneFa = (
 
   const [enrollImageData, setEnrollImageData] = useState("");
 
-  
   let enrollCount = 0;
   let enrollTokenCurrent;
   const enrollUserOneFa = async (token = "", skipAntispoof = false) => {
@@ -63,7 +62,7 @@ const useEnrollOneFa = (
 
           if (skipAntispoofProcess) {
             if (result.returnValue.validation_status[0].status === 0) {
-              enrollUserOneFa(result.returnValue.validation_status[0].enroll_token,skipAntispoofProcess);
+              enrollUserOneFa(result.returnValue.validation_status[0].enroll_token, skipAntispoofProcess);
             } else {
               enrollUserOneFa("", skipAntispoofProcess);
             }
@@ -71,7 +70,7 @@ const useEnrollOneFa = (
             if (
               result.returnValue.validation_status[0].anti_spoof_performed &&
               result.returnValue.validation_status[0].anti_spoof_status === 0 &&
-              result.returnValue.validation_status[0].status === 0
+              result.returnValue.validation_status[0].status === 0 
             ) {
               if (result.returnValue.validation_status[0].enroll_token === enrollTokenCurrent && enrollTokenCurrent) {
                 enrollCount++;
