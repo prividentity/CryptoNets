@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { convertCroppedImage, enroll1FA } from "@privateid/cryptonets-web-sdk-alpha";
+import { convertCroppedImage, enroll1FA } from "@privateid/cryptonets-web-sdk-test";
 
 let skipAntispoofProcess = false;
 const useEnrollOneFa = (

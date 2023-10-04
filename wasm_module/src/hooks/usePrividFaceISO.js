@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { faceISO, convertCroppedImage } from "@privateid/cryptonets-web-sdk-alpha";
+import { faceISO, convertCroppedImage } from "@privateid/cryptonets-web-sdk-test";
 
 let loop = true;
 const usePrividFaceISO = () => {

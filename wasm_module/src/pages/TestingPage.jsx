@@ -6,7 +6,7 @@ import {
   closeCamera,
   faceCompareLocal,
   documentMugshoFaceCompare,
-} from "@privateid/cryptonets-web-sdk-alpha";
+} from "@privateid/cryptonets-web-sdk-test";
 
 import {
   useCamera,
@@ -38,7 +38,7 @@ import {
   getFaceValidationMessage,
   getFrontDocumentStatusMessage,
   getRawFaceValidationStatus,
-} from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
+} from "@privateid/cryptonets-web-sdk-test/dist/utils";
 import { DebugContext } from "../context/DebugContext";
 import useContinuousPredictWithoutRestrictions from "../hooks/useContinuousPredictWithoutRestriction";
 import useMultiFramePredictAge from "../hooks/useMultiFramePredictAge";
@@ -264,6 +264,7 @@ const Ready = () => {
     antispoofPerformed: predictAgeAntispoofPerformed,
     antispoofStatus: predictAgeAntispoofStatus,
     validationStatus: predictAgeValidationStatus,
+    ageMultiframeToken: predictAgeMultiframeToken,
   } = useMultiFramePredictAge();
 
   const handlePredictAge = async () => {
@@ -714,6 +715,7 @@ const Ready = () => {
                   <div>{`Antispoof Performed: ${predictAgeAntispoofPerformed}`}</div>
                   <div>{`Antispoof Status: ${predictAgeAntispoofStatus}`}</div>
                   <div>{`Validataion Status: ${predictAgeValidationStatus}`}</div>
+                  <div>{`Multiframe Token: ${predictAgeMultiframeToken}`}</div>
                 </div>
               )}
 

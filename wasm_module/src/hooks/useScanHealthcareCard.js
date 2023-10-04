@@ -1,4 +1,4 @@
-import { convertCroppedImage, scanHealthcareCard } from "@privateid/cryptonets-web-sdk-alpha";
+import { convertCroppedImage, scanHealthcareCard } from "@privateid/cryptonets-web-sdk-test";
 import React, { useEffect, useState } from "react";
 let scanOnce = false;
 const useScanHealthcareCard = (setShowSuccess = () => {}) => {
