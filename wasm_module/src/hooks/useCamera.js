@@ -32,6 +32,10 @@ const useCamera = (element = "userVideo", resolution = null) => {
         setDevice(settings.deviceId);
       }
       setReady(true);
+      console.log("capabilities:" , capabilities);
+      if (capabilities){
+
+      }
     } catch (e) {
       console.log("Error Message", e);
     }
