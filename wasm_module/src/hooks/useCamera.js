@@ -88,7 +88,7 @@ const useCamera = (
       console.log("capabilities:", capabilities);
       console.log("settings", settings);
       if (capabilities) {
-        let settings ={
+        let cameraSettings ={
           focusDistance: false,
           exposureTime: false,
           sharpness: false,
@@ -100,39 +100,39 @@ const useCamera = (
           setCameraFocusMin(capabilities.focusDistance.min);
           setCameraFocusMax(capabilities.focusDistance.max);
           setCameraFocusCurrent(settings.focusDistance);
-          settings = {...settings, focusDistance: true};
+          cameraSettings = {...settings, focusDistance: true};
         }
         if (capabilities.exposureTime) {
           setCameraExposureTimeMin(Math.ceil(capabilities.exposureTime.min));
           setCameraExposureTimeMax(Math.ceil(capabilities.exposureTime.max));
           setCameraExposureTimeCurrent(Math.ceil(settings.exposureTime));
-          settings = {...settings, exposureTime: true};
+          cameraSettings = {...settings, exposureTime: true};
         }
         if (capabilities.sharpness){
           setCameraSharpnessMin(Math.ceil(capabilities.sharpness.min));
           setCameraSharpnessMax(Math.ceil(capabilities.sharpness.max));
           setCameraSharpnessCurrent(Math.ceil(settings.sharpness));
-          settings = {...settings, sharpness: true};
+          cameraSettings = {...settings, sharpness: true};
         }
         if (capabilities.brightness){
           setCameraBrightnessMin(Math.ceil(capabilities.brightness.min));
           setCameraBrightnessMax(Math.ceil(capabilities.brightness.max));
           setCameraBrightnessCurrent(Math.ceil(settings.brightness));
-          settings = {...settings, brightness: true};
+          cameraSettings = {...settings, brightness: true};
         }
         if (capabilities.saturation){
           setCameraSaturationMin(Math.ceil(capabilities.saturation.min));
           setCameraSaturationMax(Math.ceil(capabilities.saturation.max));
           setCameraSaturationCurrent(Math.ceil(settings.saturation));
-          settings = {...settings, saturation: true};
+          cameraSettings = {...settings, saturation: true};
         }
         if (capabilities.contrast){
           setCameraContrastMin(Math.ceil(capabilities.contrast.min));
           setCameraContrastMax(Math.ceil(capabilities.contrast.max));
           setCameraContrastCurrent(Math.ceil(settings.contrast));
-          settings = {...settings, contrast: true};
+          cameraSettings = {...settings, contrast: true};
         }
-        setCameraSettingsList(settings);
+        setCameraSettingsList(cameraSettings);
       }
     } catch (e) {
       console.log("Error Message", e);
