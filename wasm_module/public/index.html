@@ -14,7 +14,7 @@
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
     -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" crossorigin="use-credentials" />
     <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.
@@ -24,10 +24,223 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
+    <style>
+    .myUL {
+      list-style-type: none;
+      list-style-position: inside;
+      padding: 5px;
+    }
+
+    .myLI {
+      padding: 5px;
+    }
+
+    .myImg{
+      height: 50px;
+      width: 50px;
+    }
+
+    .caret {
+      cursor: pointer;
+      -webkit-user-select: none;
+      /* Safari 3.1+ */
+      -moz-user-select: none;
+      /* Firefox 2+ */
+      -ms-user-select: none;
+      /* IE 10+ */
+      user-select: none;
+    }
+
+    .caret::before {
+      content: "\25B6";
+      color: black;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    .caret-down::before {
+      -ms-transform: rotate(90deg);
+      /* IE 9 */
+      -webkit-transform: rotate(90deg);
+      /* Safari */
+      transform: rotate(90deg);
+    }
+
+    .nested {
+      display: none;
+    }
+
+    .active {
+      display: block;
+    }
+
+    /* styles.css */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .myLiIgFileItem {
+      background-color: #ccc;
+      padding: 4px;
+      margin: 12px;
+    }
+
+  </style>
     <title>React App</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+    <script>
+    function openDebugDataPanel() {
+      const modal = document.getElementById('myModal');
+      modal.style.display = 'block';
+      // Initialize IndexedDB variables
+      const dbName = '/fhe-privateid';
+      const storeName = 'FILE_DATA';
+      // Open a connection to the IndexedDB
+      const openRequest = indexedDB.open(dbName);
+      openRequest.onupgradeneeded = (event) => {
+        // do nothing
+      };
+      openRequest.onerror = (event) => {
+        console.error('Error opening IndexedDB:', event.target.errorCode);
+      };
+      openRequest.onsuccess = (event) => {
+        const db = event.target.result;
+        const tree = {};
+        displayData(db, tree);
+      };
+
+      function displayData(db, tree) {
+
+
+        const debug_panel = document.getElementById('debug_panel');
+        while (debug_panel.firstChild)
+          debug_panel.removeChild(debug_panel.firstChild);
+
+        const transaction = db.transaction(storeName, 'readonly');
+        console.log(transaction);
+        const objectStore = transaction.objectStore(storeName);
+        console.log("object store", objectStore);
+        objectStore.openCursor().onsuccess = (event) => {
+          const cursor = event.target.result;
+          if (cursor) {
+            let currentNode = tree;
+            let strkey = cursor.key.substring(1);
+            strkey.split('/').forEach((key) => {
+              if (!currentNode[key]) {
+                currentNode[key] = {};
+              }
+              currentNode = currentNode[key];
+            });
+            currentNode.data = cursor.value;
+            cursor.continue();
+          } else {
+            const list = document.createElement('ul');
+            list.className = 'myUL';
+            renderTree(tree, list);
+            debug_panel.appendChild(list);
+            let toggler = document.getElementsByClassName("caret");
+            let i;
+            for (i = 0; i < toggler.length; i++) {
+              toggler[i].addEventListener("click", function () {
+                this.parentElement.querySelector(".nested").classList.toggle("active");
+                this.classList.toggle("caret-down");
+              });
+            }
+          }
+        };
+      }
+
+      function renderTree(tree, parentElement) {
+        var blobToBase64 = function (bin, callback) {
+          var reader = new FileReader();
+          reader.onload = function () {
+            var dataUrl = reader.result;
+            var base64 = dataUrl.split(',')[1];
+            callback(base64);
+          };
+          const blob = new Blob([bin], { type: 'application/octet-stream' });
+          reader.readAsDataURL(blob);
+        };
+
+        Object.keys(tree).forEach((key) => {
+          if (key == 'data') return;
+          const listItem = document.createElement('li');
+          listItem.className = 'myLI';
+          const node = tree[key];
+          if (node.data && Object.keys(node).length == 1) {
+            const div_root = document.createElement('div');
+            div_root.className="myLiIgFileItem";
+            if (key.endsWith('.png')){
+              const img_div = document.createElement('div');
+
+              div_root.appendChild(img_div);
+              const b64encoded = blobToBase64(node.data.contents,(base64)=>{
+              const src = "data:image/png;base64," + base64;
+              const img = document.createElement('img');
+              img['src'] = src;
+              img['alt'] = key;
+              img.className='myImg';
+              img_div.appendChild(img);
+            });
+          }
+              const a_div = document.createElement('div');
+              const blob = new Blob([node.data.contents], { type: 'application/octet-stream' });
+            const link = document.createElement('a');
+            link.textContent = key;
+            link.href = URL.createObjectURL(blob);
+            link.download = key;
+            a_div.appendChild(link);
+            div_root.appendChild(a_div);
+
+
+            listItem.appendChild(div_root);
+
+          } else {
+            const span = document.createElement('span');
+            span.textContent = key;
+            span.className = "caret";
+            listItem.appendChild(span);
+            const nestedList = document.createElement('ul');
+            nestedList.className = 'nested myUL';
+            renderTree(node, nestedList);
+            listItem.appendChild(nestedList);
+          }
+          parentElement.appendChild(listItem);
+        });
+      }
+    }
+  </script>
     <div id="root"></div>
     <!--
       This HTML file is a template.
@@ -39,5 +252,26 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
+  <button onclick="openDebugDataPanel()">view</button>
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Debug Data</h2>
+      <div id="debug_panel"></div>
+    </div>
+  </div>
+  <script>
+    const modal = document.getElementById('myModal');
+    const openModalButton = document.getElementById('openModalButton');
+    const closeModalButton = document.querySelector('.close');
+    closeModalButton.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+    window.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+  </script>
   </body>
 </html>

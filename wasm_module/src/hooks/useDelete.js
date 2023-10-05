@@ -11,8 +11,8 @@ const useDelete = (onDeleteEnd, ready) => {
     onDeleteEnd(result.returnValue.status === 0 ? "success" : result.returnValue.message);
   };
 
-  const onDeleteUser = async (uuid) => {
-    deleteUser(uuid, callback);
+  const onDeleteUser = async (puid) => {
+    deleteUser(puid, callback);
   };
 
   return { loading, onDeleteUser };

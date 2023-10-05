@@ -1,65 +1,72 @@
 import { useState } from "react";
 import { faceLogin } from "@privateid/cryptonets-web-sdk-alpha";
+const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess, disableButtons) => {
+  const [faceLoginMessage, setFaceLoginMessage] = useState("");
 
-const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess) => {
-  const [faceLoginFaceDetected, setFaceDetected] = useState(false);
-  const [faceLoginStatus, setPredictStatus] = useState(null);
-  const [faceLoginData, setPredictData] = useState(null);
-  const [faceLoginMessage, setPredictMessage] = useState("");
-
-  const doFaceLogin = async () => {
-    // setFaceDetected(false);
-    // setPredictData(null);
-    // eslint-disable-next-line no-unused-vars
-    await faceLogin(callback, {
-      input_image_format: "rgba",
-    });
-  };
+  const [faceLoginAntispoofPerformed, setFaceLoginAntispoofPerformed] = useState("");
+  const [faceLoginAntispoofStatus, setFaceLoginAntispoofStatus] = useState("");
+  const [faceLoginValidationStatus, setFaceLoginValidationStatus] = useState("");
+  const [faceLoginGUID, setFaceLoginGUID] = useState("");
+  const [faceLoginPUID, setFaceLoginPUID] = useState("");
+  let skipAntispoofProcess = false;
 
   const callback = async (result) => {
-    console.log("facelogin callback hook result:", result);
+    console.log("faceLogin callback hook result:", result);
+
     switch (result.status) {
       case "WASM_RESPONSE":
-        if (result?.returnValue?.error) {
-          setFaceDetected(false);
-          setPredictMessage("Invalid Image");
-          return;
-        }
         if (result.returnValue?.status === 0) {
           const { message } = result.returnValue;
-          setPredictMessage(message);
-          setPredictData(result.returnValue);
+          setFaceLoginMessage(message);
           onSuccess(result.returnValue);
-          setFaceDetected(true);
           setShowSuccess(true);
+          setFaceLoginAntispoofPerformed(result.returnValue.anti_spoof_performed || "");
+          setFaceLoginAntispoofStatus(result.returnValue.anti_spoof_status || "");
+          setFaceLoginValidationStatus(result.returnValue.status);
+          setFaceLoginGUID(result.returnValue.guid);
+          setFaceLoginPUID(result.returnValue.puid);
+          disableButtons(false);
         }
         if (result.returnValue?.status !== 0) {
-          const { validation_status, message } = result.returnValue;
-          setPredictMessage(message);
-          let hasValidFace = false;
-          for (let i = 0; validation_status.length > i; i++) {
-            if (validation_status[i].status === 0) {
-              hasValidFace = true;
-              i = validation_status.length;
-            }
-          }
-          setFaceDetected(hasValidFace);
-          setPredictStatus(null);
-          setFaceDetected(false);
-          setPredictData(null);
+          const { status, message } = result.returnValue;
+          setFaceLoginMessage(message);
+          setFaceLoginAntispoofPerformed(result.returnValue.anti_spoof_performed);
+          setFaceLoginAntispoofStatus(result.returnValue.anti_spoof_status);
+          setFaceLoginValidationStatus(result.returnValue.status);
+          setFaceLoginGUID(result.returnValue.guid);
+          setFaceLoginPUID(result.returnValue.puid);
+          doFaceLogin(skipAntispoofProcess, true);
         }
         break;
       default:
     }
-    doFaceLogin();
+  };
+
+  const doFaceLogin = async (skipAntispoof=true, isRunning = false) => {
+    // eslint-disable-next-line no-unused-vars
+    skipAntispoofProcess = skipAntispoof;
+    if(!isRunning){
+      setFaceLoginAntispoofPerformed("");
+      setFaceLoginAntispoofStatus("");
+      setFaceLoginValidationStatus("");
+      setFaceLoginGUID("");
+      setFaceLoginPUID("");
+      disableButtons(true);
+    }
+   
+    await faceLogin(callback, {
+      skipAntispoof: skipAntispoof
+    });
   };
 
   return {
-    faceLoginFaceDetected,
-    faceLoginStatus,
-    faceLoginData,
     doFaceLogin,
     faceLoginMessage,
+    faceLoginAntispoofPerformed,
+    faceLoginAntispoofStatus,
+    faceLoginValidationStatus,
+    faceLoginGUID,
+    faceLoginPUID,
   };
 };
 

@@ -3,9 +3,12 @@ import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-s
 import { CANVAS_SIZE } from "../utils";
 
 let internalCanvasSize;
+let loop = true;
 const useScanBackDocument = (setShowSuccess) => {
   const [scannedCodeData, setScannedCodeData] = useState(null);
   const [isFound, setIsFound] = useState(false);
+
+
 
   // Input image
   const [inputImageData, setInputImageData] = useState(null);
@@ -78,7 +81,9 @@ const useScanBackDocument = (setShowSuccess) => {
     setCroppedDocumentImageData(null);
     setCroppedBarcodeImageData(null);
     setInputImageData(null);
-    scanBackDocument();
+    if (loop) {
+      scanBackDocument();
+    }
   };
 
   const convertImageData = async (imageData, width, height, setState, message = "") => {
@@ -101,7 +106,7 @@ const useScanBackDocument = (setShowSuccess) => {
   }, [isFound, croppedDocumentImageData, returnValue]);
 
   useEffect(() => {
-    if (isFound && croppedBarcodeImageData && returnValue) {
+    if (croppedBarcodeImageData && returnValue) {
       convertImageData(
         croppedBarcodeImageData,
         returnValue.crop_barcode_width,
@@ -124,7 +129,8 @@ const useScanBackDocument = (setShowSuccess) => {
     }
   }, [croppedDocumentImage, croppedBarcodeImage, inputImage]);
 
-  const scanBackDocument = async (canvasSize) => {
+  const scanBackDocument = async (canvasSize, functionLoop = true, uploadData = undefined) => {
+    loop = functionLoop;
     if (canvasSize && canvasSize !== internalCanvasSize) {
       internalCanvasSize = canvasSize;
     }
@@ -132,13 +138,14 @@ const useScanBackDocument = (setShowSuccess) => {
     const { result, croppedBarcode, croppedDocument, imageData } = await isValidPhotoID(
       "PHOTO_ID_BACK",
       documentCallback,
-      true,
-      undefined,
-      { document_scan_barcode_only: true },
+      uploadData,
+      { document_scan_barcode_only: true,
+        blur_threshold_barcode: 1700,
+      },
       canvasObj
     );
-    console.log({croppedBarcode, croppedDocument, imageData})
-    if(croppedBarcode && croppedDocument && imageData){
+    console.log({ croppedBarcode, croppedDocument, imageData });
+    if (croppedBarcode && croppedDocument && imageData) {
       setCroppedDocumentImageData(croppedDocument);
       setCroppedBarcodeImageData(croppedBarcode);
       setInputImageData(imageData);

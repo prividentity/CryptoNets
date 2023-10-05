@@ -1,46 +1,39 @@
 import { useState } from "react";
 import { predictAge } from "@privateid/cryptonets-web-sdk-alpha";
 
+let skipAntispoofGlobal = false;
 const usePredictAge = () => {
   const [age, setAge] = useState(null);
-  const [predictAgeHasFinished, setPredictAgeHasFinished] = useState(false);
+  const [antispoofPerformed, setAntispoofPerformed] = useState(false);
+  const [antispoofStatus, setAntispoofStatus] = useState("");
+  const [validationStatus, setValidationStatus] = useState("");
 
-  const predictAgeCallback = (response) => {
-    console.log("RESPONSE USEPREDICT FE: ", response);
-    
-    const { faces } = response.returnValue
+  const callback = (response) => {
+    console.log("predict Age Callback", response);
 
-    if ( faces.length === 0 ){
-      setAge(null);
-      setPredictAgeHasFinished(true);
+    if (response?.returnValue?.faces.length > 0) {
+      setAge(response?.returnValue?.faces[0].age);
+      setAntispoofPerformed(response?.returnValue?.faces[0].anti_spoof_performed);
+      setAntispoofStatus(response?.returnValue?.faces[0].anti_spoof_status);
+      setValidationStatus(response?.returnValue?.faces[0].status);
+    } else {
+      setAge("");
+      setAntispoofPerformed("");
+      setAntispoofStatus("");
+      setValidationStatus("");
     }
-    else{
-      for(let index = 0 ; faces.length > index; index++){
-        const { status, age } = faces[index];
 
-        if(age > 0){
-          setAge(age);
-          setPredictAgeHasFinished(true);
-          index = faces.length
-        }
-
-        if(index+1 === faces.length && age <= 0){
-          setAge(null);
-          setPredictAgeHasFinished(true);
-        }
-      }
-    }
+    doPredictAge(skipAntispoofGlobal);
   };
 
-  const doPredictAge = async () => {
-    const data = await predictAge(
-      null,
-      predictAgeCallback
-    );
-    console.log("IMAGE DATA HERE??????????", data?data:false)
+  const doPredictAge = async (skipAntispoof=false) => {
+    skipAntispoofGlobal = skipAntispoof;
+    await predictAge(callback, {
+      skip_antispoof: skipAntispoofGlobal,
+    });
   };
 
-  return { doPredictAge, age, predictAgeHasFinished, setPredictAgeHasFinished };
+  return { doPredictAge, age, antispoofPerformed, antispoofStatus, validationStatus };
 };
 
 export default usePredictAge;

@@ -1,0 +1,40 @@
+name: wasm sample test workflow
+
+on:
+  push:
+    branches:
+    - test
+  
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+      SKIP_PREFLIGHT_CHECK: true
+      REACT_APP_API_URL: https://api.devel.cryptonets.ai/node
+      REACT_APP_API_URL_WASM: https://api.devel.cryptonets.ai/node
+      REACT_APP_API_KEY: "00000000000000001962"
+      REACT_APP_WASM_MODULE: face_mask
+      NPM_TOKEN: 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
+      CI: false 
+
+    steps:
+        - uses: actions/checkout@v1
+
+        - name: Install dependencies
+          working-directory: ./wasm_module
+          run: npm install
+
+        - name: Build
+          working-directory: ./wasm_module
+          run: npm run build
+
+        - name: Deploy
+          uses: lbertenasco/s3-deploy@v1
+          with:
+            folder: ./wasm_module/build
+            bucket: ${{ secrets.S3_BUCKET_TEST }}
+            dist-id: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_TEST }}
+            invalidation: / *
