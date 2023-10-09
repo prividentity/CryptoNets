@@ -1232,7 +1232,7 @@ const Ready = () => {
                 }
                 disabled={disableButtons}
               >
-                Predict Age
+                Multiframe Age Predict
               </button>
               <button
                 className="button"
