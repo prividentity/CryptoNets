@@ -38,9 +38,9 @@ const useEnrollOneFa = (
       antispoof_face_margin: 1.0,
       gray_scale_threshold: 25.0,
       gray_scale_variance_threshold: 100.0,
-      anti_spoofing_threshold: 0.9,
+      anti_spoofing_threshold: 0.6,
       enroll_embeddings_compare: 1.9,
-      threshold_user_too_far: 0.18,
+      threshold_user_too_far: 0.15,
     });
 
     if (bestImage) {
