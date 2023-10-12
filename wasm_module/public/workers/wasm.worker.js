@@ -21,12 +21,16 @@ let wasmPrivAntispoofModule;
 let antispoofVersion;
 const ModuleName = 'face_mask';
 
-const isLoad = (simd, url, key, debug_type, cacheConfig = true, liveness = false) =>
+const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000) =>
   new Promise(async (resolve, reject) => {
     apiUrl = url;
     apiKey = key;
     if (debug_type) {
       debugType = debug_type;
+    }
+    let timeoutSession = 5000
+    if(timeout) {
+      timeoutSession = timeout;
     }
     setCache = cacheConfig;
     const modulePath = simd ? 'simd' : 'noSimd';
@@ -45,7 +49,7 @@ const isLoad = (simd, url, key, debug_type, cacheConfig = true, liveness = false
         eval(cachedScript);
         wasmPrivModule = await createTFLiteModule({ wasmBinary: cachedWasm });
         if (!checkWasmLoaded) {
-          await initializeWasmSession(url, key, debugType);
+          await initializeWasmSession(url, key, debugType, timeoutSession);
           checkWasmLoaded = true;
         }
       }
@@ -53,7 +57,7 @@ const isLoad = (simd, url, key, debug_type, cacheConfig = true, liveness = false
     } else {
       wasmPrivModule = await loadWasmModule(modulePath, moduleName, true);
       if (!checkWasmLoaded) {
-        await initializeWasmSession(url, key, debugType);
+        await initializeWasmSession(url, key, debugType, timeoutSession);
         checkWasmLoaded = true;
       }
       // console.log('WASM MODULES:', wasmPrivModule);
@@ -738,7 +742,7 @@ const output_ptr = function () {
   };
 };
 
-async function initializeWasmSession(url, key, debug_type) {
+async function initializeWasmSession(url, key, debug_type, timeout=5000) {
   if (!wasmSession) {
     const url_args = buffer_args(url);
     const key_args = buffer_args(key);
@@ -747,6 +751,7 @@ async function initializeWasmSession(url, key, debug_type) {
       ...key_args.args(),
       ...url_args.args(),
       debug_type,
+      timeout,
       session_out_ptr.outer_ptr(),
     );
     url_args.free();

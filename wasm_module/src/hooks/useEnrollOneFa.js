@@ -41,6 +41,9 @@ const useEnrollOneFa = (
       anti_spoofing_threshold: 0.6,
       enroll_embeddings_compare: 1.9,
       threshold_user_too_far: 0.15,
+      threshold_user_right: 0.2,
+      threshold_user_left: 0.8,
+  
     });
 
     if (bestImage) {
