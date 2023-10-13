@@ -32,19 +32,6 @@ const useEnrollOneFa = (
       input_image_format: "rgba",
       mf_token: token,
       skip_antispoof: skipAntispoof,
-      angle_rotation_left_threshold: 20.0,
-      angle_rotation_right_threshold: 20.0,
-      preprocessing_margin_factor: 4,
-      antispoof_face_margin: 1.0,
-      gray_scale_threshold: 25.0,
-      gray_scale_variance_threshold: 100.0,
-      anti_spoofing_threshold: 0.6,
-      enroll_embeddings_compare: 1.9,
-      threshold_user_too_far: 0.15,
-      threshold_user_right: 0.2,
-      threshold_user_left: 0.8,
-      threshold_high_vertical_enroll: -0.2,
-      threshold_down_vertical_enroll: 0.2,
     });
 
     if (bestImage) {
