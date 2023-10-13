@@ -43,7 +43,8 @@ const useEnrollOneFa = (
       threshold_user_too_far: 0.15,
       threshold_user_right: 0.2,
       threshold_user_left: 0.8,
-  
+      threshold_high_vertical_enroll: -0.2,
+      threshold_down_vertical_enroll: 0.2,
     });
 
     if (bestImage) {
@@ -82,7 +83,7 @@ const useEnrollOneFa = (
             if (
               result.returnValue.validation_status[0].anti_spoof_performed &&
               result.returnValue.validation_status[0].anti_spoof_status === 0 &&
-              result.returnValue.validation_status[0].status === 0 
+              result.returnValue.validation_status[0].status === 0
             ) {
               if (result.returnValue.validation_status[0].enroll_token === enrollTokenCurrent && enrollTokenCurrent) {
                 enrollCount++;

@@ -750,8 +750,8 @@ async function initializeWasmSession(url, key, debug_type, timeout=5000) {
     const s_result = wasmPrivModule._privid_initialize_session(
       ...key_args.args(),
       ...url_args.args(),
-      debug_type,
       timeout,
+      debug_type,
       session_out_ptr.outer_ptr(),
     );
     url_args.free();
