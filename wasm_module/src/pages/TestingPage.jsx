@@ -48,6 +48,40 @@ let callingWasm = false;
 const Ready = () => {
   const debugContext = useContext(DebugContext);
   const { ready: wasmReady, deviceSupported, init: initWasm } = useWasm();
+
+  const [cameraSettingsList, setCameraSettingsList] = useState({
+    focusDistance: false,
+    exposureTime: false,
+    sharpness: false,
+    brightness: false,
+    saturation: false,
+    contrast: false,
+  });
+
+  const [cameraFocusMin, setCameraFocusMin] = useState(0);
+  const [cameraFocusMax, setCameraFocusMax] = useState(0);
+  const [cameraFocusCurrent, setCameraFocusCurrent] = useState(0);
+
+  const [cameraExposureTimeMin, setCameraExposureTimeMin] = useState(0);
+  const [cameraExposureTimeMax, setCameraExposureTimeMax] = useState(0);
+  const [cameraExposureTimeCurrent, setCameraExposureTimeCurrent] = useState(0);
+
+  const [cameraSharpnessMin, setCameraSharpnessMin] = useState(0);
+  const [cameraSharpnessMax, setCameraSharpnessMax] = useState(0);
+  const [cameraSharpnessCurrent, setCameraSharpnessCurrent] = useState(0);
+
+  const [cameraBrightnessMin, setCameraBrightnessMin] = useState(0);
+  const [cameraBrightnessMax, setCameraBrightnessMax] = useState(0);
+  const [cameraBrightnessCurrent, setCameraBrightnessCurrent] = useState(0);
+
+  const [cameraSaturationMin, setCameraSaturationMin] = useState(0);
+  const [cameraSaturationMax, setCameraSaturationMax] = useState(0);
+  const [cameraSaturationCurrent, setCameraSaturationCurrent] = useState(0);
+
+  const [cameraContrastMin, setCameraContrastMin] = useState(0);
+  const [cameraContrastMax, setCameraContrastMax] = useState(0);
+  const [cameraContrastCurrent, setCameraContrastCurrent] = useState(0);
+
   const {
     ready: cameraReady,
     init: initCamera,
@@ -56,7 +90,29 @@ const Ready = () => {
     settings,
     capabilities,
     setReady,
-  } = useCamera("userVideo");
+  } = useCamera(
+    "userVideo",
+    undefined,
+    setCameraFocusMin,
+    setCameraFocusMax,
+    setCameraFocusCurrent,
+    setCameraExposureTimeMin,
+    setCameraExposureTimeMax,
+    setCameraExposureTimeCurrent,
+    setCameraSharpnessMin,
+    setCameraSharpnessMax,
+    setCameraSharpnessCurrent,
+    setCameraBrightnessMin,
+    setCameraBrightnessMax,
+    setCameraBrightnessCurrent,
+    setCameraSaturationMin,
+    setCameraSaturationMax,
+    setCameraSaturationCurrent,
+    setCameraContrastMin,
+    setCameraContrastMax,
+    setCameraContrastCurrent,
+    setCameraSettingsList
+  );
 
   const [disableButtons, setDisableButtons] = useState(false);
 
@@ -195,12 +251,66 @@ const Ready = () => {
     const { capabilities = {}, settings = {}, devices } = await switchCamera(null, e.target.value);
     setDeviceCapabilities(capabilities);
     // setDevicesList(devices.map(mapDevices));
+    console.log("switch camera capabilities:", capabilities);
+    console.log("switch camera settings:", settings);
     if (currentAction === "useScanDocumentFront") {
       let width = WIDTH_TO_STANDARDS[settings?.width];
       if (width === "FHD" && settings?.height === 1440) {
         width = "iPhoneCC";
       }
       await handleCanvasSize({ target: { value: width } }, true);
+    }
+
+    try {
+      if (capabilities) {
+        let cameraSettings = {
+          focusDistance: false,
+          exposureTime: false,
+          sharpness: false,
+          brightness: false,
+          saturation: false,
+          contrast: false,
+        };
+        if (capabilities.focusDistance) {
+          setCameraFocusMin(capabilities.focusDistance.min);
+          setCameraFocusMax(capabilities.focusDistance.max);
+          setCameraFocusCurrent(settings.focusDistance);
+          cameraSettings = { ...settings, focusDistance: true };
+        }
+        if (capabilities.exposureTime) {
+          setCameraExposureTimeMin(Math.ceil(capabilities.exposureTime.min));
+          setCameraExposureTimeMax(Math.ceil(capabilities.exposureTime.max));
+          setCameraExposureTimeCurrent(Math.ceil(settings.exposureTime));
+          cameraSettings = { ...settings, exposureTime: true };
+        }
+        if (capabilities.sharpness) {
+          setCameraSharpnessMin(Math.ceil(capabilities.sharpness.min));
+          setCameraSharpnessMax(Math.ceil(capabilities.sharpness.max));
+          setCameraSharpnessCurrent(Math.ceil(settings.sharpness));
+          cameraSettings = { ...settings, sharpness: true };
+        }
+        if (capabilities.brightness) {
+          setCameraBrightnessMin(Math.ceil(capabilities.brightness.min));
+          setCameraBrightnessMax(Math.ceil(capabilities.brightness.max));
+          setCameraBrightnessCurrent(Math.ceil(settings.brightness));
+          cameraSettings = { ...settings, brightness: true };
+        }
+        if (capabilities.saturation) {
+          setCameraSaturationMin(Math.ceil(capabilities.saturation.min));
+          setCameraSaturationMax(Math.ceil(capabilities.saturation.max));
+          setCameraSaturationCurrent(Math.ceil(settings.saturation));
+          cameraSettings = { ...settings, saturation: true };
+        }
+        if (capabilities.contrast) {
+          setCameraContrastMin(Math.ceil(capabilities.contrast.min));
+          setCameraContrastMax(Math.ceil(capabilities.contrast.max));
+          setCameraContrastCurrent(Math.ceil(settings.contrast));
+          cameraSettings = { ...settings, contrast: true };
+        }
+        setCameraSettingsList(cameraSettings);
+      }
+    } catch (e) {
+      //
     }
   };
 
@@ -502,11 +612,11 @@ const Ready = () => {
     navigator.clipboard.writeText(text);
   };
 
-  const handleLivenessCheck = async () => {
-    setCurrentAction("livenessCheck");
-    resetAllLivenessValues();
-    await doLivenessCheck();
-  };
+  // const handleLivenessCheck = async () => {
+  //   setCurrentAction("livenessCheck");
+  //   resetAllLivenessValues();
+  //   await doLivenessCheck();
+  // };
 
   const {
     continuousPredictWithoutRestrictionsGUID,
@@ -519,6 +629,139 @@ const Ready = () => {
   const handleBurningMan = () => {
     setCurrentAction("useContinuousPredictWithoutRestrictions");
     doContinuousPredictWithoutRestrictions();
+  };
+
+  const handleFocusChange = async (val) => {
+    try {
+      const video = document.getElementById("userVideo");
+      const mediaStream = video.srcObject;
+      const track = await mediaStream.getTracks()[0];
+      const capabilities = track.getCapabilities();
+
+      await track.applyConstraints({
+        advanced: [
+          {
+            focusMode: "manual",
+            focusDistance: val,
+          },
+        ],
+      });
+
+      const newSettings = await track.getSettings();
+
+      console.log("new Settings", newSettings);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log(e);
+    }
+  };
+
+  const handleExposureTimeChange = async (val) => {
+    try {
+      const video = document.getElementById("userVideo");
+      const mediaStream = video.srcObject;
+      const track = await mediaStream.getTracks()[0];
+      const capabilities = track.getCapabilities();
+      await track.applyConstraints({
+        advanced: [
+          {
+            exposureMode: "manual",
+            exposureTime: val,
+          },
+        ],
+      });
+      const newSettings = await track.getSettings();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log(e);
+    }
+  };
+
+  const handleSharpnessChange = async (val) => {
+    try {
+      const video = document.getElementById("userVideo");
+      const mediaStream = video.srcObject;
+      const track = await mediaStream.getTracks()[0];
+      const capabilities = track.getCapabilities();
+      await track.applyConstraints({
+        advanced: [
+          {
+            sharpness: val,
+          },
+        ],
+      });
+      const newSettings = await track.getSettings();
+
+      console.log("new Settings", newSettings);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log(e);
+    }
+  };
+
+  const handleBrightnessChange = async (val) => {
+    try {
+      const video = document.getElementById("userVideo");
+      const mediaStream = video.srcObject;
+      const track = await mediaStream.getTracks()[0];
+      const capabilities = track.getCapabilities();
+      await track.applyConstraints({
+        advanced: [
+          {
+            brightness: val,
+          },
+        ],
+      });
+      const newSettings = await track.getSettings();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log(e);
+    }
+  };
+
+  const handleSaturationChange = async (val) => {
+    try {
+      const video = document.getElementById("userVideo");
+      const mediaStream = video.srcObject;
+      const track = await mediaStream.getTracks()[0];
+      const capabilities = track.getCapabilities();
+      await track.applyConstraints({
+        advanced: [
+          {
+            saturation: val,
+          },
+        ],
+      });
+      const newSettings = await track.getSettings();
+
+      console.log("new Settings", newSettings);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log(e);
+    }
+  };
+
+  const handleContrastChange = async (val) => {
+    try {
+      const video = document.getElementById("userVideo");
+      const mediaStream = video.srcObject;
+      const track = await mediaStream.getTracks()[0];
+      const capabilities = track.getCapabilities();
+
+      await track.applyConstraints({
+        advanced: [
+          {
+            contrast: val,
+          },
+        ],
+      });
+      const newSettings = await track.getSettings();
+
+      console.log("new Settings", newSettings);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log(e);
+    }
   };
 
   return (
@@ -606,6 +849,102 @@ const Ready = () => {
                 <></>
               )}
             </div>
+            {cameraSettingsList.focusDistance && (
+              <div>
+                Focus Slider:
+                <input
+                  type="range"
+                  min={cameraFocusMin}
+                  max={cameraFocusMax}
+                  defaultValue={cameraFocusCurrent}
+                  onChange={async (e) => {
+                    console.log("changed");
+                    await handleFocusChange(e.currentTarget.value);
+                  }}
+                />
+              </div>
+            )}
+
+            {cameraSettingsList.exposureTime && (
+              <div>
+                Exposure Time Slider:
+                <input
+                  type="range"
+                  min={cameraExposureTimeMin}
+                  max={cameraExposureTimeMax}
+                  defaultValue={cameraExposureTimeCurrent}
+                  onChange={async (e) => {
+                    console.log("changed");
+                    await handleExposureTimeChange(e.currentTarget.value);
+                  }}
+                />
+              </div>
+            )}
+
+            {cameraSettingsList.sharpness && (
+              <div>
+                Sharpness Slider:
+                <input
+                  type="range"
+                  min={cameraSharpnessMin}
+                  max={cameraSharpnessMax}
+                  defaultValue={cameraSharpnessCurrent}
+                  onChange={async (e) => {
+                    console.log("changed");
+                    await handleSharpnessChange(e.currentTarget.value);
+                  }}
+                />
+              </div>
+            )}
+
+            {cameraSettingsList.brightness && (
+              <div>
+                Brightness Slider:
+                <input
+                  type="range"
+                  min={cameraBrightnessMin}
+                  max={cameraBrightnessMax}
+                  defaultValue={cameraBrightnessCurrent}
+                  onChange={async (e) => {
+                    console.log("changed");
+                    await handleBrightnessChange(e.currentTarget.value);
+                  }}
+                />
+              </div>
+            )}
+
+            {cameraSettingsList.saturation && (
+              <div>
+                Saturation Slider:
+                <input
+                  type="range"
+                  min={cameraSaturationMin}
+                  max={cameraSaturationMax}
+                  defaultValue={cameraSaturationCurrent}
+                  onChange={async (e) => {
+                    console.log("changed");
+                    await handleSaturationChange(e.currentTarget.value);
+                  }}
+                />
+              </div>
+            )}
+
+            {cameraSettingsList.contrast && (
+              <div>
+                Contrast Slider:
+                <input
+                  type="range"
+                  min={cameraContrastMin}
+                  max={cameraContrastMax}
+                  defaultValue={cameraContrastCurrent}
+                  onChange={async (e) => {
+                    console.log("changed");
+                    await handleContrastChange(e.currentTarget.value);
+                  }}
+                />
+              </div>
+            )}
+
             <div className={"cameraContainer"}>
               {currentAction === "useEnrollOneFa" && (
                 <div className="enrollDisplay">
@@ -617,7 +956,7 @@ const Ready = () => {
                   <span> {getRawFaceValidationStatus(faceLoginValidationStatus)} </span>
                 </div>
               )}
-               {currentAction === "useOscarLogin" && (
+              {currentAction === "useOscarLogin" && (
                 <div className="enrollDisplay">
                   <span> {getRawFaceValidationStatus(oscarLoginValidationStatus)} </span>
                 </div>
@@ -638,7 +977,7 @@ const Ready = () => {
                   (currentAction === "useScanDocumentFront" ||
                   currentAction === "useScanDocumentBack" ||
                   currentAction === "useScanDocumentFrontValidity" ||
-                  currentAction === "useScanHealthcareCard" 
+                  currentAction === "useScanHealthcareCard"
                     ? `cameraDisplay`
                     : `cameraDisplay mirrored`) +
                   " " +
@@ -894,7 +1233,7 @@ const Ready = () => {
                 }
                 disabled={disableButtons}
               >
-                Predict Age
+                Multiframe Age Predict
               </button>
               <button
                 className="button"

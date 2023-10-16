@@ -18,8 +18,9 @@ const useMultiFramePredictAge = () => {
 
       if (
         response?.returnValue?.faces[0].anti_spoof_performed &&
-        response?.returnValue?.faces[0].anti_spoof_status === 0 &&
-        response?.returnValue?.faces[0].status === 0
+          response?.returnValue?.faces[0].anti_spoof_status === 0 &&
+          response?.returnValue?.faces[0].status === 0 ||
+        response?.returnValue?.faces[0].status === 20 || response?.returnValue?.faces[0].status === 21
       ) {
         if (response?.returnValue?.faces[0].age > 0) {
           setAge(response?.returnValue?.faces[0].age);

@@ -30,7 +30,7 @@ const useEnrollOneFa = (
     // eslint-disable-next-line no-unused-vars
     const bestImage = await enroll1FA(callback, {
       input_image_format: "rgba",
-      enroll_token: token,
+      mf_token: token,
       skip_antispoof: skipAntispoof,
     });
 
@@ -70,7 +70,7 @@ const useEnrollOneFa = (
             if (
               result.returnValue.validation_status[0].anti_spoof_performed &&
               result.returnValue.validation_status[0].anti_spoof_status === 0 &&
-              result.returnValue.validation_status[0].status === 0 
+              result.returnValue.validation_status[0].status === 0
             ) {
               if (result.returnValue.validation_status[0].enroll_token === enrollTokenCurrent && enrollTokenCurrent) {
                 enrollCount++;
