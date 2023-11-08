@@ -35,10 +35,15 @@ const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, 
       timeoutSession = timeout;
     }
     setCache = cacheConfig;
-    const modulePath = simd ? 'simd' : 'noSimd';
+    const modulePath = false ? 'simd' : 'noSimd';
     const moduleName = 'privid_fhe';
     const cachedModule = await readKey(ModuleName);
     const fetchdWasmVersion = await fetchResource(
+      `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
+      `../wasm/${ModuleName}/${modulePath}/version.json`,
+    );
+
+    console.log(
       `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
       `../wasm/${ModuleName}/${modulePath}/version.json`,
     );
