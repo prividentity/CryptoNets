@@ -42,6 +42,11 @@ const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, 
       `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
       `../wasm/${ModuleName}/${modulePath}/version.json`,
     );
+
+    console.log(
+      `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
+      `../wasm/${ModuleName}/${modulePath}/version.json`,
+    );
     // const fetchdWasmVersion = await fetch(`../wasm/${ModuleName}/${modulePath}/version.json`);
     const fetchdVersion = await fetchdWasmVersion.json();
     console.log(
