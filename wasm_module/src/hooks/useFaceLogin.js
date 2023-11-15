@@ -55,7 +55,7 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
     }
    
     await faceLogin(callback, {
-      skipAntispoof: skipAntispoof
+      skipAntispoof: skipAntispoof,
     });
   };
 

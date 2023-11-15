@@ -20,23 +20,34 @@ let checkWasmLoaded = false;
 let wasmPrivAntispoofModule;
 let antispoofVersion;
 const ModuleName = 'face_mask';
-
-const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000) =>
+const cdnUrl = 'https://wasm.privateid.com';
+let useCdnLink = false;
+const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, useCdn = false) =>
   new Promise(async (resolve, reject) => {
     apiUrl = url;
     apiKey = key;
+    useCdnLink = useCdn;
     if (debug_type) {
       debugType = debug_type;
     }
-    let timeoutSession = 5000
-    if(timeout) {
+    let timeoutSession = 5000;
+    if (timeout) {
       timeoutSession = timeout;
     }
     setCache = cacheConfig;
     const modulePath = simd ? 'simd' : 'noSimd';
     const moduleName = 'privid_fhe';
     const cachedModule = await readKey(ModuleName);
-    const fetchdWasmVersion = await fetch(`../wasm/${ModuleName}/${modulePath}/version.json`);
+    const fetchdWasmVersion = await fetchResource(
+      `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
+      `../wasm/${ModuleName}/${modulePath}/version.json`,
+    );
+
+    console.log(
+      `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
+      `../wasm/${ModuleName}/${modulePath}/version.json`,
+    );
+    // const fetchdWasmVersion = await fetch(`../wasm/${ModuleName}/${modulePath}/version.json`);
     const fetchdVersion = await fetchdWasmVersion.json();
     console.log(
       `check version ${`${
@@ -312,7 +323,7 @@ const FHE_enrollOnefa = async (imageData, simd, config, cb) => {
   let bestImage = null;
 
   const [outputBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, bestImageLenPtr, 1);
- 
+
   if (outputBufferSize > 0) {
     let outputBufferSecPtr = null;
     [outputBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, bestImageFirstPtr, 1);
@@ -742,7 +753,7 @@ const output_ptr = function () {
   };
 };
 
-async function initializeWasmSession(url, key, debug_type, timeout=5000) {
+async function initializeWasmSession(url, key, debug_type, timeout = 5000) {
   if (!wasmSession) {
     const url_args = buffer_args(url);
     const key_args = buffer_args(key);
@@ -915,8 +926,16 @@ const prividFaceCompareLocal = (imageInputA, imageInputB, simd, debug_type = 0, 
   });
 
 const loadWasmModule = async (modulePath, moduleName, saveCache) => {
-  const wasm = await fetch(`../wasm/face_mask/${modulePath}/${moduleName}.wasm`);
-  const script = await fetch(`../wasm/face_mask/${modulePath}/${moduleName}.js`);
+  const wasm = await fetchResource(
+    `${cdnUrl}/wasm/face_mask/${modulePath}/${moduleName}.wasm`,
+    `../wasm/face_mask/${modulePath}/${moduleName}.wasm`,
+  );
+  const script = await fetchResource(
+    `${cdnUrl}/wasm/face_mask/${modulePath}/${moduleName}.js`,
+    `../wasm/face_mask/${modulePath}/${moduleName}.js`,
+  );
+  // const wasm = await fetch(`../wasm/face_mask/${modulePath}/${moduleName}.wasm`);
+  // const script = await fetch(`../wasm/face_mask/${modulePath}/${moduleName}.js`);
   const scriptBuffer = await script.text();
   const buffer = await wasm.arrayBuffer();
   eval(scriptBuffer);
@@ -1058,6 +1077,19 @@ const scanDocumentNoFace = async (imageInput, simd, cb, config, debug_type = 0) 
     imageData: imageBuffer,
   };
 };
+
+async function fetchResource(cdnUrl, localUrl) {
+  try {
+    if (useCdnLink) {
+      const response = await fetch(cdnUrl);
+      return response;
+    }
+    return fetch(localUrl);
+  } catch (error) {
+    console.error(`Error fetching resource from CDN. Falling back to local path. Error: ${error}`);
+    return fetch(localUrl);
+  }
+}
 
 Comlink.expose({
   FHE_enrollOnefa,

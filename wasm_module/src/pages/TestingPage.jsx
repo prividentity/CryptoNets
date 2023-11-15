@@ -43,10 +43,13 @@ import { DebugContext } from "../context/DebugContext";
 import useContinuousPredictWithoutRestrictions from "../hooks/useContinuousPredictWithoutRestriction";
 import useMultiFramePredictAge from "../hooks/useMultiFramePredictAge";
 import useOscarLogin from "../hooks/useOscarLogin";
+import { useParams } from "react-router-dom";
 
 let callingWasm = false;
 const Ready = () => {
   const debugContext = useContext(DebugContext);
+  let { loadSimd } = useParams();
+  console.log(loadSimd);
   const { ready: wasmReady, deviceSupported, init: initWasm } = useWasm();
 
   const [cameraSettingsList, setCameraSettingsList] = useState({
@@ -184,7 +187,7 @@ const Ready = () => {
     if (!wasmReady) {
       if (!callingWasm) {
         // NOTE: MAKE SURE THAT WASM IS ONLY LOADED ONCE
-        initWasm();
+        initWasm(loadSimd);
         callingWasm = true;
       }
       return;
