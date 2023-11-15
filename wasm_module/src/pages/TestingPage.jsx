@@ -649,6 +649,7 @@ const Ready = () => {
           },
         ],
       });
+
       const newSettings = await track.getSettings();
 
       console.log("new Settings", newSettings);
