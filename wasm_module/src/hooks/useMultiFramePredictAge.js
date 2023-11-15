@@ -17,10 +17,22 @@ const useMultiFramePredictAge = () => {
       setValidationStatus(response?.returnValue?.faces[0].status);
 
       if (
-        response?.returnValue?.faces[0].anti_spoof_performed &&
+        (response?.returnValue?.faces[0].anti_spoof_performed &&
           response?.returnValue?.faces[0].anti_spoof_status === 0 &&
-          response?.returnValue?.faces[0].status === 0 ||
-        response?.returnValue?.faces[0].status === 20 || response?.returnValue?.faces[0].status === 21
+          response?.returnValue?.faces[0].status === 0) ||
+        response?.returnValue?.faces[0].status === 20 ||
+        response?.returnValue?.faces[0].status === 21
+      ) {
+        if (response?.returnValue?.faces[0].age > 0) {
+          setAge(response?.returnValue?.faces[0].age);
+        } else {
+          doPredictAge(skipAntispoofGlobal, response.returnValue.mf_token);
+          setAge("");
+        }
+      } else if (
+        (!response?.returnValue?.faces[0].anti_spoof_performed && response?.returnValue?.faces[0].status === 0) ||
+        response?.returnValue?.faces[0].status === 20 ||
+        response?.returnValue?.faces[0].status === 21
       ) {
         if (response?.returnValue?.faces[0].age > 0) {
           setAge(response?.returnValue?.faces[0].age);

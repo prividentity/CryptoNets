@@ -5,7 +5,7 @@ import {
   setStopLoopContinuousAuthentication,
   closeCamera,
   faceCompareLocal,
-  documentMugshoFaceCompare,
+  documentMugshotFaceCompare,
 } from "@privateid/cryptonets-web-sdk-alpha";
 
 import {
@@ -514,7 +514,7 @@ const Ready = () => {
   };
   const handleUploadImage2 = async (e) => {
     console.log(e.target.files);
-    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
+    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg|image[/]gif/;
     if (e.target.files.length > 0) {
       if (imageRegex.test(e.target.files[0].type)) {
         const imageUrl = URL.createObjectURL(e.target.files[0]);
@@ -536,6 +536,7 @@ const Ready = () => {
         };
 
         const base64 = await getBase64(e.target.files[0]); // prints the base64 string
+        console.log("====> GIF TEST: ",{base64});
         var newImg = new Image();
         newImg.src = base64;
         newImg.onload = async () => {
@@ -565,7 +566,7 @@ const Ready = () => {
       console.log("COMPARE RESULT", result);
     };
 
-    await documentMugshoFaceCompare(callback, uploadImage1, uploadImage2);
+    await documentMugshotFaceCompare(callback, uploadImage1, uploadImage2);
   };
 
   // Face Login
