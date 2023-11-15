@@ -32,8 +32,6 @@ const useEnrollOneFa = (
       input_image_format: "rgba",
       mf_token: token,
       skip_antispoof: skipAntispoof,
-      gray_scale_variance_threshold: 100.0,
-      gray_scale_threshold: 14,
     });
 
     if (bestImage) {

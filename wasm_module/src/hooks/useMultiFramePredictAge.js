@@ -46,8 +46,6 @@ const useMultiFramePredictAge = () => {
     await predictAge(mfCallback, {
       skip_antispoof: skipAntispoofGlobal,
       mf_token: mfToken,
-      gray_scale_variance_threshold: 100.0,
-      gray_scale_threshold: 14,
     });
   };
 

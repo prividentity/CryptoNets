@@ -56,8 +56,6 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
    
     await faceLogin(callback, {
       skipAntispoof: skipAntispoof,
-      gray_scale_variance_threshold: 100.0,
-      gray_scale_threshold: 14,
     });
   };
 
