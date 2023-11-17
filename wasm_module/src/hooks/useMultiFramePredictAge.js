@@ -56,7 +56,7 @@ const useMultiFramePredictAge = () => {
   const doPredictAge = async (skipAntispoof = false, mfToken = "") => {
     skipAntispoofGlobal = skipAntispoof;
     await predictAge(mfCallback, {
-      skip_antispoof: skipAntispoofGlobal,
+      skip_antispoof: true,
       mf_token: mfToken,
     });
   };
