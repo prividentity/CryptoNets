@@ -5,7 +5,7 @@ import {
   setStopLoopContinuousAuthentication,
   closeCamera,
   faceCompareLocal,
-  documentMugshoFaceCompare,
+  documentMugshotFaceCompare,
 } from "@privateid/cryptonets-web-sdk-alpha";
 
 import {
@@ -44,6 +44,7 @@ import useContinuousPredictWithoutRestrictions from "../hooks/useContinuousPredi
 import useMultiFramePredictAge from "../hooks/useMultiFramePredictAge";
 import useOscarLogin from "../hooks/useOscarLogin";
 import { useParams } from "react-router-dom";
+import useEnrollWithAge from "../hooks/useEnrollWithAge";
 
 let callingWasm = false;
 const Ready = () => {
@@ -514,7 +515,7 @@ const Ready = () => {
   };
   const handleUploadImage2 = async (e) => {
     console.log(e.target.files);
-    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
+    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg|image[/]gif/;
     if (e.target.files.length > 0) {
       if (imageRegex.test(e.target.files[0].type)) {
         const imageUrl = URL.createObjectURL(e.target.files[0]);
@@ -536,6 +537,7 @@ const Ready = () => {
         };
 
         const base64 = await getBase64(e.target.files[0]); // prints the base64 string
+        console.log("====> GIF TEST: ", { base64 });
         var newImg = new Image();
         newImg.src = base64;
         newImg.onload = async () => {
@@ -565,7 +567,7 @@ const Ready = () => {
       console.log("COMPARE RESULT", result);
     };
 
-    await documentMugshoFaceCompare(callback, uploadImage1, uploadImage2);
+    await documentMugshotFaceCompare(callback, uploadImage1, uploadImage2);
   };
 
   // Face Login
@@ -766,6 +768,22 @@ const Ready = () => {
     }
   };
 
+  // Enroll With Age
+  const {
+    ewaAge,
+    ewaGUID,
+    ewaPUID,
+    ewaAntispoofPerformed,
+    ewaAntispoofStatus,
+    ewaToken,
+    ewaValidationStatus,
+    enrollWithAge,
+  } = useEnrollWithAge("userVideo", () => {}, null, deviceId, setShowSuccess, setDisableButtons);
+
+  const handleEnrollWithAge = async () => {
+    setCurrentAction("enrollWithAge");
+    await enrollWithAge("");
+  };
   return (
     <>
       {deviceSupported.isChecking ? (
@@ -1042,6 +1060,30 @@ const Ready = () => {
                 </div>
               )}
 
+              {currentAction === "enrollWithAge" && (
+                <div>
+                  <div> Enroll Token: {ewaToken} </div>
+                  <div>
+                    Antispoof Performed:
+                    {JSON.stringify(ewaAntispoofPerformed)}
+                  </div>
+                  <div> Antispoof Status: {ewaAntispoofStatus} </div>
+                  <div> Validation Status: {ewaValidationStatus} </div>
+                  <div>
+                    Enroll GUID:&nbsp;
+                    {`${ewaGUID}`}
+                  </div>
+                  <div>
+                    Enroll PUID:&nbsp;
+                    {`${ewaPUID}`}
+                  </div>
+                  <div>
+                    Age Predicted:
+                    {`${ewaAge}`}
+                  </div>
+                </div>
+              )}
+
               {currentAction === "isValid" && (
                 <div>
                   <div>{`Antispoof Performed: ${isValidAntispoofPerformed}`}</div>
@@ -1253,6 +1295,21 @@ const Ready = () => {
               </button>
               <button
                 className="button"
+                onClick={handleEnrollWithAge}
+                style={
+                  disableButtons && currentAction !== "enrollWithAge"
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Enroll With Age
+              </button>
+
+              <button
+                className="button"
                 onClick={handlePredictOneFa}
                 style={
                   disableButtons && currentAction !== "usePredictOneFa"
@@ -1279,7 +1336,7 @@ const Ready = () => {
               >
                 Face Login
               </button>
-              <button
+              {/* <button
                 className="button"
                 onClick={handleOscarLogin}
                 style={
@@ -1292,7 +1349,7 @@ const Ready = () => {
                 disabled={disableButtons}
               >
                 Oscar Login
-              </button>
+              </button> */}
               {/* <button className="button" onClick={handleContinuousPredict}>
                 Continuous Authentication
               </button> */}
