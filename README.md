@@ -1,3 +1,5 @@
+[![logo-name](https://github.com/openinfer/PrivateIdentity/blob/master/images/PrivID_Logo_Long.png)](https://www.private.id/)
+
 # CryptoNets Samples
 
 Welcome! <br>
