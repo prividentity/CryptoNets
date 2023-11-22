@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-import { loadPrivIdModule } from "@privateid/cryptonets-web-sdk";
+import { loadPrivIdModule } from "@privateid/bravo-web-sdk";
 import { getUrlParameter } from "../utils";
 
 const useWasm = () => {

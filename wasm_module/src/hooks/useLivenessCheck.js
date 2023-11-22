@@ -1,4 +1,4 @@
-import { livenessCheck } from "@privateid/cryptonets-web-sdk";
+import { livenessCheck } from "@privateid/bravo-web-sdk";
 import { useState } from "react";
 
 let possitiveCount = 0;

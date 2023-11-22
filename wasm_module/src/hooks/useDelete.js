@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { deleteUser } from "@privateid/cryptonets-web-sdk";
+import { deleteUser } from "@privateid/bravo-web-sdk";
 
 // useDelete
 const useDelete = (onDeleteEnd, ready) => {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { faceLogin } from "@privateid/cryptonets-web-sdk";
+import { faceLogin } from "@privateid/bravo-web-sdk";
 const useOscarLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess, disableButtons) => {
   const [oscarLoginMessage, setFaceLoginMessage] = useState("");
 

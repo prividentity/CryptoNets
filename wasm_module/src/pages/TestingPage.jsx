@@ -6,7 +6,7 @@ import {
   closeCamera,
   faceCompareLocal,
   documentMugshoFaceCompare,
-} from "@privateid/cryptonets-web-sdk";
+} from "@privateid/bravo-web-sdk";
 
 import {
   useCamera,
@@ -38,7 +38,7 @@ import {
   getFaceValidationMessage,
   getFrontDocumentStatusMessage,
   getRawFaceValidationStatus,
-} from "@privateid/cryptonets-web-sdk/dist/utils";
+} from "@privateid/bravo-web-sdk/dist/utils";
 import { DebugContext } from "../context/DebugContext";
 import useContinuousPredictWithoutRestrictions from "../hooks/useContinuousPredictWithoutRestriction";
 import useMultiFramePredictAge from "../hooks/useMultiFramePredictAge";

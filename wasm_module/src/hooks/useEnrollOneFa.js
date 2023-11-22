@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { convertCroppedImage, enroll1FA } from "@privateid/cryptonets-web-sdk";
+import { convertCroppedImage, enroll1FA } from "@privateid/bravo-web-sdk";
 
 let skipAntispoofProcess = false;
 const useEnrollOneFa = (

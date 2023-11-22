@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk";
+import { convertCroppedImage, isValidPhotoID } from "@privateid/bravo-web-sdk";
 
 let loop = true;
 const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {

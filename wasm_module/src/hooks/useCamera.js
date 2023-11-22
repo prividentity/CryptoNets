@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { useState } from "react";
-import { openCamera } from "@privateid/cryptonets-web-sdk";
+import { openCamera } from "@privateid/bravo-web-sdk";
 import { mapDevices } from "../utils";
 import platform, { os } from "platform";
 

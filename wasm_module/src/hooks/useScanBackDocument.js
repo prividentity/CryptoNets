@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk";
+import { convertCroppedImage, isValidPhotoID } from "@privateid/bravo-web-sdk";
 import { CANVAS_SIZE } from "../utils";
 
 let internalCanvasSize;

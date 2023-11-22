@@ -5,7 +5,7 @@
 //   setStopLoopContinuousAuthentication,
 //   closeCamera,
 //   faceCompareLocal,
-// } from "@privateid/cryptonets-web-sdk";
+// } from "@privateid/bravo-web-sdk";
 
 // import {
 //   useCamera,
