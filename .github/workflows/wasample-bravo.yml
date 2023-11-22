@@ -1,0 +1,38 @@
+name: bravo wasm sample main workflow
+
+on:
+  push:
+    branches:
+    - bravo_main
+  
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+      SKIP_PREFLIGHT_CHECK: true
+      REACT_APP_API_URL: https://api.prodv2.cryptonets.ai/node
+      REACT_APP_API_URL_WASM: https://api.prodv2.cryptonets.ai/node
+      REACT_APP_API_KEY: "0000000000000000test"
+      CI: false
+
+    steps:
+        - uses: actions/checkout@v1
+
+        - name: Install dependencies
+          working-directory: ./wasm_module
+          run: npm install
+
+        - name: Build
+          working-directory: ./wasm_module
+          run: npm run build
+
+        - name: Deploy
+          uses: lbertenasco/s3-deploy@v1
+          with:
+            folder: ./wasm_module/build
+            bucket: ${{ secrets.S3_BUCKET_BRAVO }}
+            dist-id: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_BRAVO }}
+            invalidation: / *
