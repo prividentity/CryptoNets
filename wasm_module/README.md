@@ -1,7 +1,7 @@
 # Installment Instructions 
 
 ### Public Sandbox
-https://wasmsample.devel.private.id/
+https://bravo.wasmsample.co/
 
 ### Setup
 
