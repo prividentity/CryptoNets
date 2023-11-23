@@ -42,7 +42,6 @@ import {
 import { DebugContext } from "../context/DebugContext";
 import useContinuousPredictWithoutRestrictions from "../hooks/useContinuousPredictWithoutRestriction";
 import useMultiFramePredictAge from "../hooks/useMultiFramePredictAge";
-import useOscarLogin from "../hooks/useOscarLogin";
 import { useParams } from "react-router-dom";
 
 let callingWasm = false;
@@ -585,23 +584,6 @@ const Ready = () => {
     doFaceLogin(skipAntiSpoof);
   };
 
-  // Face Login
-  const {
-    doOscarLogin,
-    oscarLoginAntispoofPerformed,
-    oscarLoginAntispoofStatus,
-    oscarLoginGUID,
-    oscarLoginMessage,
-    oscarLoginPUID,
-    oscarLoginValidationStatus,
-  } = useOscarLogin("userVideo", () => {}, null, deviceId, setShowSuccess, setDisableButtons);
-
-  const handleOscarLogin = async () => {
-    setShowSuccess(false);
-    setCurrentAction("useOscarLogin");
-    doOscarLogin(skipAntiSpoof);
-  };
-
   // Scan Healthcare Card
   const { croppedDocumentBase64, doScanHealthcareCard } = useScanHealthcareCard(setShowSuccess);
 
@@ -959,11 +941,6 @@ const Ready = () => {
                   <span> {getRawFaceValidationStatus(faceLoginValidationStatus)} </span>
                 </div>
               )}
-              {currentAction === "useOscarLogin" && (
-                <div className="enrollDisplay">
-                  <span> {getRawFaceValidationStatus(oscarLoginValidationStatus)} </span>
-                </div>
-              )}
               {currentAction === "usePredictOneFa" && (
                 <div className="enrollDisplay">
                   <span> {getRawFaceValidationStatus(predictValidationStatus)} </span>
@@ -1079,15 +1056,6 @@ const Ready = () => {
                 </div>
               )}
 
-              {/* {currentAction === "useContinuousPredict" && (
-                <div>
-                  <div>{`Face Valid: ${continuousFaceDetected ? "Face Detected" : "Face not detected"}`}</div>
-                  <div>{`Message: ${continuousPredictMessage || ""}`}</div>
-                  <div>{`Predicted GUID: ${continuousPredictGUID ? continuousPredictGUID : ""}`}</div>
-                  <div>{`Predicted PUID: ${continuousPredictUUID ? continuousPredictUUID : ""}`}</div>
-                </div>
-              )} */}
-
               {currentAction === "useFaceLogin" && (
                 <div>
                   <div>{`Face Login Status: ${faceLoginValidationStatus}`} </div>
@@ -1096,17 +1064,6 @@ const Ready = () => {
                   <div>{`Antispoof Status: ${faceLoginAntispoofStatus}`} </div>
                   <div>{`Face Login GUID: ${faceLoginGUID}`}</div>
                   <div>{`Face Login PUID: ${faceLoginPUID}`}</div>
-                </div>
-              )}
-
-              {currentAction === "useOscarLogin" && (
-                <div>
-                  <div>{`Face Login Status: ${oscarLoginValidationStatus}`} </div>
-                  <div>{`Message: ${oscarLoginMessage || ""}`}</div>
-                  <div>{`Antispoof Performed: ${oscarLoginAntispoofPerformed}`} </div>
-                  <div>{`Antispoof Status: ${oscarLoginAntispoofStatus}`} </div>
-                  <div>{`Face Login GUID: ${oscarLoginGUID}`}</div>
-                  <div>{`Face Login PUID: ${oscarLoginPUID}`}</div>
                 </div>
               )}
 
@@ -1280,23 +1237,6 @@ const Ready = () => {
               >
                 Face Login
               </button>
-              <button
-                className="button"
-                onClick={handleOscarLogin}
-                style={
-                  disableButtons && currentAction !== "useOscarLogin"
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
-              >
-                Oscar Login
-              </button>
-              {/* <button className="button" onClick={handleContinuousPredict}>
-                Continuous Authentication
-              </button> */}
 
               <button
                 className="button"
@@ -1355,20 +1295,7 @@ const Ready = () => {
               >
                 Scan Back Document
               </button>
-              {/* <button
-                className="button"
-                onClick={handlePrividFaceISO}
-                style={
-                  disableButtons
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
-              >
-                Face ISO
-              </button> */}
+
               <button
                 className="button"
                 onClick={handleUseScanHealhcareCard}
@@ -1383,20 +1310,6 @@ const Ready = () => {
               >
                 Healthcare Card Scan
               </button>
-              {/* <button
-                className="button"
-                onClick={handleLivenessCheck}
-                style={
-                  disableButtons
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
-              >
-                Liveness Check
-              </button> */}
             </div>
 
             <div>
