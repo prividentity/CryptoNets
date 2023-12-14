@@ -89,7 +89,7 @@ function flatten(arrays, TypedArray) {
 async function deleteUUID(uuid, cb) {
   privid_wasm_result = cb;
   const encoder = new TextEncoder();
-  const uuid_bytes = encoder.encode(`${uuid}\0`);
+  const uuid_bytes = encoder.encode(`${uuid}`);
 
   const uuidInputSize = uuid.length;
   const uuidInputPtr = wasmPrivModule._malloc(uuidInputSize);
@@ -123,7 +123,7 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) => {
   const croppedBarcodeBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
   const encoder = new TextEncoder();
-  const config_bytes = encoder.encode(`${config}\0`);
+  const config_bytes = encoder.encode(`${config}`);
 
   const configInputSize = config.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
@@ -185,7 +185,7 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
   // const version = wasmPrivModule._get_version();
 
   const encoder = new TextEncoder();
-  const config_bytes = encoder.encode(`${config}\0`);
+  const config_bytes = encoder.encode(`${config}`);
 
   const configInputSize = config.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
@@ -294,13 +294,13 @@ const FHE_enrollOnefa = async (imageData, simd, config, cb) => {
   const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   const encoder = new TextEncoder();
-  const config_bytes = encoder.encode(`${config}\0`);
+  const config_bytes = encoder.encode(`${config}`);
   const configInputSize = config_bytes.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
   const bestImageFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   const bestImageLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
-
+  console.log("Config:", config);
   try {
     wasmPrivModule._privid_enroll_onefa(
       wasmSession /* session pointer */,
@@ -356,7 +356,7 @@ const FHE_predictOnefa = async (originalImages, simd, config, cb) => {
   // const version = wasmPrivModule._get_version();
 
   const encoder = new TextEncoder();
-  const config_bytes = encoder.encode(`${config}\0`);
+  const config_bytes = encoder.encode(`${config}`);
 
   const configInputSize = config.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
@@ -370,7 +370,7 @@ const FHE_predictOnefa = async (originalImages, simd, config, cb) => {
   const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   // create a pointer to interger to hold the length of the output buffer
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-
+  console.log("Config:", config);
   try {
     await wasmPrivModule._privid_face_predict_onefa(
       wasmSession /* session pointer */,
@@ -417,7 +417,7 @@ const isValidInternal = async (
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
   const encoder = new TextEncoder();
-  const config_bytes = encoder.encode(`${config}\0`);
+  const config_bytes = encoder.encode(`${config}`);
   const configInputSize = config.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
   wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
@@ -450,7 +450,7 @@ const antispoofCheck = async (data, width, height, config, cb) => {
   wasmPrivModule.HEAP8.set(data, imagePtr / data.BYTES_PER_ELEMENT);
 
   const encoder = new TextEncoder();
-  const config_bytes = encoder.encode(`${config}\0`);
+  const config_bytes = encoder.encode(`${config}`);
   const configInputSize = config.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
   wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
@@ -503,7 +503,7 @@ const prividAgePredict = async (
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
   const encoder = new TextEncoder();
-  const config_bytes = encoder.encode(`${config}\0`);
+  const config_bytes = encoder.encode(`${config}`);
   const configInputSize = config.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
   wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
@@ -629,7 +629,7 @@ async function setCacheConfiguration() {
   db.onsuccess = async function () {
     const cacheObj = JSON.stringify({ cache_type: setCache ? 'basic' : 'nocache' });
     const encoder = new TextEncoder();
-    const cache_config_bytes = encoder.encode(`${cacheObj}\0`);
+    const cache_config_bytes = encoder.encode(`${cacheObj}`);
 
     const cacheInputSize = cacheObj.length;
     const cacheInputPtr = wasmPrivModule._malloc(cacheInputSize);
@@ -800,7 +800,7 @@ const prividFaceISO = (imageInput, simd, debug_type = 0, cb, config = {}) =>
     const imageInputSize = imageData.length * imageData.BYTES_PER_ELEMENT;
 
     const encoder = new TextEncoder();
-    const config_bytes = encoder.encode(`${config}\0`);
+    const config_bytes = encoder.encode(`${config}`);
     const configInputSize = config.length;
     const configInputPtr = wasmPrivModule._malloc(configInputSize);
     wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
@@ -882,7 +882,7 @@ const prividFaceCompareLocal = (imageInputA, imageInputB, simd, debug_type = 0, 
     wasmPrivModule.HEAP8.set(imageDataB, imageInputPtrB / imageDataB.BYTES_PER_ELEMENT);
 
     const encoder = new TextEncoder();
-    const config_bytes = encoder.encode(`${config}\0`);
+    const config_bytes = encoder.encode(`${config}`);
 
     const configInputSize = config.length;
     const configInputPtr = wasmPrivModule._malloc(configInputSize);
@@ -967,7 +967,7 @@ const prividDocumentMugshotFaceCompare = (imageInputA, imageInputB, simd, debug_
     wasmPrivModule.HEAP8.set(imageDataB, imageInputPtrB / imageDataB.BYTES_PER_ELEMENT);
 
     const encoder = new TextEncoder();
-    const config_bytes = encoder.encode(`${config}\0`);
+    const config_bytes = encoder.encode(`${config}`);
 
     const configInputSize = config.length;
     const configInputPtr = wasmPrivModule._malloc(configInputSize);
@@ -1018,7 +1018,7 @@ const scanDocumentNoFace = async (imageInput, simd, cb, config, debug_type = 0) 
   }
   configGlobal = config;
   const encoder = new TextEncoder();
-  const config_bytes = encoder.encode(`${config}\0`);
+  const config_bytes = encoder.encode(`${config}`);
 
   const configInputSize = config.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
