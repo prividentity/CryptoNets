@@ -17,9 +17,10 @@ const useMultiFramePredictAge = () => {
       setValidationStatus(response?.returnValue?.faces[0].status);
 
       if (
-        (response?.returnValue?.faces[0].anti_spoof_performed &&
+        response?.returnValue?.faces[0].anti_spoof_performed &&
           response?.returnValue?.faces[0].anti_spoof_status === 0 &&
-          response?.returnValue?.faces[0].status === 0) ||
+          response?.returnValue?.faces[0].status === 0 ||
+          response?.returnValue?.faces[0].status === 10 ||
         response?.returnValue?.faces[0].status === 20 ||
         response?.returnValue?.faces[0].status === 21
       ) {
@@ -56,7 +57,7 @@ const useMultiFramePredictAge = () => {
   const doPredictAge = async (skipAntispoof = false, mfToken = "") => {
     skipAntispoofGlobal = skipAntispoof;
     await predictAge(mfCallback, {
-      skip_antispoof: true,
+      skip_antispoof: false,
       mf_token: mfToken,
     });
   };
