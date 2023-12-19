@@ -142,7 +142,7 @@ const useScanBackDocument = (setShowSuccess) => {
       { 
         document_scan_barcode_only: true,
         blur_threshold_barcode: 1000,
-        blur_blur_threshold_doc: 1000,
+        blur_threshold_doc: 1000,
         conf_score_thr_doc:	0.3,
         threshold_doc_too_close: 99,
         threshold_doc_too_far: 0,
