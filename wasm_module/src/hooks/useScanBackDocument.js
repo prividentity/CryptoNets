@@ -139,8 +139,15 @@ const useScanBackDocument = (setShowSuccess) => {
       "PHOTO_ID_BACK",
       documentCallback,
       uploadData,
-      { document_scan_barcode_only: true,
-        blur_threshold_barcode: 1700,
+      { 
+        document_scan_barcode_only: true,
+        blur_threshold_barcode: 1000,
+        blur_blur_threshold_doc: 1000,
+        conf_score_thr_doc:	0.3,
+        threshold_doc_too_close: 99,
+        threshold_doc_too_far: 0,
+        fingers_over_document_threshold: 0.3, 
+        barcode_margin: 0.1,
       },
       canvasObj
     );
