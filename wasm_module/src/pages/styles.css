@@ -64,7 +64,7 @@ body{
     transform: rotateY(180);
     border: 2px solid white;
     border-radius: 10px;
-    object-fit: cover;
+    object-fit: fill;
 }
 
 .cameraDisplaySuccess{
