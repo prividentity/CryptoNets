@@ -64,7 +64,7 @@ body{
     transform: rotateY(180);
     border: 2px solid white;
     border-radius: 10px;
-    object-fit: fill;
+    object-fit: cover;
 }
 
 .cameraDisplaySuccess{
@@ -118,4 +118,8 @@ body{
     gap:  10px;
     flex-wrap: wrap;
     justify-content: center;
+}
+
+.cameraObjectFitFill{
+  object-fit: fill;
 }

@@ -7,6 +7,7 @@ import {
   faceCompareLocal,
   documentMugshotFaceCompare,
 } from "@privateid/cryptonets-web-sdk-alpha";
+import platform, { os } from "platform";
 
 import {
   useCamera,
@@ -784,6 +785,61 @@ const Ready = () => {
     setCurrentAction("enrollWithAge");
     await enrollWithAge("");
   };
+
+  const [uploadImage3, setUploadImage3] = useState(null);
+  const handleUploadImage3 = async (e) => {
+    console.log(e.target.files);
+    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg|image[/]gif/;
+    if (e.target.files.length > 0) {
+      if (imageRegex.test(e.target.files[0].type)) {
+        const imageUrl = URL.createObjectURL(e.target.files[0]);
+
+        console.log(e.target.files[0]);
+
+        const getBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+
+            reader.onload = function () {
+              resolve(reader.result);
+            };
+            reader.onerror = function (error) {
+              reject(error);
+            };
+          });
+        };
+
+        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
+        console.log("====> GIF TEST: ", { base64 });
+        var newImg = new Image();
+        newImg.src = base64;
+        newImg.onload = async () => {
+          var imgSize = {
+            w: newImg.width,
+            h: newImg.height,
+          };
+          alert(imgSize.w + " " + imgSize.h);
+          const canvas = document.createElement("canvas");
+          canvas.setAttribute("height", `${imgSize.h}`);
+          canvas.setAttribute("width", `${imgSize.w}`);
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(newImg, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
+          console.log("imageData", imageData);
+          setUploadImage3(imageData);
+        };
+      } else {
+        console.log("INVALID IMAGE TYPE");
+      }
+    }
+  };
+
+  const doBackDlScanFromImage =() => {
+    
+  }
+
   return (
     <>
       {deviceSupported.isChecking ? (
@@ -1002,6 +1058,8 @@ const Ready = () => {
                     : `cameraDisplay mirrored`) +
                   " " +
                   (showSuccess ? "cameraDisplaySuccess" : "")
+                  + " " +
+                  (platform.os === "iOS" ? "cameraObjectFitFill" : "")
                 }
                 muted
                 autoPlay
@@ -1478,8 +1536,28 @@ const Ready = () => {
                 <span className="button">Face Image</span>
               </label>
 
+
+            
+
+             
               <button className="button" onClick={handleDoCompare}>
                 Do Compare
+              </button>
+
+
+              <label>
+                <input
+                  type="file"
+                  name="upload"
+                  accept="image/png, image/gif, image/jpeg"
+                  onChange={handleUploadImage3}
+                  style={{ display: "none" }}
+                />
+                <span className="button">Upload Back Dl Test</span>
+              </label>
+
+              <button onClick={doBackDlScanFromImage}>
+                Handle back dl Scan
               </button>
             </div>
           </div>
