@@ -840,6 +840,12 @@ const Ready = () => {
     
   }
 
+  function iOS() {
+    return ['iPad Simulator', 'iPhone Simulator', 'iPod Simulator', 'iPad', 'iPhone', 'iPod'].includes(
+      navigator.platform,
+    );
+  }
+
   return (
     <>
       {deviceSupported.isChecking ? (
@@ -1059,7 +1065,7 @@ const Ready = () => {
                   " " +
                   (showSuccess ? "cameraDisplaySuccess" : "")
                   + " " +
-                  (platform.os === "iOS" ? "cameraObjectFitFill" : "")
+                  (iOS() ? "cameraObjectFitFill" : "")
                 }
                 muted
                 autoPlay
