@@ -92,7 +92,7 @@ const useCamera = (
           focusDistance: false,
           exposureTime: false,
           sharpness: false,
-          brightness: false, 
+          brightness: false,
           saturation: false,
           contrast: false,
         }
@@ -133,6 +133,7 @@ const useCamera = (
           cameraSettings = {...settings, contrast: true};
         }
         setCameraSettingsList(cameraSettings);
+        setAutoFocusForWindows();
       }
     } catch (e) {
       console.log("Error Message", e);
@@ -163,6 +164,26 @@ const useCamera = (
   };
 
   return { ready, init, devices, device, setDevice, faceMode, ...cameraFeatures, setReady };
+};
+
+export const setAutoFocusForWindows = async () => {
+  const video = document.getElementById("userVideo") as any;
+  const mediaStream = video.srcObject;
+  const track = await mediaStream.getTracks()[0];
+  const capabilities = track.getCapabilities() ? track.getCapabilities() : null;
+  if (
+      capabilities &&
+      capabilities?.zoom
+  ) {
+    // @ts-ignore
+    await track.applyConstraints({
+      advanced: [
+        {
+          zoom: capabilities?.zoom,
+        },
+      ],
+    });
+  }
 };
 
 export default useCamera;
