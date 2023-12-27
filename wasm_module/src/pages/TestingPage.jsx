@@ -427,14 +427,14 @@ const Ready = () => {
 
   const handleCanvasSize = async (e, skipSwitchCamera = false) => {
     if (currentAction === "useScanFrontValidity" || currentAction === "useScanDocumentBack") {
-      setShouldTriggerCallback(false);
+      // setShouldTriggerCallback(false);
       setCanvasSize(e.target.value);
       const canvasSize = CANVAS_SIZE[e.target.value];
       if (!skipSwitchCamera) {
         const { capabilities = {} } = await switchCamera(null, deviceId || device, canvasSize);
         setDeviceCapabilities(capabilities);
       }
-      setShouldTriggerCallback(true);
+      // setShouldTriggerCallback(true);
 
       if (currentAction === "useScanFrontValidity") {
         setTimeout(async () => {
@@ -837,7 +837,7 @@ const Ready = () => {
   };
 
   const doBackDlScanFromImage =() => {
-    
+
   }
 
   function iOS() {
@@ -1543,9 +1543,9 @@ const Ready = () => {
               </label>
 
 
-            
 
-             
+
+
               <button className="button" onClick={handleDoCompare}>
                 Do Compare
               </button>
