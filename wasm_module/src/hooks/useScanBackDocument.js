@@ -8,8 +8,6 @@ const useScanBackDocument = (setShowSuccess) => {
   const [scannedCodeData, setScannedCodeData] = useState(null);
   const [isFound, setIsFound] = useState(false);
 
-
-
   // Input image
   const [inputImageData, setInputImageData] = useState(null);
   const [inputImage, setInputImage] = useState(null);
@@ -95,7 +93,7 @@ const useScanBackDocument = (setShowSuccess) => {
   };
 
   useEffect(() => {
-    if (isFound && croppedDocumentImageData && returnValue) {
+    if (isFound && croppedDocumentImageData && returnValue.crop_doc_width && returnValue.crop_doc_height) {
       convertImageData(
         croppedDocumentImageData,
         returnValue.crop_doc_width,
@@ -106,7 +104,7 @@ const useScanBackDocument = (setShowSuccess) => {
   }, [isFound, croppedDocumentImageData, returnValue]);
 
   useEffect(() => {
-    if (croppedBarcodeImageData && returnValue) {
+    if (croppedBarcodeImageData && returnValue.crop_barcode_width && returnValue.crop_barcode_height) {
       convertImageData(
         croppedBarcodeImageData,
         returnValue.crop_barcode_width,
@@ -118,7 +116,7 @@ const useScanBackDocument = (setShowSuccess) => {
   }, [isFound, croppedBarcodeImageData, returnValue]);
 
   useEffect(() => {
-    if (isFound && inputImageData) {
+    if (isFound && inputImageData && returnValue?.image_width && returnValue?.image_height) {
       convertImageData(inputImageData, returnValue.image_width, returnValue.image_height, setInputImage);
     }
   }, [isFound, inputImageData]);
@@ -139,9 +137,7 @@ const useScanBackDocument = (setShowSuccess) => {
       "PHOTO_ID_BACK",
       documentCallback,
       uploadData,
-      { document_scan_barcode_only: true,
-        blur_threshold_barcode: 1700,
-      },
+      { document_scan_barcode_only: true, blur_threshold_barcode: 1700 },
       canvasObj
     );
     console.log({ croppedBarcode, croppedDocument, imageData });
