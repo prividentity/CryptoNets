@@ -93,7 +93,7 @@ const useScanBackDocument = (setShowSuccess) => {
   };
 
   useEffect(() => {
-    if (isFound && croppedDocumentImageData && returnValue.crop_doc_width && returnValue.crop_doc_height) {
+    if (isFound && croppedDocumentImageData && returnValue?.crop_doc_width && returnValue?.crop_doc_height) {
       convertImageData(
         croppedDocumentImageData,
         returnValue.crop_doc_width,
@@ -104,7 +104,7 @@ const useScanBackDocument = (setShowSuccess) => {
   }, [isFound, croppedDocumentImageData, returnValue]);
 
   useEffect(() => {
-    if (croppedBarcodeImageData && returnValue.crop_barcode_width && returnValue.crop_barcode_height) {
+    if (croppedBarcodeImageData && returnValue?.crop_barcode_width && returnValue?.crop_barcode_height) {
       convertImageData(
         croppedBarcodeImageData,
         returnValue.crop_barcode_width,
