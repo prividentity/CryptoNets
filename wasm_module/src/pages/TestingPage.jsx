@@ -350,9 +350,11 @@ const Ready = () => {
     barcodeStatusCode,
     croppedBarcodeImage: croppedBarcodeBase64,
     croppedDocumentImage: croppedBackDocumentBase64,
+    clearStatusBackScan,
   } = useScanBackDocument(setShowSuccess);
   const handleScanDocumentBack = async () => {
     setShowSuccess(false);
+    clearStatusBackScan();
     setCurrentAction("useScanDocumentBack");
     await scanBackDocument(undefined, debugContext.functionLoop);
   };

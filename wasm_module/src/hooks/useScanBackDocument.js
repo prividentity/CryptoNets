@@ -8,8 +8,6 @@ const useScanBackDocument = (setShowSuccess) => {
   const [scannedCodeData, setScannedCodeData] = useState(null);
   const [isFound, setIsFound] = useState(false);
 
-
-
   // Input image
   const [inputImageData, setInputImageData] = useState(null);
   const [inputImage, setInputImage] = useState(null);
@@ -159,7 +157,20 @@ const useScanBackDocument = (setShowSuccess) => {
     }
   };
 
-  return { scanBackDocument, scannedCodeData, isFound, croppedDocumentImage, croppedBarcodeImage, barcodeStatusCode };
+  const clearStatusBackScan = () => {
+    setIsFound(false);
+    setScannedCodeData(null);
+    setInputImageData(null);
+    setInputImage(null);
+    setCroppedDocumentImageData(null);
+    setCroppedDocumentImage(null);
+    setCroppedBarcodeImageData(null);
+    setCroppedBarcodeImage(null);
+    setBarcodeStatusCode(null);
+    setResultValue(null);
+  }
+
+  return { scanBackDocument, scannedCodeData, isFound, croppedDocumentImage, croppedBarcodeImage, barcodeStatusCode, clearStatusBackScan };
 };
 
 export default useScanBackDocument;
