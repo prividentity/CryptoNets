@@ -56,6 +56,7 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
    
     await faceLogin(callback, {
       skipAntispoof: skipAntispoof,
+      conf_score_thr_barcode: 85,
     });
   };
 
