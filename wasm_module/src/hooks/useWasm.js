@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 import { loadPrivIdModule } from "@privateid/cryptonets-web-sdk";
 import { getUrlParameter } from "../utils";

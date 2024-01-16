@@ -137,7 +137,16 @@ const useScanBackDocument = (setShowSuccess) => {
       "PHOTO_ID_BACK",
       documentCallback,
       uploadData,
-      { document_scan_barcode_only: true, blur_threshold_barcode: 1700 },
+      { 
+        document_scan_barcode_only: true,
+        blur_threshold_barcode: 1000,
+        blur_threshold_doc: 1000,
+        conf_score_thr_doc:	0.3,
+        threshold_doc_too_close: 99,
+        threshold_doc_too_far: 0,
+        fingers_over_document_threshold: 0.3, 
+        barcode_margin: 0.1,
+      },
       canvasObj
     );
     console.log({ croppedBarcode, croppedDocument, imageData });
@@ -148,7 +157,20 @@ const useScanBackDocument = (setShowSuccess) => {
     }
   };
 
-  return { scanBackDocument, scannedCodeData, isFound, croppedDocumentImage, croppedBarcodeImage, barcodeStatusCode };
+  const clearStatusBackScan = () => {
+    setIsFound(false);
+    setScannedCodeData(null);
+    setInputImageData(null);
+    setInputImage(null);
+    setCroppedDocumentImageData(null);
+    setCroppedDocumentImage(null);
+    setCroppedBarcodeImageData(null);
+    setCroppedBarcodeImage(null);
+    setBarcodeStatusCode(null);
+    setResultValue(null);
+  }
+
+  return { scanBackDocument, scannedCodeData, isFound, croppedDocumentImage, croppedBarcodeImage, barcodeStatusCode, clearStatusBackScan };
 };
 
 export default useScanBackDocument;

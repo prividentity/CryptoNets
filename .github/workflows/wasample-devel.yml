@@ -13,8 +13,8 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
       SKIP_PREFLIGHT_CHECK: true
-      REACT_APP_API_URL: https://api.prodv2.cryptonets.ai/node
-      REACT_APP_API_URL_WASM: https://api.prodv2.cryptonets.ai/node
+      REACT_APP_API_URL: https://api.develv2.cryptonets.ai/node
+      REACT_APP_API_URL_WASM: https://api.develv2.cryptonets.ai/node
       REACT_APP_API_KEY: "00000000000000001962"
       REACT_APP_WASM_MODULE: face_mask
       REACT_APP_SET_CACHE: false
