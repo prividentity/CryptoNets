@@ -167,7 +167,7 @@ const useCamera = (
 };
 
 export const setAutoFocusForWindows = async () => {
-  const video = document.getElementById("userVideo") as any;
+  const video = document.getElementById("userVideo");
   const mediaStream = video.srcObject;
   const track = await mediaStream.getTracks()[0];
   const capabilities = track.getCapabilities() ? track.getCapabilities() : null;
