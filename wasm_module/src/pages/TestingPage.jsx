@@ -46,6 +46,7 @@ import useMultiFramePredictAge from "../hooks/useMultiFramePredictAge";
 import useOscarLogin from "../hooks/useOscarLogin";
 import { useParams } from "react-router-dom";
 import useEnrollWithAge from "../hooks/useEnrollWithAge";
+import useTwoStepFaceLogin from "../hooks/useTwoStepFaceLogin";
 
 let callingWasm = false;
 const Ready = () => {
@@ -838,15 +839,26 @@ const Ready = () => {
     }
   };
 
-  const doBackDlScanFromImage =() => {
-
-  }
+  const doBackDlScanFromImage = () => {};
 
   function iOS() {
-    return ['iPad Simulator', 'iPhone Simulator', 'iPod Simulator', 'iPad', 'iPhone', 'iPod'].includes(
-      navigator.platform,
+    return ["iPad Simulator", "iPhone Simulator", "iPod Simulator", "iPad", "iPhone", "iPod"].includes(
+      navigator.platform
     );
   }
+
+  const {
+    doTwoStepFaceLogin,
+    faceLoginMessage: twoStepFaceLoginMessage,
+    faceLoginGUID: twoStepFaceLoginGUID,
+    faceLoginPUID: twoStepFaceLoginPUID,
+    faceLoginValidationStatus: twoStepFaceLoginStatus
+  } = useTwoStepFaceLogin(setShowSuccess);
+
+  const handleTwoStepFaceLogin = async () => {
+    setCurrentAction("twoStepFaceLogin");
+    await doTwoStepFaceLogin();
+  };
 
   return (
     <>
@@ -1065,8 +1077,8 @@ const Ready = () => {
                     ? `cameraDisplay`
                     : `cameraDisplay mirrored`) +
                   " " +
-                  (showSuccess ? "cameraDisplaySuccess" : "")
-                  + " " +
+                  (showSuccess ? "cameraDisplaySuccess" : "") +
+                  " " +
                   (iOS() ? "cameraObjectFitFill" : "")
                 }
                 muted
@@ -1203,6 +1215,15 @@ const Ready = () => {
                   <div>{`Antispoof Status: ${faceLoginAntispoofStatus}`} </div>
                   <div>{`Face Login GUID: ${faceLoginGUID}`}</div>
                   <div>{`Face Login PUID: ${faceLoginPUID}`}</div>
+                </div>
+              )}
+
+              {currentAction === "twoStepFaceLogin" && (
+                <div>
+                  <div>{`Face Login Status: ${twoStepFaceLoginStatus}`} </div>
+                  <div>{`Message: ${twoStepFaceLoginMessage || ""}`}</div>
+                  <div>{`Face Login GUID: ${twoStepFaceLoginGUID}`}</div>
+                  <div>{`Face Login PUID: ${twoStepFaceLoginPUID}`}</div>
                 </div>
               )}
 
@@ -1505,6 +1526,21 @@ const Ready = () => {
               >
                 Healthcare Card Scan
               </button>
+
+              <button
+                className="button"
+                onClick={handleTwoStepFaceLogin}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Do Two Step Face Login
+              </button>
               {/* <button
                 className="button"
                 onClick={handleLivenessCheck}
@@ -1544,14 +1580,9 @@ const Ready = () => {
                 <span className="button">Face Image</span>
               </label>
 
-
-
-
-
               <button className="button" onClick={handleDoCompare}>
                 Do Compare
               </button>
-
 
               <label>
                 <input
@@ -1564,9 +1595,7 @@ const Ready = () => {
                 <span className="button">Upload Back Dl Test</span>
               </label>
 
-              <button onClick={doBackDlScanFromImage}>
-                Handle back dl Scan
-              </button>
+              <button onClick={doBackDlScanFromImage}>Handle back dl Scan</button>
             </div>
           </div>
         </div>
