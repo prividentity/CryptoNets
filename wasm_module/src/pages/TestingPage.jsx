@@ -446,7 +446,7 @@ const Ready = () => {
       } else {
         setTimeout(async () => {
           await scanBackDocument(e.target.value);
-        }, 1000);
+        }, 3000);
       }
     }
   };
@@ -655,6 +655,7 @@ const Ready = () => {
           },
         ],
       });
+
       const newSettings = await track.getSettings();
 
       console.log("new Settings", newSettings);
