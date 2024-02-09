@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { useState } from "react";
 import { openCamera } from "@privateid/cryptonets-web-sdk";
-import { mapDevices } from "../utils";
+import { iOS, mapDevices } from "../utils";
 import platform, { os } from "platform";
 
 const useCamera = (
@@ -133,7 +133,9 @@ const useCamera = (
           cameraSettings = {...settings, contrast: true};
         }
         setCameraSettingsList(cameraSettings);
-        setAutoFocusForWindows();
+        if(!iOS()) {
+          setAutoFocusForWindows();
+        }
       }
     } catch (e) {
       console.log("Error Message", e);

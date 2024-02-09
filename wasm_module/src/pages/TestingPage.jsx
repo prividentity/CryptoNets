@@ -1079,8 +1079,9 @@ const Ready = () => {
                     : `cameraDisplay mirrored`) +
                   " " +
                   (showSuccess ? "cameraDisplaySuccess" : "") +
-                  " " +
-                  (iOS() ? "cameraObjectFitFill" : "")
+                  " "
+                  // +
+                  // (iOS() ? "cameraObjectFitFill" : "")
                 }
                 muted
                 autoPlay

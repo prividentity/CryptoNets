@@ -161,3 +161,10 @@ export const getScaledBoundingBox = (scanResult, videoElement) => {
     roughScale,
   };
 };
+
+
+export const iOS = () => {
+  return ["iPad Simulator", "iPhone Simulator", "iPod Simulator", "iPad", "iPhone", "iPod"].includes(
+    navigator.platform
+  );
+}
