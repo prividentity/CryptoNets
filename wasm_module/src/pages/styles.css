@@ -64,7 +64,7 @@ body{
     transform: rotateY(180);
     border: 2px solid white;
     border-radius: 10px;
-    object-fit: cover;
+    object-fit: cover!important;
 }
 
 .cameraDisplaySuccess{
@@ -122,4 +122,11 @@ body{
 
 .cameraObjectFitFill{
   object-fit: fill;
+}
+
+
+@media only screen and (max-width: 767px) {
+  .cameraDisplay{
+    height: 400px !important;
+  }
 }
