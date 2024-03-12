@@ -14,7 +14,18 @@ const useWasm = () => {
     const loadSimd = getUrlParameter("loadSimd", null);
     console.log("FORCE LOAD SIMD?", loadSimd);
     const parseBool = loadSimd !== null ? (loadSimd === "false" ? false : loadSimd === "true" ? true : null) : null;
-    const isSupported = await loadPrivIdModule(apiUrl, apiKey, null, null, true, 300000, false, parseBool);
+    const isSupported = await loadPrivIdModule(apiUrl, apiKey, null, null, true, 300000, false, parseBool, JSON.stringify({ 
+      "named_urls": 
+      [ 
+        { 
+          "url_name": "collection1", 
+          "url": process.env.REACT_APP_V3_PREDICT_URL1 || "https://api.develv3.cryptonets.ai/node/FACE1_1/predict" 
+        },  
+        { 
+          "url_name": "collection2", 
+          "url": process.env.REACT_APP_V3_PREDICT_URL2 || "https://api.develv3.cryptonets.ai/node/FACE1_2/predict" 
+        },  
+      ] }));
     if (isSupported.support) {
       setReady(true);
       setDeviceSupported({ supported: true, isChecking: false });

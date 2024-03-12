@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { predict1FA } from "@privateid/cryptonets-web-sdk-alpha";
 let loop = true;
-const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess, disableButtons) => {
+let currentUrl = "";
+const usePredictOneFa = (
+  element = "userVideo",
+  onSuccess,
+  retryTimes = 4,
+  deviceId = null,
+  setShowSuccess,
+  disableButtons
+) => {
   const [predictMessage, setPredictMessage] = useState("");
 
   const [predictAntispoofPerformed, setPredictAntispoofPerformed] = useState("");
@@ -37,17 +45,17 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
           setPredictValidationStatus(result.returnValue.status);
           setPredictGUID(result.returnValue.guid);
           setPredictPUID(result.returnValue.puid);
-          predictUserOneFa(skipAntispoofProcess, true);
+          predictUserOneFa(skipAntispoofProcess, true, false, currentUrl);
         }
         break;
       default:
     }
   };
 
-  const predictUserOneFa = async (skipAntispoof = true, isRunning = false) => {
+  const predictUserOneFa = async (skipAntispoof = true, isRunning = false, url = null) => {
     skipAntispoofProcess = skipAntispoof;
     // eslint-disable-next-line no-unused-vars
-    if(!isRunning){
+    if (!isRunning) {
       setPredictAntispoofPerformed("");
       setPredictAntispoofStatus("");
       setPredictValidationStatus("");
@@ -55,9 +63,21 @@ const usePredictOneFa = (element = "userVideo", onSuccess, retryTimes = 4, devic
       setPredictPUID("");
       disableButtons(true);
     }
-    await predict1FA(callback, {
-      skip_antispoof: skipAntispoof,
-    });
+
+    if (url) {
+      currentUrl = url;
+    }
+    await predict1FA(
+      callback,
+      url
+        ? {
+            skip_antispoof: skipAntispoof,
+            predict_collection: url,
+          }
+        : {
+            skip_antispoof: skipAntispoof,
+          }
+    );
   };
 
   return {

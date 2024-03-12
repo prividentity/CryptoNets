@@ -252,6 +252,13 @@ const Ready = () => {
     predictUserOneFa(skipAntiSpoof);
   };
 
+  const handlePredictUrl = async (url) => {
+    console.log("PREDICTING");
+    setShowSuccess(false);
+    setCurrentAction("usePredictOneFa");
+    predictUserOneFa(skipAntiSpoof, false, url);
+  };
+
   const handleSwitchCamera = async (e) => {
     setDeviceId(e.target.value);
     const { capabilities = {}, settings = {}, devices } = await switchCamera(null, e.target.value);
@@ -852,7 +859,7 @@ const Ready = () => {
     faceLoginMessage: twoStepFaceLoginMessage,
     faceLoginGUID: twoStepFaceLoginGUID,
     faceLoginPUID: twoStepFaceLoginPUID,
-    faceLoginValidationStatus: twoStepFaceLoginStatus
+    faceLoginValidationStatus: twoStepFaceLoginStatus,
   } = useTwoStepFaceLogin(setShowSuccess);
 
   const handleTwoStepFaceLogin = async () => {
@@ -1555,6 +1562,41 @@ const Ready = () => {
               >
                 Liveness Check
               </button> */}
+            </div>
+
+            <div>
+              <button
+                className="button"
+                onClick={()=>{
+                  handlePredictUrl("collection1");
+                }}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Predict URL 1
+              </button>
+              <button
+                className="button"
+                onClick={()=>{ 
+                  handlePredictUrl("collection2");
+                }}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Predict URL 2
+              </button>
             </div>
 
             <div>

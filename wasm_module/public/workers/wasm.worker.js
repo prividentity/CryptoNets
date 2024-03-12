@@ -22,7 +22,7 @@ let antispoofVersion;
 const ModuleName = 'face_mask';
 const cdnUrl = 'https://wasm.privateid.com';
 let useCdnLink = false;
-const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, useCdn = false) =>
+const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, useCdn = false, configureUrl = null) =>
   new Promise(async (resolve, reject) => {
     apiUrl = url;
     apiKey = key;
@@ -35,6 +35,8 @@ const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, 
       timeoutSession = timeout;
     }
     setCache = cacheConfig;
+
+    console.log("predict url:", configureUrl);
     const modulePath = simd ? 'simd' : 'noSimd';
     const moduleName = 'privid_fhe';
     const cachedModule = await readKey(ModuleName);
@@ -65,6 +67,11 @@ const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, 
           checkWasmLoaded = true;
         }
       }
+      console.log("Module:",wasmPrivModule);
+
+      if(configureUrl){
+        wasmPrivModule._privid_configure_predict_urls(configureUrl);
+      }
       resolve('Cache Loaded');
     } else {
       wasmPrivModule = await loadWasmModule(modulePath, moduleName, true);
@@ -72,7 +79,10 @@ const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, 
         await initializeWasmSession(url, key, debugType, timeoutSession);
         checkWasmLoaded = true;
       }
-      // console.log('WASM MODULES:', wasmPrivModule);
+      if(configureUrl){
+        wasmPrivModule._privid_configure_predict_urls(configureUrl);
+      }
+      console.log('WASM MODULES:', wasmPrivModule);
       resolve('Loaded');
     }
   });
