@@ -25,7 +25,21 @@ const useWasm = () => {
           "url_name": "collection2", 
           "url": process.env.REACT_APP_V3_PREDICT_URL2 || "https://api.develv3.cryptonets.ai/node/FACE1_2/predict" 
         },  
-      ] }));
+      ] }),
+      JSON.stringify({
+        "named_urls": 
+        [ 
+          { 
+            "url_name": "collection1", 
+            "url": process.env.REACT_APP_V3_ENROLL_URL1 || "https://api.develv3.cryptonets.ai/node/FACE1_1/enroll" 
+          },  
+          { 
+            "url_name": "collection2", 
+            "url": process.env.REACT_APP_V3_ENROLL_URL2 || "https://api.develv3.cryptonets.ai/node/FACE1_2/enroll" 
+          },  
+        ]
+      })
+      );
     if (isSupported.support) {
       setReady(true);
       setDeviceSupported({ supported: true, isChecking: false });

@@ -73,6 +73,7 @@ const usePredictOneFa = (
         ? {
             skip_antispoof: skipAntispoof,
             predict_collection: url,
+            identifier: "test",
           }
         : {
             skip_antispoof: skipAntispoof,

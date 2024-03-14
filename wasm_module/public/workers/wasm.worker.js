@@ -22,7 +22,7 @@ let antispoofVersion;
 const ModuleName = 'face_mask';
 const cdnUrl = 'https://wasm.privateid.com';
 let useCdnLink = false;
-const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, useCdn = false, configureUrl = null) =>
+const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, useCdn = false, predictConfigUrls = null, enrollConfigUrls) =>
   new Promise(async (resolve, reject) => {
     apiUrl = url;
     apiKey = key;
@@ -36,7 +36,6 @@ const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, 
     }
     setCache = cacheConfig;
 
-    console.log("predict url:", configureUrl);
     const modulePath = simd ? 'simd' : 'noSimd';
     const moduleName = 'privid_fhe';
     const cachedModule = await readKey(ModuleName);
@@ -63,25 +62,19 @@ const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, 
         eval(cachedScript);
         wasmPrivModule = await createTFLiteModule({ wasmBinary: cachedWasm });
         if (!checkWasmLoaded) {
-          await initializeWasmSession(url, key, debugType, timeoutSession);
+          await initializeWasmSession(url, key, debugType, timeoutSession, predictConfigUrls, enrollConfigUrls);
           checkWasmLoaded = true;
         }
       }
       console.log("Module:",wasmPrivModule);
-
-      if(configureUrl){
-        wasmPrivModule._privid_configure_predict_urls(configureUrl);
-      }
       resolve('Cache Loaded');
     } else {
       wasmPrivModule = await loadWasmModule(modulePath, moduleName, true);
       if (!checkWasmLoaded) {
-        await initializeWasmSession(url, key, debugType, timeoutSession);
+        await initializeWasmSession(url, key, debugType, timeoutSession, predictConfigUrls, enrollConfigUrls);
         checkWasmLoaded = true;
       }
-      if(configureUrl){
-        wasmPrivModule._privid_configure_predict_urls(configureUrl);
-      }
+    
       console.log('WASM MODULES:', wasmPrivModule);
       resolve('Loaded');
     }
@@ -764,7 +757,7 @@ const output_ptr = function () {
   };
 };
 
-async function initializeWasmSession(url, key, debug_type, timeout = 5000) {
+async function initializeWasmSession(url, key, debug_type, timeout = 5000,predictConfigUrls, enrollConfigUrls) {
   if (!wasmSession) {
     const url_args = buffer_args(url);
     const key_args = buffer_args(key);
@@ -794,6 +787,28 @@ async function initializeWasmSession(url, key, debug_type, timeout = 5000) {
     if (setCache) {
       await setCacheConfiguration();
     }
+    console.log("config url before setting:", {predict: predictConfigUrls, enrollConfigUrls: enrollConfigUrls});
+    if(predictConfigUrls){
+      const encoder = new TextEncoder();
+      const config_bytes = encoder.encode(`${predictConfigUrls}`);
+      const configInputSize = predictConfigUrls.length;
+      const configInputPtr = wasmPrivModule._malloc(configInputSize);
+      wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
+      wasmPrivModule._privid_configure_predict_urls(wasmSession, configInputPtr, configInputSize);
+      wasmPrivModule._free(configInputPtr);
+    }
+
+    if(enrollConfigUrls){
+      const encoder = new TextEncoder();
+      const config_bytes = encoder.encode(`${enrollConfigUrls}`);
+      const configInputSize = enrollConfigUrls.length;
+      const configInputPtr = wasmPrivModule._malloc(configInputSize);
+      wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
+      wasmPrivModule._privid_configure_enroll_urls(wasmSession, configInputPtr, configInputSize);
+      wasmPrivModule._free(configInputPtr);
+    }
+
+  
   } else {
     // console.log('Wasm session is available. Skipping creating session');
   }

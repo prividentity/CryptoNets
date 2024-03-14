@@ -23,17 +23,35 @@ const useEnrollOneFa = (
 
   let enrollCount = 0;
   let enrollTokenCurrent;
-  const enrollUserOneFa = async (token = "", skipAntispoof = false) => {
+  let currentUrl = null;
+  const enrollUserOneFa = async (token = "", skipAntispoof = false, url = null) => {
     enrollTokenCurrent = token;
     skipAntispoofProcess = skipAntispoof;
     disableButtons(true);
+
+    if (url) {
+      currentUrl = url;
+    }
     // eslint-disable-next-line no-unused-vars
-    const bestImage = await enroll1FA(callback, {
-      input_image_format: "rgba",
-      mf_token: token,
-      skip_antispoof: skipAntispoof,
-      anti_spoofing_detect_document: false,
-    });
+    const bestImage = await enroll1FA(
+      callback,
+      url
+        ? {
+            input_image_format: "rgba",
+            mf_token: token,
+            skip_antispoof: skipAntispoof,
+            anti_spoofing_detect_document: false,
+            enroll_collection: url,
+            identifier: "test",
+            // mf_count: 1,
+          }
+        : {
+            input_image_format: "rgba",
+            mf_token: token,
+            skip_antispoof: skipAntispoof,
+            anti_spoofing_detect_document: false,
+          }
+    );
 
     if (bestImage) {
       setEnrollImageData(new ImageData(bestImage.imageData, bestImage.width, bestImage.height));
@@ -63,9 +81,9 @@ const useEnrollOneFa = (
 
           if (skipAntispoofProcess) {
             if (result.returnValue.validation_status[0].status === 0) {
-              enrollUserOneFa(result.returnValue.validation_status[0].enroll_token, skipAntispoofProcess);
+              enrollUserOneFa(result.returnValue.validation_status[0].enroll_token, skipAntispoofProcess, currentUrl);
             } else {
-              enrollUserOneFa("", skipAntispoofProcess);
+              enrollUserOneFa("", skipAntispoofProcess, currentUrl);
             }
           } else {
             if (
@@ -78,9 +96,9 @@ const useEnrollOneFa = (
               } else {
                 enrollCount = 1;
               }
-              enrollUserOneFa(result.returnValue.validation_status[0].enroll_token, skipAntispoofProcess);
+              enrollUserOneFa(result.returnValue.validation_status[0].enroll_token, skipAntispoofProcess, currentUrl);
             } else {
-              enrollUserOneFa("", skipAntispoofProcess);
+              enrollUserOneFa("", skipAntispoofProcess, currentUrl);
             }
           }
         } else {
@@ -96,13 +114,13 @@ const useEnrollOneFa = (
         setEnrollAntispoofPerformed(result.returnValue.validation_status[0].anti_spoof_performed);
         setEnrollAntispoofStatus(result.returnValue.validation_status[0].anti_spoof_status);
         setEnrollValidationStatus(result.returnValue.validation_status[0].status);
-        enrollUserOneFa(result.returnValue.validation_status[0].enroll_token, skipAntispoofProcess);
+        enrollUserOneFa(result.returnValue.validation_status[0].enroll_token, skipAntispoofProcess, currentUrl);
       } else {
         setEnrollToken("");
         setEnrollAntispoofPerformed("");
         setEnrollAntispoofStatus("");
         setEnrollValidationStatus("");
-        enrollUserOneFa("", skipAntispoofProcess);
+        enrollUserOneFa("", skipAntispoofProcess, currentUrl);
       }
     }
   };

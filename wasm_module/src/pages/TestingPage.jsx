@@ -233,6 +233,12 @@ const Ready = () => {
     enrollUserOneFa("", skipAntiSpoof);
   };
 
+  const handleEnrollUrl = async (url) => {
+    setShowSuccess(false);
+    setCurrentAction("useEnrollOneFa");
+    enrollUserOneFa("", skipAntiSpoof,url);
+  };
+
   const handlePreidctSuccess = (result) => {
     console.log("======PREDICT SUCCESS========");
   };
@@ -1583,6 +1589,22 @@ const Ready = () => {
               </button>
               <button
                 className="button"
+                onClick={()=>{
+                  handleEnrollUrl("collection1");
+                }}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Enroll URL 1
+              </button>
+              <button
+                className="button"
                 onClick={()=>{ 
                   handlePredictUrl("collection2");
                 }}
@@ -1596,6 +1618,22 @@ const Ready = () => {
                 disabled={disableButtons}
               >
                 Predict URL 2
+              </button>
+              <button
+                className="button"
+                onClick={()=>{
+                  handleEnrollUrl("collection2");
+                }}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Enroll URL 2
               </button>
             </div>
 
