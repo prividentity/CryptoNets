@@ -45,7 +45,7 @@ const usePredictOneFa = (
           setPredictValidationStatus(result.returnValue.status);
           setPredictGUID(result.returnValue.guid);
           setPredictPUID(result.returnValue.puid);
-          predictUserOneFa(skipAntispoofProcess, true, false, currentUrl);
+          predictUserOneFa(skipAntispoofProcess, true, currentUrl);
         }
         break;
       default:
