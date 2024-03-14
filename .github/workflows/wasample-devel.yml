@@ -19,6 +19,10 @@ jobs:
       REACT_APP_WASM_MODULE: face_mask
       REACT_APP_SET_CACHE: false
       NPM_TOKEN: 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
+      REACT_APP_V3_ENROLL_URL1: https://api.develv3.cryptonets.ai/node/FACE3_1/enroll
+      REACT_APP_V3_PREDICT_URL1: https://api.develv3.cryptonets.ai/node/FACE3_1/predict
+      REACT_APP_V3_ENROLL_URL2: https://api.develv3.cryptonets.ai/node/FACE3_2/enroll
+      REACT_APP_V3_PREDICT_URL2: https://api.develv3.cryptonets.ai/node/FACE3_2/predict
       CI: false
 
     steps:
