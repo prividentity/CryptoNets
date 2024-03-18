@@ -42,7 +42,7 @@ const useEnrollOneFa = (
             skip_antispoof: skipAntispoof,
             anti_spoofing_detect_document: false,
             enroll_collection: url,
-            identifier: "test",
+            // identifier: "test",
             // mf_count: 1,
           }
         : {
