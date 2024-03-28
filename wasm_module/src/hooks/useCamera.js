@@ -45,7 +45,7 @@ const useCamera = (
         stream,
         errorMessage,
         capabilities,
-      } = await openCamera(element, requireHd, null, "front", resolution);
+      } = await openCamera({ videoElementId: element, requestFaceMode:"front" } );
       setCameraFeatures({ settings, capabilities });
       setFaceMode(faceMode);
       console.log({ devices, faceMode, settings, status, stream, errorMessage, capabilities });

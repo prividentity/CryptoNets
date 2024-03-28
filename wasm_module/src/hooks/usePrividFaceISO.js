@@ -67,8 +67,11 @@ const usePrividFaceISO = () => {
 
   const doFaceISO = async (functionLoop = true) => {
     loop = functionLoop;
-    const { imageOutput } = await faceISO(faceISOCallback, {
-      input_image_format: "rgba",
+    const { imageOutput } = await faceISO({
+      callback: faceISOCallback,
+      config: {
+        input_image_format: "rgba",
+      },
     });
     // console.log("FACE ISO RESULT:", { result, imageOutput });
     setFaceISOData(imageOutput);
