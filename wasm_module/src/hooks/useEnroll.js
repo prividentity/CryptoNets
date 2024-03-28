@@ -1,4 +1,4 @@
-import { enroll } from "@privateid/cryptonets-web-sdk-alpha";
+import { enroll } from "@privateid/cryptonets-web-sdk-test";
 import { useState } from "react";
 
 let skipAntispoofProcess = false;
