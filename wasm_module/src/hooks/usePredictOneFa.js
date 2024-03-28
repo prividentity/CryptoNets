@@ -23,7 +23,7 @@ const usePredictOneFa = (
   const callback = async (result) => {
     console.log("predict callback hook result:", result);
 
-    if (result.guid && result.puid && result.api_result === 0) {
+    if (result.guid && result.puid && result.api_status === 0) {
       setPredictGUID(result.guid);
       setPredictPUID(result.puid);
       setPredictAntispoofStatus(result.antispoof_status);
