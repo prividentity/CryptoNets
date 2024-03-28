@@ -6,7 +6,7 @@ import {
   closeCamera,
   faceCompareLocal,
   documentMugshotFaceCompare,
-} from "@privateid/cryptonets-web-sdk-alpha";
+} from "@privateid/cryptonets-web-sdk-test";
 import platform, { os } from "platform";
 
 import {
@@ -14,7 +14,7 @@ import {
   useWasm,
   useDelete,
   useIsValid,
-  useEnrollOneFa,
+  useEnroll,
   usePredictOneFa,
   useScanFrontDocument,
   useScanBackDocument,
@@ -39,7 +39,7 @@ import {
   getFaceValidationMessage,
   getFrontDocumentStatusMessage,
   getRawFaceValidationStatus,
-} from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
+} from "@privateid/cryptonets-web-sdk-test/dist/utils";
 import { DebugContext } from "../context/DebugContext";
 import useContinuousPredictWithoutRestrictions from "../hooks/useContinuousPredictWithoutRestriction";
 import useMultiFramePredictAge from "../hooks/useMultiFramePredictAge";
@@ -226,7 +226,8 @@ const Ready = () => {
     enrollValidationStatus,
     enrollToken,
     enrollUserOneFa,
-  } = useEnrollOneFa("userVideo", useEnrollSuccess, null, deviceId, setShowSuccess, setDisableButtons);
+    enrollImageData,
+  } = useEnroll("userVideo", useEnrollSuccess, null, deviceId, setShowSuccess, setDisableButtons);
   const handleEnrollOneFa = async () => {
     setShowSuccess(false);
     setCurrentAction("useEnrollOneFa");
@@ -366,15 +367,16 @@ const Ready = () => {
     croppedDocumentImage: croppedBackDocumentBase64,
     clearStatusBackScan,
   } = useScanBackDocument(setShowSuccess);
+
   const handleScanDocumentBack = async () => {
-    setShowSuccess(false);
+    // setShowSuccess(false);
     clearStatusBackScan();
     setCurrentAction("useScanDocumentBack");
-    await scanBackDocument(undefined, debugContext.functionLoop);
+    await scanBackDocument();
   };
 
-  const isDocumentOrBackCamera =
-    ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) || isBack;
+  // const isDocumentOrBackCamera =
+  //   ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) || isBack;
 
   // Predict Age
   // const {
@@ -429,10 +431,10 @@ const Ready = () => {
     isFound: isfoundValidity,
     scanFrontDocument: scanFrontValidity,
     confidenceValue,
-    predictMugshotImageData,
     isMugshotFound,
     croppedDocumentImage,
     predictMugshotImage,
+    predictMugshotImageData,
     frontScanData,
   } = useScanFrontDocumentWithoutPredict(setShowSuccess);
 
@@ -441,28 +443,28 @@ const Ready = () => {
     await scanFrontValidity(debugContext.functionLoop);
   };
 
-  const handleCanvasSize = async (e, skipSwitchCamera = false) => {
-    if (currentAction === "useScanFrontValidity" || currentAction === "useScanDocumentBack") {
-      // setShouldTriggerCallback(false);
-      setCanvasSize(e.target.value);
-      const canvasSize = CANVAS_SIZE[e.target.value];
-      if (!skipSwitchCamera) {
-        const { capabilities = {} } = await switchCamera(null, deviceId || device, canvasSize);
-        setDeviceCapabilities(capabilities);
-      }
-      // setShouldTriggerCallback(true);
+  // const handleCanvasSize = async (e, skipSwitchCamera = false) => {
+  //   if (currentAction === "useScanFrontValidity" || currentAction === "useScanDocumentBack") {
+  //     // setShouldTriggerCallback(false);
+  //     setCanvasSize(e.target.value);
+  //     const canvasSize = CANVAS_SIZE[e.target.value];
+  //     if (!skipSwitchCamera) {
+  //       const { capabilities = {} } = await switchCamera(null, deviceId || device, canvasSize);
+  //       setDeviceCapabilities(capabilities);
+  //     }
+  //     // setShouldTriggerCallback(true);
 
-      if (currentAction === "useScanFrontValidity") {
-        setTimeout(async () => {
-          await useScanFrontDocumentWithoutPredict(e.target.value);
-        }, 1000);
-      } else {
-        setTimeout(async () => {
-          await scanBackDocument(e.target.value);
-        }, 1000);
-      }
-    }
-  };
+  //     if (currentAction === "useScanFrontValidity") {
+  //       setTimeout(async () => {
+  //         await useScanFrontDocumentWithoutPredict(e.target.value);
+  //       }, 1000);
+  //     } else {
+  //       setTimeout(async () => {
+  //         await scanBackDocument(e.target.value);
+  //       }, 1000);
+  //     }
+  //   }
+  // };
 
   const { doFaceISO, inputImage, faceISOImageData, faceISOStatus, faceISOError } = usePrividFaceISO();
 
@@ -485,6 +487,7 @@ const Ready = () => {
   const [uploadImage2, setUploadImage2] = useState(null);
 
   const handleUploadImage1 = async (e) => {
+    console.log("clicked");
     console.log(e.target.files);
     const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
     if (e.target.files.length > 0) {
@@ -854,6 +857,63 @@ const Ready = () => {
 
   const doBackDlScanFromImage = () => {};
 
+
+  const [uploadImage4, setUploadImage4] = useState(null);
+  const handleUploadImage4 = async (e) => {
+    console.log(e.target.files);
+    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg|image[/]gif/;
+    if (e.target.files.length > 0) {
+      if (imageRegex.test(e.target.files[0].type)) {
+        const imageUrl = URL.createObjectURL(e.target.files[0]);
+
+        console.log(e.target.files[0]);
+
+        const getBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+
+            reader.onload = function () {
+              resolve(reader.result);
+            };
+            reader.onerror = function (error) {
+              reject(error);
+            };
+          });
+        };
+
+        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
+        console.log("====> GIF TEST: ", { base64 });
+        var newImg = new Image();
+        newImg.src = base64;
+        newImg.onload = async () => {
+          var imgSize = {
+            w: newImg.width,
+            h: newImg.height,
+          };
+          alert(imgSize.w + " " + imgSize.h);
+          const canvas = document.createElement("canvas");
+          canvas.setAttribute("height", `${imgSize.h}`);
+          canvas.setAttribute("width", `${imgSize.w}`);
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(newImg, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
+          console.log("imageData", imageData);
+          setUploadImage4(imageData);
+        };
+      } else {
+        console.log("INVALID IMAGE TYPE");
+      }
+    }
+  };
+
+  const doFrontDlScanFromImage = () => {
+
+
+
+  };
+
   function iOS() {
     return ["iPad Simulator", "iPhone Simulator", "iPod Simulator", "iPad", "iPhone", "iPod"].includes(
       navigator.platform
@@ -872,6 +932,15 @@ const Ready = () => {
     setCurrentAction("twoStepFaceLogin");
     await doTwoStepFaceLogin();
   };
+
+
+ const handleDocumentMugshotFaceCompare = () => {
+  console.log("comparing start!!!");
+  const callback = (result)=> {
+    console.log("compare result", result);
+  }
+  documentMugshotFaceCompare(callback, enrollImageData, predictMugshotImageData);
+ }
 
   return (
     <>
@@ -1298,12 +1367,12 @@ const Ready = () => {
 
               {currentAction === "useScanDocumentFrontValidity" && (
                 <div>
-                  <div>{`Status Code: ${frontScanData ? frontScanData.returnValue.op_status : ""}`}</div>
+                  {/* <div>{`Status Code: ${frontScanData ? frontScanData.returnValue.op_status : ""}`}</div>
                   <div>
                     {`Status Message: ${
                       frontScanData ? getFrontDocumentStatusMessage(frontScanData.returnValue.op_status) : ""
                     }`}{" "}
-                  </div>
+                  </div> */}
                   <div>{`Document 4 corners found: ${
                     isfoundValidity ? "Document 4 corners available" : "not found"
                   }`}</div>
@@ -1511,20 +1580,12 @@ const Ready = () => {
               >
                 Scan Back Document
               </button>
-              {/* <button
+              <button
                 className="button"
                 onClick={handlePrividFaceISO}
-                style={
-                  disableButtons
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
               >
                 Face ISO
-              </button> */}
+              </button>
               <button
                 className="button"
                 onClick={handleUseScanHealhcareCard}
@@ -1660,11 +1721,11 @@ const Ready = () => {
                 <span className="button">Face Image</span>
               </label>
 
-              <button className="button" onClick={handleDoCompare}>
+              <button className="button" onClick={handleDocumentMugshotFaceCompare}>
                 Do Compare
               </button>
 
-              <label>
+              {/* <label>
                 <input
                   type="file"
                   name="upload"
@@ -1676,6 +1737,19 @@ const Ready = () => {
               </label>
 
               <button onClick={doBackDlScanFromImage}>Handle back dl Scan</button>
+
+              <label>
+                <input
+                  type="file"
+                  name="upload"
+                  accept="image/png, image/gif, image/jpeg"
+                  onChange={handleUploadImage3}
+                  style={{ display: "none" }}
+                />
+                <span className="button">Upload Front Dl Test</span>
+              </label>
+
+              <button onClick={doBackDlScanFromImage}>Handle front dl Scan</button> */}
             </div>
           </div>
         </div>

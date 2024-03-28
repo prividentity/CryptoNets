@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { predict1FA } from "@privateid/cryptonets-web-sdk-alpha";
+import { predict1FA } from "@privateid/cryptonets-web-sdk-test";
 let loop = true;
 let currentUrl = "";
 const usePredictOneFa = (
@@ -23,32 +23,15 @@ const usePredictOneFa = (
   const callback = async (result) => {
     console.log("predict callback hook result:", result);
 
-    switch (result.status) {
-      case "WASM_RESPONSE":
-        if (result.returnValue?.status === 0) {
-          const { message } = result.returnValue;
-          setPredictMessage(message);
-          onSuccess(result.returnValue);
-          setShowSuccess(true);
-          setPredictAntispoofPerformed(result.returnValue.anti_spoof_performed || "");
-          setPredictAntispoofStatus(result.returnValue.anti_spoof_status || "");
-          setPredictValidationStatus(result.returnValue.status);
-          setPredictGUID(result.returnValue.guid);
-          setPredictPUID(result.returnValue.puid);
-          disableButtons(false);
-        }
-        if (result.returnValue?.status !== 0) {
-          const { status, message } = result.returnValue;
-          setPredictMessage(message);
-          setPredictAntispoofPerformed(result.returnValue.anti_spoof_performed);
-          setPredictAntispoofStatus(result.returnValue.anti_spoof_status);
-          setPredictValidationStatus(result.returnValue.status);
-          setPredictGUID(result.returnValue.guid);
-          setPredictPUID(result.returnValue.puid);
-          predictUserOneFa(skipAntispoofProcess, true, currentUrl);
-        }
-        break;
-      default:
+    if (result.guid && result.puid && result.api_result === 0) {
+      setPredictGUID(result.guid);
+      setPredictPUID(result.puid);
+      setPredictAntispoofStatus(result.antispoof_status);
+      setPredictValidationStatus(result.face_validation_status);
+    } else {
+      setPredictAntispoofStatus(result.antispoof_status);
+      setPredictValidationStatus(result.face_validation_status);
+      predictUserOneFa(skipAntispoofProcess, true, currentUrl);
     }
   };
 
@@ -67,18 +50,14 @@ const usePredictOneFa = (
     if (url) {
       currentUrl = url;
     }
-    await predict1FA(
+    await predict1FA({
       callback,
-      url
-        ? {
-            skip_antispoof: skipAntispoof,
-            predict_collection: url,
-            // identifier: "test",
-          }
-        : {
-            skip_antispoof: skipAntispoof,
-          }
-    );
+      config: {
+        skip_antispoof: skipAntispoof,
+        // predict_collection: url,
+        // identifier: "test",
+      },
+    });
   };
 
   return {

@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { useState } from "react";
-import { openCamera } from "@privateid/cryptonets-web-sdk-alpha";
+import { openCamera } from "@privateid/cryptonets-web-sdk-test";
 import { mapDevices } from "../utils";
 import platform, { os } from "platform";
 
@@ -45,7 +45,7 @@ const useCamera = (
         stream,
         errorMessage,
         capabilities,
-      } = await openCamera(element, requireHd, null, "front", resolution);
+      } = await openCamera({ videoElementId: element, requestFaceMode:"front" } );
       setCameraFeatures({ settings, capabilities });
       setFaceMode(faceMode);
       console.log({ devices, faceMode, settings, status, stream, errorMessage, capabilities });

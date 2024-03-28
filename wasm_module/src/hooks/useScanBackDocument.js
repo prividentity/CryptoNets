@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { convertCroppedImage, isValidPhotoID } from "@privateid/cryptonets-web-sdk-alpha";
+import { convertCroppedImage, backScanDocument } from "@privateid/cryptonets-web-sdk-test";
 import { CANVAS_SIZE } from "../utils";
 
 let internalCanvasSize;
@@ -26,135 +26,132 @@ const useScanBackDocument = (setShowSuccess) => {
   const documentCallback = (result) => {
     console.log("--------- Back scan callback result:", result);
     console.log("--------- returnedValue:", result.returnValue);
-    if (result.status === "WASM_RESPONSE") {
-      setBarcodeStatusCode(result.returnValue.op_status);
-      if (result.returnValue.op_status === 0) {
-        const {
-          firstName,
-          middleName,
-          lastName,
-          dateOfBirth,
-          gender,
-          streetAddress1,
-          streetAddress2,
-          state,
-          city,
-          postCode,
-          issuingCountry,
-          // crop_doc_width,
-          // crop_doc_height,
-          // crop_barcode_width,
-          // crop_barcode_height,
-        } = result.returnValue;
-        const finalResult = {
-          firstName,
-          middleName,
-          lastName,
-          dateOfBirth,
-          gender,
-          streetAddress1,
-          streetAddress2,
-          state,
-          city,
-          postCode,
-          issuingCountry,
-        };
-        setResultValue(result.returnValue);
-        // setCropedDocumentWidth(crop_doc_width);
-        // setCroppedDocumentHeight(crop_doc_height);
-        // setCroppedBarcodeWidth(crop_barcode_width);
-        // setCroppedBarcodeHeight(crop_barcode_height);
-        setIsFound(true);
-        setScannedCodeData(finalResult);
-        setShowSuccess(true);
-        return finalResult;
-      } else {
-        setResultValue(null);
-        // setCropedDocumentWidth(null);
-        // setCroppedDocumentHeight(null);
-        // setCroppedBarcodeWidth(null);
-        // setCroppedBarcodeHeight(null);
+    // if (result.status === "WASM_RESPONSE") {
+    //   setBarcodeStatusCode(result.returnValue.op_status);
+    //   if (result.returnValue.op_status === 0) {
+    //     const {
+    //       firstName,
+    //       middleName,
+    //       lastName,
+    //       dateOfBirth,
+    //       gender,
+    //       streetAddress1,
+    //       streetAddress2,
+    //       state,
+    //       city,
+    //       postCode,
+    //       issuingCountry,
+    //       // crop_doc_width,
+    //       // crop_doc_height,
+    //       // crop_barcode_width,
+    //       // crop_barcode_height,
+    //     } = result.returnValue;
+    //     const finalResult = {
+    //       firstName,
+    //       middleName,
+    //       lastName,
+    //       dateOfBirth,
+    //       gender,
+    //       streetAddress1,
+    //       streetAddress2,
+    //       state,
+    //       city,
+    //       postCode,
+    //       issuingCountry,
+    //     };
+    //     setResultValue(result.returnValue);
+    //     // setCropedDocumentWidth(crop_doc_width);
+    //     // setCroppedDocumentHeight(crop_doc_height);
+    //     // setCroppedBarcodeWidth(crop_barcode_width);
+    //     // setCroppedBarcodeHeight(crop_barcode_height);
+    //     setIsFound(true);
+    //     setScannedCodeData(finalResult);
+    //     setShowSuccess(true);
+    //     return finalResult;
+    //   } else {
+    //     setResultValue(null);
+    //     // setCropedDocumentWidth(null);
+    //     // setCroppedDocumentHeight(null);
+    //     // setCroppedBarcodeWidth(null);
+    //     // setCroppedBarcodeHeight(null);
+    //   }
+    // }
+    // setCroppedDocumentImageData(null);
+    // setCroppedBarcodeImageData(null);
+    // setInputImageData(null);
+    // if (loop) {
+    //   scanBackDocument();
+    // }
+  };
+
+  // const convertImageData = async (imageData, width, height, setState, message = "") => {
+  //   if (width * height * 4 === imageData.length) {
+  //     const convertedImage = await convertCroppedImage(imageData, width, height);
+  //     console.log(message, convertedImage);
+  //     setState(convertedImage);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   if (isFound && croppedDocumentImageData && returnValue) {
+  //     convertImageData(
+  //       croppedDocumentImageData,
+  //       returnValue.crop_doc_width,
+  //       returnValue.crop_doc_height,
+  //       setCroppedDocumentImage
+  //     );
+  //   }
+  // }, [isFound, croppedDocumentImageData, returnValue]);
+
+  // useEffect(() => {
+  //   if (croppedBarcodeImageData && returnValue) {
+  //     convertImageData(
+  //       croppedBarcodeImageData,
+  //       returnValue.crop_barcode_width,
+  //       returnValue.crop_barcode_height,
+  //       setCroppedBarcodeImage,
+  //       "Barcode:"
+  //     );
+  //   }
+  // }, [isFound, croppedBarcodeImageData, returnValue]);
+
+  // useEffect(() => {
+  //   if (isFound && inputImageData) {
+  //     convertImageData(inputImageData, returnValue.image_width, returnValue.image_height, setInputImage);
+  //   }
+  // }, [isFound, inputImageData]);
+
+  // useEffect(() => {
+  //   if (croppedDocumentImage && croppedBarcodeImage && inputImage) {
+  //     console.log("Barcode Images:", { inputImage, croppedBarcodeImage, croppedDocumentImage });
+  //   }
+  // }, [croppedDocumentImage, croppedBarcodeImage, inputImage]);
+
+  const doScanBackDocument = async (canvasSize, functionLoop = false, uploadData = undefined) => {
+   // const canvasObj = canvasSize ? CANVAS_SIZE[canvasSize] : internalCanvasSize ? CANVAS_SIZE[internalCanvasSize] : {};
+   // const { result, croppedBarcode, croppedDocument, imageData } = 
+   await backScanDocument(
+      {
+        callback: documentCallback,
+        // image: uploadData,
+        config: {
+          document_scan_barcode_only: true,
+          blur_threshold_barcode: 1000,
+          blur_threshold_doc: 1000,
+          conf_score_thr_doc:	0.3,
+          threshold_doc_too_close: 99,
+          threshold_doc_too_far: 0,
+          fingers_over_document_threshold: 0.3, 
+          barcode_margin: 0.1,
+        }
       }
-    }
-    setCroppedDocumentImageData(null);
-    setCroppedBarcodeImageData(null);
-    setInputImageData(null);
-    if (loop) {
-      scanBackDocument();
-    }
-  };
-
-  const convertImageData = async (imageData, width, height, setState, message = "") => {
-    if (width * height * 4 === imageData.length) {
-      const convertedImage = await convertCroppedImage(imageData, width, height);
-      console.log(message, convertedImage);
-      setState(convertedImage);
-    }
-  };
-
-  useEffect(() => {
-    if (isFound && croppedDocumentImageData && returnValue) {
-      convertImageData(
-        croppedDocumentImageData,
-        returnValue.crop_doc_width,
-        returnValue.crop_doc_height,
-        setCroppedDocumentImage
-      );
-    }
-  }, [isFound, croppedDocumentImageData, returnValue]);
-
-  useEffect(() => {
-    if (croppedBarcodeImageData && returnValue) {
-      convertImageData(
-        croppedBarcodeImageData,
-        returnValue.crop_barcode_width,
-        returnValue.crop_barcode_height,
-        setCroppedBarcodeImage,
-        "Barcode:"
-      );
-    }
-  }, [isFound, croppedBarcodeImageData, returnValue]);
-
-  useEffect(() => {
-    if (isFound && inputImageData) {
-      convertImageData(inputImageData, returnValue.image_width, returnValue.image_height, setInputImage);
-    }
-  }, [isFound, inputImageData]);
-
-  useEffect(() => {
-    if (croppedDocumentImage && croppedBarcodeImage && inputImage) {
-      console.log("Barcode Images:", { inputImage, croppedBarcodeImage, croppedDocumentImage });
-    }
-  }, [croppedDocumentImage, croppedBarcodeImage, inputImage]);
-
-  const scanBackDocument = async (canvasSize, functionLoop = true, uploadData = undefined) => {
-    loop = functionLoop;
-    if (canvasSize && canvasSize !== internalCanvasSize) {
-      internalCanvasSize = canvasSize;
-    }
-    const canvasObj = canvasSize ? CANVAS_SIZE[canvasSize] : internalCanvasSize ? CANVAS_SIZE[internalCanvasSize] : {};
-    const { result, croppedBarcode, croppedDocument, imageData } = await isValidPhotoID(
-      "PHOTO_ID_BACK",
-      documentCallback,
-      uploadData,
-      { 
-        document_scan_barcode_only: true,
-        blur_threshold_barcode: 1000,
-        blur_threshold_doc: 1000,
-        conf_score_thr_doc:	0.3,
-        threshold_doc_too_close: 99,
-        threshold_doc_too_far: 0,
-        fingers_over_document_threshold: 0.3, 
-        barcode_margin: 0.1,
-      },
-      canvasObj
     );
-    console.log({ croppedBarcode, croppedDocument, imageData });
-    if (croppedBarcode && croppedDocument && imageData) {
-      setCroppedDocumentImageData(croppedDocument);
-      setCroppedBarcodeImageData(croppedBarcode);
-      setInputImageData(imageData);
-    }
+    // console.log({ croppedBarcode, croppedDocument, imageData });
+    // if (croppedBarcode && croppedDocument && imageData) {
+    //   setCroppedDocumentImageData(croppedDocument);
+    //   setCroppedBarcodeImageData(croppedBarcode);
+    //   setInputImageData(imageData);
+    // }
   };
 
   const clearStatusBackScan = () => {
@@ -170,7 +167,7 @@ const useScanBackDocument = (setShowSuccess) => {
     setResultValue(null);
   }
 
-  return { scanBackDocument, scannedCodeData, isFound, croppedDocumentImage, croppedBarcodeImage, barcodeStatusCode, clearStatusBackScan };
+  return { scanBackDocument:doScanBackDocument, scannedCodeData, isFound, croppedDocumentImage, croppedBarcodeImage, barcodeStatusCode, clearStatusBackScan };
 };
 
 export default useScanBackDocument;

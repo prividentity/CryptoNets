@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { deleteUser } from "@privateid/cryptonets-web-sdk-alpha";
+import { deleteUser } from "@privateid/cryptonets-web-sdk-test";
 
 // useDelete
 const useDelete = (onDeleteEnd, ready) => {
@@ -12,7 +12,7 @@ const useDelete = (onDeleteEnd, ready) => {
   };
 
   const onDeleteUser = async (puid) => {
-    deleteUser(puid, callback);
+    deleteUser({uuid: puid, callback:callback});
   };
 
   return { loading, onDeleteUser };

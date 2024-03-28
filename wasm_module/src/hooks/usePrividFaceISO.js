@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { faceISO, convertCroppedImage } from "@privateid/cryptonets-web-sdk-alpha";
+import { faceISO, convertCroppedImage } from "@privateid/cryptonets-web-sdk-test";
 
 let loop = true;
 const usePrividFaceISO = () => {
@@ -67,8 +67,11 @@ const usePrividFaceISO = () => {
 
   const doFaceISO = async (functionLoop = true) => {
     loop = functionLoop;
-    const { imageOutput } = await faceISO(faceISOCallback, {
-      input_image_format: "rgba",
+    const { imageOutput } = await faceISO({
+      callback: faceISOCallback,
+      config: {
+        input_image_format: "rgba",
+      },
     });
     // console.log("FACE ISO RESULT:", { result, imageOutput });
     setFaceISOData(imageOutput);

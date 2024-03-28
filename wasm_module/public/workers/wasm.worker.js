@@ -22,7 +22,25 @@ let antispoofVersion;
 const ModuleName = 'face_mask';
 const cdnUrl = 'https://wasm.privateid.com';
 let useCdnLink = false;
-const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, useCdn = false, predictConfigUrls = null, enrollConfigUrls) =>
+
+
+const createImageArguments = (imageData, width, height) => {
+
+}
+
+const createStringArguments = () => {
+
+}
+
+const isLoad = (
+  simd,
+  url,
+  key,
+  debug_type,
+  cacheConfig = true,
+  timeout = 5000,
+  useCdn = false,
+) =>
   new Promise(async (resolve, reject) => {
     apiUrl = url;
     apiKey = key;
@@ -40,7 +58,7 @@ const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, 
     const moduleName = 'privid_fhe';
     const cachedModule = await readKey(ModuleName);
     const fetchdWasmVersion = await fetchResource(
-    //  `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
+      //  `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
       `../wasm/${ModuleName}/${modulePath}/version.json`,
       `../wasm/${ModuleName}/${modulePath}/version.json`,
     );
@@ -62,19 +80,19 @@ const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, 
         eval(cachedScript);
         wasmPrivModule = await createTFLiteModule({ wasmBinary: cachedWasm });
         if (!checkWasmLoaded) {
-          await initializeWasmSession(url, key, debugType, timeoutSession, predictConfigUrls, enrollConfigUrls);
+          await initializeWasmSession(url, key, debugType, timeoutSession);
           checkWasmLoaded = true;
         }
       }
-      console.log("Module:",wasmPrivModule);
+      console.log('Module:', wasmPrivModule);
       resolve('Cache Loaded');
     } else {
       wasmPrivModule = await loadWasmModule(modulePath, moduleName, true);
       if (!checkWasmLoaded) {
-        await initializeWasmSession(url, key, debugType, timeoutSession, predictConfigUrls, enrollConfigUrls);
+        await initializeWasmSession(url, key, debugType, timeoutSession);
         checkWasmLoaded = true;
       }
-    
+
       console.log('WASM MODULES:', wasmPrivModule);
       resolve('Loaded');
     }
@@ -98,9 +116,14 @@ async function deleteUUID(uuid, cb) {
   const uuidInputSize = uuid.length;
   const uuidInputPtr = wasmPrivModule._malloc(uuidInputSize);
   wasmPrivModule.HEAP8.set(uuid_bytes, uuidInputPtr / uuid_bytes.BYTES_PER_ELEMENT);
-
-  wasmPrivModule._privid_user_delete(wasmSession, null, 0, uuidInputPtr, uuidInputSize, 0, 0);
+ 
+  const config_bytes = encoder.encode(`{}`);
+  const configSize = "{}".length;
+  const configInputPtr = wasmPrivModule._malloc(configSize);
+  wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
+  wasmPrivModule._privid_user_delete(wasmSession, configInputPtr, configSize, uuidInputPtr, uuidInputSize, 0, 0);
   wasmPrivModule._free(uuidInputPtr);
+  wasmPrivModule._free(configInputPtr);
 }
 
 const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) => {
@@ -215,6 +238,18 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
   let result = null;
 
   try {
+    console.log({
+      wasmSession,
+      configInputPtr,
+      configInputSize,
+      inputPtr,
+      width: imageInput.width,
+      height: imageInput.height,
+      croppedDocumentBufferFirstPtr,
+      croppedDocumentBufferLenPtr,
+      croppedMugshotBufferFirstPtr,
+      croppedMugshotBufferLenPtr,
+    })
     result = wasmPrivModule._privid_doc_scan_face(
       wasmSession,
       configInputPtr,
@@ -304,7 +339,7 @@ const FHE_enrollOnefa = async (imageData, simd, config, cb) => {
   const bestImageFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   const bestImageLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
-  console.log("Config:", config);
+  console.log('Config:', config);
   try {
     wasmPrivModule._privid_enroll_onefa(
       wasmSession /* session pointer */,
@@ -374,7 +409,7 @@ const FHE_predictOnefa = async (originalImages, simd, config, cb) => {
   const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   // create a pointer to interger to hold the length of the output buffer
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
-  console.log("Config:", config);
+  console.log('Config:', config);
   try {
     await wasmPrivModule._privid_face_predict_onefa(
       wasmSession /* session pointer */,
@@ -757,58 +792,37 @@ const output_ptr = function () {
   };
 };
 
-async function initializeWasmSession(url, key, debug_type, timeout = 5000,predictConfigUrls, enrollConfigUrls) {
+async function initializeWasmSession(url, key, debug_type, timeout = 5000) {
   if (!wasmSession) {
-    const url_args = buffer_args(url);
-    const key_args = buffer_args(key);
+
     const session_out_ptr = output_ptr();
+    const settings  = {
+      ...url,
+      session_token: key,
+      debug_level: debug_type,
+    }
+
+    console.log("Settings:", settings);
+    const settings_args = buffer_args(JSON.stringify(settings));
+
     const s_result = wasmPrivModule._privid_initialize_session(
-      ...key_args.args(),
-      ...url_args.args(),
-      timeout,
-      debug_type,
+      ...settings_args.args(),
       session_out_ptr.outer_ptr(),
     );
-    url_args.free();
-    key_args.free();
+    settings_args.free();
 
     if (s_result) {
-      // console.log('[FAR_DEBUG] : session initialized successfully');
+      console.log('[DEBUG ISLOAD] : session initialized successfully');
     } else {
-      // console.log('[FAR_DEBUG] : session initialized failed');
+      console.log('[DEBUG ISLOADED] : session initialized failed');
       return;
     }
 
-    // get our inner session created by wasm and free the outer container ptr
     wasmSession = session_out_ptr.inner_ptr();
-
     await wasmPrivModule._privid_set_default_configuration(wasmSession, 1);
-    // wasmPrivModule._privid_set_operation_debug_enabled(true);
     if (setCache) {
       await setCacheConfiguration();
     }
-    console.log("config url before setting:", {predict: predictConfigUrls, enrollConfigUrls: enrollConfigUrls});
-    if(predictConfigUrls){
-      const encoder = new TextEncoder();
-      const config_bytes = encoder.encode(`${predictConfigUrls}`);
-      const configInputSize = predictConfigUrls.length;
-      const configInputPtr = wasmPrivModule._malloc(configInputSize);
-      wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
-      wasmPrivModule._privid_configure_predict_urls(wasmSession, configInputPtr, configInputSize);
-      wasmPrivModule._free(configInputPtr);
-    }
-
-    if(enrollConfigUrls){
-      const encoder = new TextEncoder();
-      const config_bytes = encoder.encode(`${enrollConfigUrls}`);
-      const configInputSize = enrollConfigUrls.length;
-      const configInputPtr = wasmPrivModule._malloc(configInputSize);
-      wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
-      wasmPrivModule._privid_configure_enroll_urls(wasmSession, configInputPtr, configInputSize);
-      wasmPrivModule._free(configInputPtr);
-    }
-
-  
   } else {
     // console.log('Wasm session is available. Skipping creating session');
   }
