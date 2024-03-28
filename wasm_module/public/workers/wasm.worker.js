@@ -846,12 +846,12 @@ const prividFaceISO = (imageInput, simd, debug_type = 0, cb, config = {}) =>
     wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
     const imageInputPtr = wasmPrivModule._malloc(imageInputSize);
 
-    wasmPrivModule.HEAP8.set(imageInput, imageInputPtr / imageInput.BYTES_PER_ELEMENT);
+    wasmPrivModule.HEAP8.set(imageData, imageInputPtr / imageData.BYTES_PER_ELEMENT);
 
-    const BufferSize = wasmPrivModule._spl_image_embedding_length();
+    // const BufferSize = wasmPrivModule._spl_image_embedding_length();
     // // outupt  ptr
-    const outputBufferSize = BufferSize * 4 * 80;
-    const outputBufferPtr = wasmPrivModule._malloc(outputBufferSize);
+    const outputBufferSize = 360 * 480 * 4 * 80;
+    const outputBufferPtr = wasmPrivModule._malloc(outputBufferSize); //wasmPrivModule._malloc(outputBufferSize);
 
     const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     // create a pointer to interger to hold the length of the output buffer

@@ -1331,15 +1331,15 @@ const Ready = () => {
                 <div>
                   <h2> {`Barcode Status Code: ${barcodeStatusCode}`}</h2>
                   <div>{`Scanned code data: ${scannedCodeData ? "success" : "not found"}`}</div>
-                  <div>{`First Name: ${scannedCodeData ? scannedCodeData.firstName : ""}`}</div>
-                  <div>{`Middle Name: ${scannedCodeData ? scannedCodeData.middleName : ""}`}</div>
-                  <div>{`Last Name: ${scannedCodeData ? scannedCodeData.lastName : ""}`}</div>
-                  <div>{`Date of Birth: ${scannedCodeData ? scannedCodeData.dateOfBirth : ""}`}</div>
-                  <div>{`Gender: ${scannedCodeData ? scannedCodeData.gender : ""}`}</div>
-                  <div>{`Street Address1: ${scannedCodeData ? scannedCodeData.streetAddress1 : ""}`}</div>
-                  <div>{`Street Address2: ${scannedCodeData ? scannedCodeData.streetAddress2 : ""}`}</div>
-                  <div>{`City: ${scannedCodeData ? scannedCodeData.city : ""}`}</div>
-                  <div>{`Postal Code: ${scannedCodeData ? scannedCodeData.postCode : ""}`}</div>
+                  <div>{`First Name: ${scannedCodeData ? scannedCodeData?.barcode_data?.first_name : ""}`}</div>
+                  <div>{`Middle Name: ${scannedCodeData ? scannedCodeData?.barcode_data?.middle_name : ""}`}</div>
+                  <div>{`Last Name: ${scannedCodeData ? scannedCodeData?.barcode_data?.last_name : ""}`}</div>
+                  <div>{`Date of Birth: ${scannedCodeData ? scannedCodeData?.barcode_data?.date_of_birth : ""}`}</div>
+                  <div>{`Gender: ${scannedCodeData ? scannedCodeData?.barcode_data?.gender : ""}`}</div>
+                  <div>{`Street Address1: ${scannedCodeData ? scannedCodeData?.barcode_data?.street_address1 : ""}`}</div>
+                  <div>{`Street Address2: ${scannedCodeData ? scannedCodeData?.barcode_data?.street_address2: ""}`}</div>
+                  <div>{`City: ${scannedCodeData ? scannedCodeData?.barcode_data?.city : ""}`}</div>
+                  <div>{`Postal Code: ${scannedCodeData ? scannedCodeData?.barcode_data?.postal_code : ""}`}</div>
                   <div style={{ display: "flex", gap: "5px" }}>
                     {croppedBarcodeBase64 && (
                       <button

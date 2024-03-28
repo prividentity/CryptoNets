@@ -28,6 +28,7 @@ const usePredictOneFa = (
       setPredictPUID(result.puid);
       setPredictAntispoofStatus(result.antispoof_status);
       setPredictValidationStatus(result.face_validation_status);
+      disableButtons(false);
     } else {
       setPredictAntispoofStatus(result.antispoof_status);
       setPredictValidationStatus(result.face_validation_status);

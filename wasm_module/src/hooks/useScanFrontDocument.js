@@ -24,89 +24,71 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
   const documentCallback = (result) => {
     console.log("Front scan callback result:", result);
     setFrontScanData(result);
-
-
-    if(result.doc_validation_status === 0 ){
+    if (result.doc_validation_status === 0) {
       setIsFound(true);
       setResultValue(result);
-    } 
-    // if (
-    //   result.returnValue.op_status === 0 &&
-    //   result.returnValue.cropped_doc_width &&
-    //   result.returnValue.cropped_face_width
-    // ) {
-    //   setIsFound(true);
-    //   setShowSuccess(true);
-    //   setResultValue(result.returnValue);
-    //   // setPredictMugshotHeight(result.returnValue.cropped_face_height);
-    //   // setPredictMugshotWidth(result.returnValue.cropped_face_width);
-    //   // setCroppedDocumentHeight(result.returnValue.cropped_doc_height)
-    //   // setCroppedDocumentWidth(result.returnValue.cropped_doc_width)
-    // } else {
-    //   setIsFound(false);
-    //   if (loop) {
-    //     scanFrontDocument();
-    //   }
-    // }
+    } else {
+      scanFrontDocument();
+    }
   };
 
-  const doConvert = async () => {
-    const mugshotBase64 = await convertCroppedImage(
-      predictMugshotRaw,
-      returnValue.cropped_face_width,
-      returnValue.cropped_face_height
-    );
-    console.log("Mugshot image:", mugshotBase64);
-    setPredictMugshotImage(mugshotBase64);
-    return mugshotBase64;
-  };
-
-  const convertCroppedDocument = async () => {
-    const mugshotBase64 = await convertCroppedImage(
-      croppedDocumentImageData,
-      returnValue.cropped_doc_width,
-      returnValue.cropped_doc_height
-    );
-    console.log("Cropped Document:", mugshotBase64);
-    setCroppedDocumentImage(mugshotBase64);
-    return mugshotBase64;
-  };
-
-  const convertImageData = async () => {
-    const inputImageBase64 = await convertCroppedImage(
-      inputImageData,
-      returnValue.image_width,
-      returnValue.image_height
-    );
-    console.log("InputImage:", inputImageBase64);
-    setInputImage(inputImageBase64);
-    return inputImageBase64;
+  const doConvert = async (message, imageData) => {
+    try {
+      if (imageData.data.length === imageData.width * imageData.height * 4) {
+        const b64Converted = await convertCroppedImage(imageData.data, imageData.width, imageData.height);
+        console.log(`${message}`, b64Converted);
+        return b64Converted;
+      }
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   // Cropped Document
   useEffect(() => {
     if (isFound && croppedDocumentImageData && returnValue) {
-      convertCroppedDocument();
+      if (croppedDocumentImageData?.length &&  returnValue?.cropped_document?.width) {
+        const image = new ImageData(
+          croppedDocumentImageData,
+          returnValue.cropped_document.width,
+          returnValue.cropped_document.height
+        );
+        console.log("cropped document image:", image);
+        setCroppedDocumentImageData(image);
+        if (image?.data?.length) {
+          const b64 = doConvert("cropped document image:", image);
+          setCroppedDocumentImage(b64)
+        }
+      }
     }
   }, [isFound, croppedDocumentImageData, returnValue]);
 
   useEffect(() => {
     if (isFound && predictMugshotRaw && returnValue) {
-      console.log("before converting:", { isFound, predictMugshotRaw, returnValue} );
-      console.log("w x h", {w: returnValue?.cropped_mugshot?.width, h: returnValue.cropped_mugshot.height}); 
+      console.log("before converting:", { isFound, predictMugshotRaw, returnValue });
+      console.log("w x h", { w: returnValue?.cropped_mugshot?.width, h: returnValue.cropped_mugshot.height });
 
-      const image = new ImageData(predictMugshotRaw, returnValue.cropped_mugshot.width, returnValue.cropped_mugshot.height);
-      console.log ("MugshotImageData", image);
+      const image = new ImageData(
+        predictMugshotRaw,
+        returnValue.cropped_mugshot.width,
+        returnValue.cropped_mugshot.height
+      );
+      console.log("MugshotImageData", image);
       setPredictMugshotImageData(image);
       setIsMugshotFound(true);
-      // doConvert();
+      if (image?.data?.length) {
+        const b64 = doConvert("cropped mugshot image:", image);
+        setPredictMugshotImage(b64)
+      }
     }
   }, [isFound, predictMugshotRaw, returnValue]);
 
   // Cropped Document
   useEffect(() => {
     if (isFound && inputImageData) {
-      convertImageData();
+      if (inputImage?.data?.lengh) {
+        doConvert(inputImageData);
+      }
     }
   }, [isFound, inputImageData]);
 
@@ -117,12 +99,10 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
       croppedDocument,
       croppedMugshot,
       imageData,
-    } = await scanFrontDocumentModule(
-      {
-        callback: documentCallback,
-        image: uploadData,
-      }
-    );
+    } = await scanFrontDocumentModule({
+      callback: documentCallback,
+      image: uploadData,
+    });
 
     setPredictMugshotRaw(croppedMugshot);
     setCroppedDocumentImageData(croppedDocument);

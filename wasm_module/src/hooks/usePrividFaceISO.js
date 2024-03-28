@@ -71,6 +71,7 @@ const usePrividFaceISO = () => {
       callback: faceISOCallback,
       config: {
         input_image_format: "rgba",
+        skip_antispoof: true,
       },
     });
     // console.log("FACE ISO RESULT:", { result, imageOutput });
