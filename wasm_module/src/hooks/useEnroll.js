@@ -1,4 +1,4 @@
-import { convertCroppedImage, enroll } from "@privateid/cryptonets-web-sdk-test";
+import { convertCroppedImage, enroll } from "@privateid/cryptonets-web-sdk-alpha";
 import { useState } from "react";
 
 let skipAntispoofProcess = false;
@@ -62,8 +62,8 @@ const useEnroll = (
 
     if (bestImage) {
       setEnrollImageData(new ImageData(bestImage.imageData, bestImage.width, bestImage.height));
-      const bestImage =  await convertCroppedImage(bestImage.imageData, bestImage.width, bestImage.height);
-      console.log("enroll image:", bestImage)
+      const bestImagePortrait =  await convertCroppedImage(bestImage.imageData, bestImage.width, bestImage.height);
+      console.log("enroll image:", bestImagePortrait)
     }
   };
   function convertBase64ToImageData(imageSrc, setImageData) {

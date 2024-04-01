@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { loadPrivIdModule } from "@privateid/cryptonets-web-sdk-test";
+import { loadPrivIdModule } from "@privateid/cryptonets-web-sdk-alpha";
 import { getUrlParameter } from "../utils";
 
 const useWasm = () => {

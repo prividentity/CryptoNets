@@ -5,7 +5,7 @@
 //   setStopLoopContinuousAuthentication,
 //   closeCamera,
 //   faceCompareLocal,
-// } from "@privateid/cryptonets-web-sdk-test";
+// } from "@privateid/cryptonets-web-sdk-alpha";
 
 // import {
 //   useCamera,

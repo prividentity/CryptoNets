@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { continuousPredictWithoutRestrictions } from "@privateid/cryptonets-web-sdk-test";
+import { continuousPredictWithoutRestrictions } from "@privateid/cryptonets-web-sdk-alpha";
 let loop = true;
 const useContinuousPredictWithoutRestrictions = (setShowSuccess) => {
   const [continuousPredictWithoutRestrictionsMessage, setContinuousPredictWithoutRestrictionsMessage] = useState("");

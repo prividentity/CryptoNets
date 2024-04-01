@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { twoStepFaceLogin } from "@privateid/cryptonets-web-sdk-test";
+import { twoStepFaceLogin } from "@privateid/cryptonets-web-sdk-alpha";
 
 
 const useTwoStepFaceLogin = (setShowSuccess = ()=>{}) => {

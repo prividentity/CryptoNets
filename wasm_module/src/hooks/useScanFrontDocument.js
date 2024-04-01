@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { convertCroppedImage, scanFrontDocument as scanFrontDocumentModule } from "@privateid/cryptonets-web-sdk-test";
+import { convertCroppedImage, scanFrontDocument as scanFrontDocumentModule } from "@privateid/cryptonets-web-sdk-alpha";
 
 let loop = true;
 const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {

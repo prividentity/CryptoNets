@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { predict1FA } from "@privateid/cryptonets-web-sdk-test";
+import { predict1FA } from "@privateid/cryptonets-web-sdk-alpha";
 let loop = true;
 let currentUrl = "";
 const usePredictOneFa = (
