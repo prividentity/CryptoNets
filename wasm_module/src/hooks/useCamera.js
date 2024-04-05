@@ -62,29 +62,29 @@ const useCamera = (
       //     platform.os.family
       //   )
       // ) {
-      //   const setCameraFocus = async () => {
-      //     try {
-      //       const video = document.getElementById("userVideo");
-      //       const mediaStream = video.srcObject;
-      //       const track = await mediaStream.getTracks()[0];
-      //       const capabilities = track.getCapabilities();
-      //       if (typeof capabilities.focusDistance !== "undefined") {
-      //         await track.applyConstraints({
-      //           advanced: [
-      //             {
-      //               focusMode: capabilities.focusMode.includes("continuous") ? "continuous" : "manual",
-      //               focusDistance: 100,
-      //             },
-      //           ],
-      //         });
-      //       }
-      //     } catch (e) {
-      //       // eslint-disable-next-line no-console
-      //       console.log(e);
-      //     }
-      //   };
-      //   await setCameraFocus();
-      // }
+        const setCameraFocus = async () => {
+          try {
+            const video = document.getElementById("userVideo");
+            const mediaStream = video.srcObject;
+            const track = await mediaStream.getTracks()[0];
+            const capabilities = track.getCapabilities();
+            if (typeof capabilities.focusDistance !== "undefined") {
+              await track.applyConstraints({
+                advanced: [
+                  {
+                    focusMode: capabilities.focusMode.includes("continuous") ? "continuous" : "manual",
+                    focusDistance: 50,
+                  },
+                ],
+              });
+            }
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.log(e);
+          }
+        };
+        await setCameraFocus();
+      //}
       console.log("capabilities:", capabilities);
       console.log("settings", settings);
       if (capabilities) {
