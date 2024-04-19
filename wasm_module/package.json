@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@privateid/cryptonets-web-sdk-alpha": "3.5.0-alpha",
+    "@privateid/cryptonets-web-sdk-alpha": "3.5.5-alpha",
     "@simplewebauthn/browser": "^7.2.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.3.0",
