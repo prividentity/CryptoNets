@@ -55,7 +55,7 @@ const useEnroll = (
       config: {
         input_image_format: "rgba",
         mf_token: token,
-        skip_antispoof: true,
+        // skip_antispoof: true,
         anti_spoofing_detect_document: false,
       },
     });
