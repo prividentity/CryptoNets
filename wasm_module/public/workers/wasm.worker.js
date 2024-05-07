@@ -1000,7 +1000,7 @@ const loadWasmModule = async (modulePath, moduleName, saveCache, version) => {
   const module = await createTFLiteModule({ wasmBinary: buffer });
   if (saveCache) {
     const version = module.UTF8ToString(module._privid_get_version());
-    await putKey('face_mask', buffer, scriptBuffer, version);
+    await putKey('generic', buffer, scriptBuffer, version);
   }
   return module;
 };

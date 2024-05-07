@@ -15,7 +15,7 @@ import {
   useDelete,
   useIsValid,
   useEnroll,
-  usePredictOneFa,
+  usePredict,
   useScanFrontDocument,
   useScanBackDocument,
 } from "../hooks";
@@ -227,7 +227,7 @@ const Ready = () => {
     enrollToken,
     enrollUserOneFa,
     enrollImageData,
-  } = useEnroll("userVideo", useEnrollSuccess, null, deviceId, setShowSuccess, setDisableButtons);
+  } = useEnroll({ onSuccess: useEnrollSuccess, disableButtons: setDisableButtons });
   const handleEnrollOneFa = async () => {
     setShowSuccess(false);
     setCurrentAction("useEnrollOneFa");
@@ -237,10 +237,10 @@ const Ready = () => {
   const handleEnrollUrl = async (url) => {
     setShowSuccess(false);
     setCurrentAction("useEnrollOneFa");
-    enrollUserOneFa("", skipAntiSpoof,url);
+    enrollUserOneFa("", skipAntiSpoof, url, "test");
   };
 
-  const handlePreidctSuccess = (result) => {
+  const handlePredictSuccess = () => {
     console.log("======PREDICT SUCCESS========");
   };
   const {
@@ -251,7 +251,7 @@ const Ready = () => {
     predictValidationStatus,
     predictMessage,
     predictUserOneFa,
-  } = usePredictOneFa("userVideo", handlePreidctSuccess, 4, null, setShowSuccess, setDisableButtons);
+  } = usePredict({ onSuccess: handlePredictSuccess, disableButtons: setDisableButtons });
   const handlePredictOneFa = async () => {
     console.log("PREDICTING");
     setShowSuccess(false);
@@ -262,8 +262,8 @@ const Ready = () => {
   const handlePredictUrl = async (url) => {
     console.log("PREDICTING");
     setShowSuccess(false);
-    setCurrentAction("usePredictOneFa");
-    predictUserOneFa(skipAntiSpoof, false, url);
+    setCurrentAction("usePredictWithUrl");
+    predictUserOneFa(skipAntiSpoof, url, "test");
   };
 
   const handleSwitchCamera = async (e) => {
@@ -857,7 +857,6 @@ const Ready = () => {
 
   const doBackDlScanFromImage = () => {};
 
-
   const [uploadImage4, setUploadImage4] = useState(null);
   const handleUploadImage4 = async (e) => {
     console.log(e.target.files);
@@ -908,11 +907,7 @@ const Ready = () => {
     }
   };
 
-  const doFrontDlScanFromImage = () => {
-
-
-
-  };
+  const doFrontDlScanFromImage = () => {};
 
   function iOS() {
     return ["iPad Simulator", "iPhone Simulator", "iPod Simulator", "iPad", "iPhone", "iPod"].includes(
@@ -933,14 +928,13 @@ const Ready = () => {
     await doTwoStepFaceLogin();
   };
 
-
- const handleDocumentMugshotFaceCompare = () => {
-  console.log("comparing start!!!");
-  const callback = (result)=> {
-    console.log("compare result", result);
-  }
-  documentMugshotFaceCompare(callback, enrollImageData, predictMugshotImageData);
- }
+  const handleDocumentMugshotFaceCompare = () => {
+    console.log("comparing start!!!");
+    const callback = (result) => {
+      console.log("compare result", result);
+    };
+    documentMugshotFaceCompare(callback, enrollImageData, predictMugshotImageData);
+  };
 
   return (
     <>
@@ -1336,8 +1330,12 @@ const Ready = () => {
                   <div>{`Last Name: ${scannedCodeData ? scannedCodeData?.barcode_data?.last_name : ""}`}</div>
                   <div>{`Date of Birth: ${scannedCodeData ? scannedCodeData?.barcode_data?.date_of_birth : ""}`}</div>
                   <div>{`Gender: ${scannedCodeData ? scannedCodeData?.barcode_data?.gender : ""}`}</div>
-                  <div>{`Street Address1: ${scannedCodeData ? scannedCodeData?.barcode_data?.street_address1 : ""}`}</div>
-                  <div>{`Street Address2: ${scannedCodeData ? scannedCodeData?.barcode_data?.street_address2: ""}`}</div>
+                  <div>{`Street Address1: ${
+                    scannedCodeData ? scannedCodeData?.barcode_data?.street_address1 : ""
+                  }`}</div>
+                  <div>{`Street Address2: ${
+                    scannedCodeData ? scannedCodeData?.barcode_data?.street_address2 : ""
+                  }`}</div>
                   <div>{`City: ${scannedCodeData ? scannedCodeData?.barcode_data?.city : ""}`}</div>
                   <div>{`Postal Code: ${scannedCodeData ? scannedCodeData?.barcode_data?.postal_code : ""}`}</div>
                   <div style={{ display: "flex", gap: "5px" }}>
@@ -1580,10 +1578,7 @@ const Ready = () => {
               >
                 Scan Back Document
               </button>
-              <button
-                className="button"
-                onClick={handlePrividFaceISO}
-              >
+              <button className="button" onClick={handlePrividFaceISO}>
                 Face ISO
               </button>
               <button
@@ -1634,8 +1629,8 @@ const Ready = () => {
             <div>
               <button
                 className="button"
-                onClick={()=>{
-                  handlePredictUrl("collection1");
+                onClick={() => {
+                  handlePredictUrl("collection_d");
                 }}
                 style={
                   disableButtons
@@ -1646,12 +1641,12 @@ const Ready = () => {
                 }
                 disabled={disableButtons}
               >
-                Predict URL 1
+                Predict URL 1 with Identifier
               </button>
               <button
                 className="button"
-                onClick={()=>{
-                  handleEnrollUrl("collection1");
+                onClick={() => {
+                  handleEnrollUrl("collection_d");
                 }}
                 style={
                   disableButtons
@@ -1662,9 +1657,9 @@ const Ready = () => {
                 }
                 disabled={disableButtons}
               >
-                Enroll URL 1
+                Enroll URL 1 with Identifier
               </button>
-              <button
+              {/* <button
                 className="button"
                 onClick={()=>{ 
                   handlePredictUrl("collection2");
@@ -1695,7 +1690,7 @@ const Ready = () => {
                 disabled={disableButtons}
               >
                 Enroll URL 2
-              </button>
+              </button> */}
             </div>
 
             <div>

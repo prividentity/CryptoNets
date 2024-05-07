@@ -22,6 +22,14 @@ const useWasm = () => {
               base_url: apiUrl,
             },
           },
+          collection_d: {
+            named_urls: {
+              predict: "https://api.develv3.cryptonets.ai/node/FACE3_1/predict",
+              enroll: "https://api.develv3.cryptonets.ai/node/FACE3_1/enroll",
+              deleteUser: "https://api.develv3.cryptonets.ai/node/FACE3_1/deleteUser",
+              syncUUID: "https://api.develv3.cryptonets.ai/node/FACE3_1/syncUUID",
+            },
+          },
         },
       },
       api_key: apiKey,

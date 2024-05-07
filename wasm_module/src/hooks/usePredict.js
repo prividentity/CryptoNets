@@ -1,14 +1,17 @@
 import { useState } from "react";
-import { predict1FA } from "@privateid/cryptonets-web-sdk-alpha";
+import { predict } from "@privateid/cryptonets-web-sdk-alpha";
+import { getStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
+
 let loop = true;
-let currentUrl = "";
-const usePredictOneFa = (
-  element = "userVideo",
-  onSuccess,
-  retryTimes = 4,
-  deviceId = null,
-  setShowSuccess,
-  disableButtons
+let skipAntispoofProcess = false;
+let identifierGlobal = undefined;
+let collectionNameGlobal = undefined;
+
+const usePredict = (
+  {
+    onSuccess,
+    disableButtons
+  }
 ) => {
   const [predictMessage, setPredictMessage] = useState("");
 
@@ -18,8 +21,6 @@ const usePredictOneFa = (
   const [predictGUID, setPredictGUID] = useState("");
   const [predictPUID, setPredictPUID] = useState("");
 
-  let skipAntispoofProcess = false;
-
   const callback = async (result) => {
     console.log("predict callback hook result:", result);
 
@@ -28,35 +29,38 @@ const usePredictOneFa = (
       setPredictPUID(result.puid);
       setPredictAntispoofStatus(result.antispoof_status);
       setPredictValidationStatus(result.face_validation_status);
+      setPredictMessage(getStatusMessage(result.face_validation_status));
       disableButtons(false);
+      onSuccess();
     } else {
       setPredictAntispoofStatus(result.antispoof_status);
       setPredictValidationStatus(result.face_validation_status);
-      predictUserOneFa(skipAntispoofProcess, true, currentUrl);
+      predictUserOneFa(skipAntispoofProcess, collectionNameGlobal, identifierGlobal);
     }
   };
 
-  const predictUserOneFa = async (skipAntispoof = true, isRunning = false, url = null) => {
+  const predictUserOneFa = async (
+    skipAntispoof = false,
+    collectionName = undefined,
+    identifier = undefined
+  ) => {
     skipAntispoofProcess = skipAntispoof;
+    collectionNameGlobal = collectionName;
+    identifierGlobal = identifier;
     // eslint-disable-next-line no-unused-vars
-    if (!isRunning) {
-      setPredictAntispoofPerformed("");
-      setPredictAntispoofStatus("");
-      setPredictValidationStatus("");
-      setPredictGUID("");
-      setPredictPUID("");
-      disableButtons(true);
-    }
+    setPredictAntispoofPerformed("");
+    setPredictAntispoofStatus("");
+    setPredictValidationStatus("");
+    setPredictGUID("");
+    setPredictPUID("");
+    disableButtons(true);
 
-    if (url) {
-      currentUrl = url;
-    }
-    await predict1FA({
+    await predict({
       callback,
       config: {
-        skip_antispoof: skipAntispoof,
-        // predict_collection: url,
-        // identifier: "test",
+        collection_name: collectionNameGlobal,
+        skip_antispoof: skipAntispoofProcess,
+        identifier,
       },
     });
   };
@@ -72,4 +76,4 @@ const usePredictOneFa = (
   };
 };
 
-export default usePredictOneFa;
+export default usePredict;

@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@privateid/cryptonets-web-sdk-alpha": "4.0.1-alpha",
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@privateid/cryptonets-web-sdk-alpha": "4.0.3-alpha",
     "@simplewebauthn/browser": "^7.2.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.3.0",
