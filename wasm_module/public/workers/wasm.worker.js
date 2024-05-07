@@ -19,8 +19,9 @@ let setCache = true;
 let checkWasmLoaded = false;
 let wasmPrivAntispoofModule;
 let antispoofVersion;
-const ModuleName = 'face_mask';
-const cdnUrl = 'https://wasm.privateid.com';
+const ModuleName = 'generic';
+const cdnUrl = 'https://privid-wasm.devel.privateid.com'; //Devel
+// const cdnUrl = 'https://privid-wasm.privateid.com'; // Prod
 let useCdnLink = false;
 
 
@@ -57,24 +58,27 @@ const isLoad = (
     const modulePath = simd ? 'simd' : 'noSimd';
     const moduleName = 'privid_fhe';
     const cachedModule = await readKey(ModuleName);
-    const fetchdWasmVersion = await fetchResource(
-      //  `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
-      `../wasm/${ModuleName}/${modulePath}/version.json`,
-      `../wasm/${ModuleName}/${modulePath}/version.json`,
-    );
+   // const fetchdVersion = await fetchdWasmVersion.json();
+    const fetchdWasmVersion = await (await fetch(`../wasm/${ModuleName}/${modulePath}/version.json`)).json();
+    // console.log(
+    //   `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
+    //   `../wasm/${ModuleName}/${modulePath}/version.json`,
+    // );
+    // console.log(
+    //   `check version ${`${
+    //     cachedModule ? cachedModule?.version.toString() : 'no cached version'
+    //   } - ${fetchdWasmVersion?.version.toString()}`}`,
+    // );
+    // const fetchdWasmVersion = await fetchResource(
+    //   //  `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
+    //   `../wasm/${ModuleName}/${}/${modulePath}/version.json`,
+    //   `../wasm/${ModuleName}/${modulePath}/version.json`,
+    // );
 
-    console.log(
-      `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
-      `../wasm/${ModuleName}/${modulePath}/version.json`,
-    );
-    // const fetchdWasmVersion = await fetch(`../wasm/${ModuleName}/${modulePath}/version.json`);
-    const fetchdVersion = await fetchdWasmVersion.json();
-    console.log(
-      `check version ${`${
-        cachedModule ? cachedModule?.version.toString() : 'no cached version'
-      } - ${fetchdVersion?.version.toString()}`}`,
-    );
-    if (cachedModule && cachedModule?.version.toString() === fetchdVersion?.version.toString()) {
+   
+  
+    
+    if (cachedModule && cachedModule?.version.toString() === fetchdWasmVersion?.version.toString()) {
       if (!wasmPrivModule) {
         const { cachedWasm, cachedScript } = cachedModule;
         eval(cachedScript);
@@ -87,7 +91,8 @@ const isLoad = (
       console.log('Module:', wasmPrivModule);
       resolve('Cache Loaded');
     } else {
-      wasmPrivModule = await loadWasmModule(modulePath, moduleName, true);
+      console.log("fetched version?:",fetchdWasmVersion )
+      wasmPrivModule = await loadWasmModule(modulePath, moduleName, true, `${fetchdWasmVersion?.version}`);
       if (!checkWasmLoaded) {
         await initializeWasmSession(url, key, debugType, timeoutSession);
         checkWasmLoaded = true;
@@ -410,6 +415,19 @@ const FHE_predictOnefa = async (originalImages, simd, config, cb) => {
   // create a pointer to interger to hold the length of the output buffer
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   console.log('Config:', config);
+
+  console.log("predict internal data: ", {
+     wasmSession /* session pointer */,
+      configInputPtr,
+      configInputSize,
+      imageInputPtr /* input images */,
+      numImages /* number of input images */,
+      imageLen: originalImages[0].data.length /* size of one image */,
+      imageW: originalImages[0].width /* width of one image */,
+      imageH: originalImages[0].height /* height of one image */,
+      resultFirstPtr /* operation result output buffer */,
+      resultLenPtr 
+  }) 
   try {
     await wasmPrivModule._privid_face_predict_onefa(
       wasmSession /* session pointer */,
@@ -799,7 +817,7 @@ async function initializeWasmSession(url, key, debug_type, timeout = 5000) {
     const settings  = {
       ...url,
       session_token: key,
-      debug_level: debug_type,
+      debug_level: debug_type? parseInt(debugType) : 0,
     }
 
     console.log("Settings:", settings);
@@ -965,14 +983,14 @@ const prividFaceCompareLocal = (imageInputA, imageInputB, simd, debug_type = 0, 
     resolve({ result });
   });
 
-const loadWasmModule = async (modulePath, moduleName, saveCache) => {
+const loadWasmModule = async (modulePath, moduleName, saveCache, version) => {
   const wasm = await fetchResource(
-    `${cdnUrl}/wasm/face_mask/${modulePath}/${moduleName}.wasm`,
-    `../wasm/face_mask/${modulePath}/${moduleName}.wasm`,
+    `${cdnUrl}/${ModuleName}/${modulePath}/${version}/${moduleName}.wasm`,
+    `../wasm/${ModuleName}/${modulePath}/${version}/${moduleName}.wasm`,
   );
   const script = await fetchResource(
-    `${cdnUrl}/wasm/face_mask/${modulePath}/${moduleName}.js`,
-    `../wasm/face_mask/${modulePath}/${moduleName}.js`,
+    `${cdnUrl}/${ModuleName}/${modulePath}/${version}/${moduleName}.js`,
+    `../wasm/${ModuleName}/${modulePath}/${version}/${moduleName}.js`,
   );
   // const wasm = await fetch(`../wasm/face_mask/${modulePath}/${moduleName}.wasm`);
   // const script = await fetch(`../wasm/face_mask/${modulePath}/${moduleName}.js`);
@@ -1122,9 +1140,13 @@ async function fetchResource(cdnUrl, localUrl) {
   try {
     if (useCdnLink) {
       const response = await fetch(cdnUrl);
+      console.log("response?", response);
       return response;
     }
-    return fetch(localUrl);
+    else{
+      const response = await fetch(localUrl);
+      return response
+    }
   } catch (error) {
     console.error(`Error fetching resource from CDN. Falling back to local path. Error: ${error}`);
     return fetch(localUrl);
