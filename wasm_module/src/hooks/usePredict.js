@@ -35,14 +35,17 @@ const usePredict = (
     } else {
       setPredictAntispoofStatus(result.antispoof_status);
       setPredictValidationStatus(result.face_validation_status);
-      predictUserOneFa(skipAntispoofProcess, collectionNameGlobal, identifierGlobal);
+      if(loop){
+        predictUserOneFa(skipAntispoofProcess, collectionNameGlobal, identifierGlobal);
+      }
     }
   };
 
   const predictUserOneFa = async (
     skipAntispoof = false,
     collectionName = undefined,
-    identifier = undefined
+    identifier = undefined,
+    image = undefined
   ) => {
     skipAntispoofProcess = skipAntispoof;
     collectionNameGlobal = collectionName;
@@ -55,6 +58,10 @@ const usePredict = (
     setPredictPUID("");
     disableButtons(true);
 
+    if(image){
+      loop = false;
+    }
+
     await predict({
       callback,
       config: {
@@ -62,6 +69,7 @@ const usePredict = (
         skip_antispoof: skipAntispoofProcess,
         identifier,
       },
+      image: image,
     });
   };
 

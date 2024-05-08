@@ -855,6 +855,10 @@ const Ready = () => {
     }
   };
 
+  const handlePredictWithImage = () => {
+    predictUserOneFa(false, undefined, undefined, uploadImage3);
+  }
+
   const doBackDlScanFromImage = () => {};
 
   const [uploadImage4, setUploadImage4] = useState(null);
@@ -1720,7 +1724,7 @@ const Ready = () => {
                 Do Compare
               </button>
 
-              {/* <label>
+              {/* {/* <label>
                 <input
                   type="file"
                   name="upload"
@@ -1729,10 +1733,10 @@ const Ready = () => {
                   style={{ display: "none" }}
                 />
                 <span className="button">Upload Back Dl Test</span>
-              </label>
+              </label> 
 
               <button onClick={doBackDlScanFromImage}>Handle back dl Scan</button>
-
+            */}
               <label>
                 <input
                   type="file"
@@ -1741,10 +1745,10 @@ const Ready = () => {
                   onChange={handleUploadImage3}
                   style={{ display: "none" }}
                 />
-                <span className="button">Upload Front Dl Test</span>
+                <span className="button">UPLOAD FACEt</span>
               </label>
 
-              <button onClick={doBackDlScanFromImage}>Handle front dl Scan</button> */}
+              <button onClick={handlePredictWithImage}>Predict Face Uploaded</button>
             </div>
           </div>
         </div>
