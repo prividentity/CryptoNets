@@ -5,16 +5,17 @@ import {
   setStopLoopContinuousAuthentication,
   closeCamera,
   faceCompareLocal,
-  documentMugshoFaceCompare,
+  documentMugshotFaceCompare,
 } from "@privateid/cryptonets-web-sdk-test";
+import platform, { os } from "platform";
 
 import {
   useCamera,
   useWasm,
   useDelete,
   useIsValid,
-  useEnrollOneFa,
-  usePredictOneFa,
+  useEnroll,
+  usePredict,
   useScanFrontDocument,
   useScanBackDocument,
 } from "../hooks";
@@ -43,11 +44,50 @@ import { DebugContext } from "../context/DebugContext";
 import useContinuousPredictWithoutRestrictions from "../hooks/useContinuousPredictWithoutRestriction";
 import useMultiFramePredictAge from "../hooks/useMultiFramePredictAge";
 import useOscarLogin from "../hooks/useOscarLogin";
+import { useParams } from "react-router-dom";
+import useEnrollWithAge from "../hooks/useEnrollWithAge";
+import useTwoStepFaceLogin from "../hooks/useTwoStepFaceLogin";
 
 let callingWasm = false;
 const Ready = () => {
   const debugContext = useContext(DebugContext);
+  let { loadSimd } = useParams();
+  console.log(loadSimd);
   const { ready: wasmReady, deviceSupported, init: initWasm } = useWasm();
+
+  const [cameraSettingsList, setCameraSettingsList] = useState({
+    focusDistance: false,
+    exposureTime: false,
+    sharpness: false,
+    brightness: false,
+    saturation: false,
+    contrast: false,
+  });
+
+  const [cameraFocusMin, setCameraFocusMin] = useState(0);
+  const [cameraFocusMax, setCameraFocusMax] = useState(0);
+  const [cameraFocusCurrent, setCameraFocusCurrent] = useState(0);
+
+  const [cameraExposureTimeMin, setCameraExposureTimeMin] = useState(0);
+  const [cameraExposureTimeMax, setCameraExposureTimeMax] = useState(0);
+  const [cameraExposureTimeCurrent, setCameraExposureTimeCurrent] = useState(0);
+
+  const [cameraSharpnessMin, setCameraSharpnessMin] = useState(0);
+  const [cameraSharpnessMax, setCameraSharpnessMax] = useState(0);
+  const [cameraSharpnessCurrent, setCameraSharpnessCurrent] = useState(0);
+
+  const [cameraBrightnessMin, setCameraBrightnessMin] = useState(0);
+  const [cameraBrightnessMax, setCameraBrightnessMax] = useState(0);
+  const [cameraBrightnessCurrent, setCameraBrightnessCurrent] = useState(0);
+
+  const [cameraSaturationMin, setCameraSaturationMin] = useState(0);
+  const [cameraSaturationMax, setCameraSaturationMax] = useState(0);
+  const [cameraSaturationCurrent, setCameraSaturationCurrent] = useState(0);
+
+  const [cameraContrastMin, setCameraContrastMin] = useState(0);
+  const [cameraContrastMax, setCameraContrastMax] = useState(0);
+  const [cameraContrastCurrent, setCameraContrastCurrent] = useState(0);
+
   const {
     ready: cameraReady,
     init: initCamera,
@@ -56,7 +96,29 @@ const Ready = () => {
     settings,
     capabilities,
     setReady,
-  } = useCamera("userVideo");
+  } = useCamera(
+    "userVideo",
+    undefined,
+    setCameraFocusMin,
+    setCameraFocusMax,
+    setCameraFocusCurrent,
+    setCameraExposureTimeMin,
+    setCameraExposureTimeMax,
+    setCameraExposureTimeCurrent,
+    setCameraSharpnessMin,
+    setCameraSharpnessMax,
+    setCameraSharpnessCurrent,
+    setCameraBrightnessMin,
+    setCameraBrightnessMax,
+    setCameraBrightnessCurrent,
+    setCameraSaturationMin,
+    setCameraSaturationMax,
+    setCameraSaturationCurrent,
+    setCameraContrastMin,
+    setCameraContrastMax,
+    setCameraContrastCurrent,
+    setCameraSettingsList
+  );
 
   const [disableButtons, setDisableButtons] = useState(false);
 
@@ -128,7 +190,7 @@ const Ready = () => {
     if (!wasmReady) {
       if (!callingWasm) {
         // NOTE: MAKE SURE THAT WASM IS ONLY LOADED ONCE
-        initWasm();
+        initWasm(loadSimd);
         callingWasm = true;
       }
       return;
@@ -164,14 +226,21 @@ const Ready = () => {
     enrollValidationStatus,
     enrollToken,
     enrollUserOneFa,
-  } = useEnrollOneFa("userVideo", useEnrollSuccess, null, deviceId, setShowSuccess, setDisableButtons);
+    enrollImageData,
+  } = useEnroll({ onSuccess: useEnrollSuccess, disableButtons: setDisableButtons });
   const handleEnrollOneFa = async () => {
     setShowSuccess(false);
     setCurrentAction("useEnrollOneFa");
     enrollUserOneFa("", skipAntiSpoof);
   };
 
-  const handlePreidctSuccess = (result) => {
+  const handleEnrollUrl = async (url) => {
+    setShowSuccess(false);
+    setCurrentAction("useEnrollOneFa");
+    enrollUserOneFa("", skipAntiSpoof, url, "test");
+  };
+
+  const handlePredictSuccess = () => {
     console.log("======PREDICT SUCCESS========");
   };
   const {
@@ -182,7 +251,7 @@ const Ready = () => {
     predictValidationStatus,
     predictMessage,
     predictUserOneFa,
-  } = usePredictOneFa("userVideo", handlePreidctSuccess, 4, null, setShowSuccess, setDisableButtons);
+  } = usePredict({ onSuccess: handlePredictSuccess, disableButtons: setDisableButtons });
   const handlePredictOneFa = async () => {
     console.log("PREDICTING");
     setShowSuccess(false);
@@ -190,17 +259,78 @@ const Ready = () => {
     predictUserOneFa(skipAntiSpoof);
   };
 
+  const handlePredictUrl = async (url) => {
+    console.log("PREDICTING");
+    setShowSuccess(false);
+    setCurrentAction("usePredictWithUrl");
+    predictUserOneFa(skipAntiSpoof, url, "test");
+  };
+
   const handleSwitchCamera = async (e) => {
     setDeviceId(e.target.value);
     const { capabilities = {}, settings = {}, devices } = await switchCamera(null, e.target.value);
     setDeviceCapabilities(capabilities);
     // setDevicesList(devices.map(mapDevices));
+    console.log("switch camera capabilities:", capabilities);
+    console.log("switch camera settings:", settings);
     if (currentAction === "useScanDocumentFront") {
       let width = WIDTH_TO_STANDARDS[settings?.width];
       if (width === "FHD" && settings?.height === 1440) {
         width = "iPhoneCC";
       }
       await handleCanvasSize({ target: { value: width } }, true);
+    }
+
+    try {
+      if (capabilities) {
+        let cameraSettings = {
+          focusDistance: false,
+          exposureTime: false,
+          sharpness: false,
+          brightness: false,
+          saturation: false,
+          contrast: false,
+        };
+        if (capabilities.focusDistance) {
+          setCameraFocusMin(capabilities.focusDistance.min);
+          setCameraFocusMax(capabilities.focusDistance.max);
+          setCameraFocusCurrent(settings.focusDistance);
+          cameraSettings = { ...settings, focusDistance: true };
+        }
+        if (capabilities.exposureTime) {
+          setCameraExposureTimeMin(Math.ceil(capabilities.exposureTime.min));
+          setCameraExposureTimeMax(Math.ceil(capabilities.exposureTime.max));
+          setCameraExposureTimeCurrent(Math.ceil(settings.exposureTime));
+          cameraSettings = { ...settings, exposureTime: true };
+        }
+        if (capabilities.sharpness) {
+          setCameraSharpnessMin(Math.ceil(capabilities.sharpness.min));
+          setCameraSharpnessMax(Math.ceil(capabilities.sharpness.max));
+          setCameraSharpnessCurrent(Math.ceil(settings.sharpness));
+          cameraSettings = { ...settings, sharpness: true };
+        }
+        if (capabilities.brightness) {
+          setCameraBrightnessMin(Math.ceil(capabilities.brightness.min));
+          setCameraBrightnessMax(Math.ceil(capabilities.brightness.max));
+          setCameraBrightnessCurrent(Math.ceil(settings.brightness));
+          cameraSettings = { ...settings, brightness: true };
+        }
+        if (capabilities.saturation) {
+          setCameraSaturationMin(Math.ceil(capabilities.saturation.min));
+          setCameraSaturationMax(Math.ceil(capabilities.saturation.max));
+          setCameraSaturationCurrent(Math.ceil(settings.saturation));
+          cameraSettings = { ...settings, saturation: true };
+        }
+        if (capabilities.contrast) {
+          setCameraContrastMin(Math.ceil(capabilities.contrast.min));
+          setCameraContrastMax(Math.ceil(capabilities.contrast.max));
+          setCameraContrastCurrent(Math.ceil(settings.contrast));
+          cameraSettings = { ...settings, contrast: true };
+        }
+        setCameraSettingsList(cameraSettings);
+      }
+    } catch (e) {
+      //
     }
   };
 
@@ -235,15 +365,18 @@ const Ready = () => {
     barcodeStatusCode,
     croppedBarcodeImage: croppedBarcodeBase64,
     croppedDocumentImage: croppedBackDocumentBase64,
+    clearStatusBackScan,
   } = useScanBackDocument(setShowSuccess);
+
   const handleScanDocumentBack = async () => {
-    setShowSuccess(false);
+    // setShowSuccess(false);
+    clearStatusBackScan();
     setCurrentAction("useScanDocumentBack");
-    await scanBackDocument(undefined, debugContext.functionLoop);
+    await scanBackDocument();
   };
 
-  const isDocumentOrBackCamera =
-    ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) || isBack;
+  // const isDocumentOrBackCamera =
+  //   ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) || isBack;
 
   // Predict Age
   // const {
@@ -299,10 +432,10 @@ const Ready = () => {
     isFound: isfoundValidity,
     scanFrontDocument: scanFrontValidity,
     confidenceValue,
-    predictMugshotImageData,
     isMugshotFound,
     croppedDocumentImage,
     predictMugshotImage,
+    predictMugshotImageData,
     frontScanData,
   } = useScanFrontDocumentWithoutPredict(setShowSuccess);
 
@@ -311,28 +444,28 @@ const Ready = () => {
     await scanFrontValidity(debugContext.functionLoop);
   };
 
-  const handleCanvasSize = async (e, skipSwitchCamera = false) => {
-    if (currentAction === "useScanFrontValidity" || currentAction === "useScanDocumentBack") {
-      setShouldTriggerCallback(false);
-      setCanvasSize(e.target.value);
-      const canvasSize = CANVAS_SIZE[e.target.value];
-      if (!skipSwitchCamera) {
-        const { capabilities = {} } = await switchCamera(null, deviceId || device, canvasSize);
-        setDeviceCapabilities(capabilities);
-      }
-      setShouldTriggerCallback(true);
+  // const handleCanvasSize = async (e, skipSwitchCamera = false) => {
+  //   if (currentAction === "useScanFrontValidity" || currentAction === "useScanDocumentBack") {
+  //     // setShouldTriggerCallback(false);
+  //     setCanvasSize(e.target.value);
+  //     const canvasSize = CANVAS_SIZE[e.target.value];
+  //     if (!skipSwitchCamera) {
+  //       const { capabilities = {} } = await switchCamera(null, deviceId || device, canvasSize);
+  //       setDeviceCapabilities(capabilities);
+  //     }
+  //     // setShouldTriggerCallback(true);
 
-      if (currentAction === "useScanFrontValidity") {
-        setTimeout(async () => {
-          await useScanFrontDocumentWithoutPredict(e.target.value);
-        }, 1000);
-      } else {
-        setTimeout(async () => {
-          await scanBackDocument(e.target.value);
-        }, 1000);
-      }
-    }
-  };
+  //     if (currentAction === "useScanFrontValidity") {
+  //       setTimeout(async () => {
+  //         await useScanFrontDocumentWithoutPredict(e.target.value);
+  //       }, 1000);
+  //     } else {
+  //       setTimeout(async () => {
+  //         await scanBackDocument(e.target.value);
+  //       }, 1000);
+  //     }
+  //   }
+  // };
 
   const { doFaceISO, inputImage, faceISOImageData, faceISOStatus, faceISOError } = usePrividFaceISO();
 
@@ -355,6 +488,7 @@ const Ready = () => {
   const [uploadImage2, setUploadImage2] = useState(null);
 
   const handleUploadImage1 = async (e) => {
+    console.log("clicked");
     console.log(e.target.files);
     const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
     if (e.target.files.length > 0) {
@@ -402,7 +536,7 @@ const Ready = () => {
   };
   const handleUploadImage2 = async (e) => {
     console.log(e.target.files);
-    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
+    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg|image[/]gif/;
     if (e.target.files.length > 0) {
       if (imageRegex.test(e.target.files[0].type)) {
         const imageUrl = URL.createObjectURL(e.target.files[0]);
@@ -424,6 +558,7 @@ const Ready = () => {
         };
 
         const base64 = await getBase64(e.target.files[0]); // prints the base64 string
+        console.log("====> GIF TEST: ", { base64 });
         var newImg = new Image();
         newImg.src = base64;
         newImg.onload = async () => {
@@ -453,7 +588,7 @@ const Ready = () => {
       console.log("COMPARE RESULT", result);
     };
 
-    await documentMugshoFaceCompare(callback, uploadImage1, uploadImage2);
+    await documentMugshotFaceCompare(callback, uploadImage1, uploadImage2);
   };
 
   // Face Login
@@ -503,11 +638,11 @@ const Ready = () => {
     navigator.clipboard.writeText(text);
   };
 
-  const handleLivenessCheck = async () => {
-    setCurrentAction("livenessCheck");
-    resetAllLivenessValues();
-    await doLivenessCheck();
-  };
+  // const handleLivenessCheck = async () => {
+  //   setCurrentAction("livenessCheck");
+  //   resetAllLivenessValues();
+  //   await doLivenessCheck();
+  // };
 
   const {
     continuousPredictWithoutRestrictionsGUID,
@@ -520,6 +655,290 @@ const Ready = () => {
   const handleBurningMan = () => {
     setCurrentAction("useContinuousPredictWithoutRestrictions");
     doContinuousPredictWithoutRestrictions();
+  };
+
+  const handleFocusChange = async (val) => {
+    try {
+      const video = document.getElementById("userVideo");
+      const mediaStream = video.srcObject;
+      const track = await mediaStream.getTracks()[0];
+      const capabilities = track.getCapabilities();
+
+      await track.applyConstraints({
+        advanced: [
+          {
+            focusMode: "manual",
+            focusDistance: val,
+          },
+        ],
+      });
+      const newSettings = await track.getSettings();
+
+      console.log("new Settings", newSettings);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log(e);
+    }
+  };
+
+  const handleExposureTimeChange = async (val) => {
+    try {
+      const video = document.getElementById("userVideo");
+      const mediaStream = video.srcObject;
+      const track = await mediaStream.getTracks()[0];
+      const capabilities = track.getCapabilities();
+      await track.applyConstraints({
+        advanced: [
+          {
+            exposureMode: "manual",
+            exposureTime: val,
+          },
+        ],
+      });
+      const newSettings = await track.getSettings();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log(e);
+    }
+  };
+
+  const handleSharpnessChange = async (val) => {
+    try {
+      const video = document.getElementById("userVideo");
+      const mediaStream = video.srcObject;
+      const track = await mediaStream.getTracks()[0];
+      const capabilities = track.getCapabilities();
+      await track.applyConstraints({
+        advanced: [
+          {
+            sharpness: val,
+          },
+        ],
+      });
+      const newSettings = await track.getSettings();
+
+      console.log("new Settings", newSettings);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log(e);
+    }
+  };
+
+  const handleBrightnessChange = async (val) => {
+    try {
+      const video = document.getElementById("userVideo");
+      const mediaStream = video.srcObject;
+      const track = await mediaStream.getTracks()[0];
+      const capabilities = track.getCapabilities();
+      await track.applyConstraints({
+        advanced: [
+          {
+            brightness: val,
+          },
+        ],
+      });
+      const newSettings = await track.getSettings();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log(e);
+    }
+  };
+
+  const handleSaturationChange = async (val) => {
+    try {
+      const video = document.getElementById("userVideo");
+      const mediaStream = video.srcObject;
+      const track = await mediaStream.getTracks()[0];
+      const capabilities = track.getCapabilities();
+      await track.applyConstraints({
+        advanced: [
+          {
+            saturation: val,
+          },
+        ],
+      });
+      const newSettings = await track.getSettings();
+
+      console.log("new Settings", newSettings);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log(e);
+    }
+  };
+
+  const handleContrastChange = async (val) => {
+    try {
+      const video = document.getElementById("userVideo");
+      const mediaStream = video.srcObject;
+      const track = await mediaStream.getTracks()[0];
+      const capabilities = track.getCapabilities();
+
+      await track.applyConstraints({
+        advanced: [
+          {
+            contrast: val,
+          },
+        ],
+      });
+      const newSettings = await track.getSettings();
+
+      console.log("new Settings", newSettings);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log(e);
+    }
+  };
+
+  // Enroll With Age
+  const {
+    ewaAge,
+    ewaGUID,
+    ewaPUID,
+    ewaAntispoofPerformed,
+    ewaAntispoofStatus,
+    ewaToken,
+    ewaValidationStatus,
+    enrollWithAge,
+  } = useEnrollWithAge("userVideo", () => {}, null, deviceId, setShowSuccess, setDisableButtons);
+
+  const handleEnrollWithAge = async () => {
+    setCurrentAction("enrollWithAge");
+    await enrollWithAge("");
+  };
+
+  const [uploadImage3, setUploadImage3] = useState(null);
+  const handleUploadImage3 = async (e) => {
+    console.log(e.target.files);
+    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg|image[/]gif/;
+    if (e.target.files.length > 0) {
+      if (imageRegex.test(e.target.files[0].type)) {
+        const imageUrl = URL.createObjectURL(e.target.files[0]);
+
+        console.log(e.target.files[0]);
+
+        const getBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+
+            reader.onload = function () {
+              resolve(reader.result);
+            };
+            reader.onerror = function (error) {
+              reject(error);
+            };
+          });
+        };
+
+        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
+        console.log("====> GIF TEST: ", { base64 });
+        var newImg = new Image();
+        newImg.src = base64;
+        newImg.onload = async () => {
+          var imgSize = {
+            w: newImg.width,
+            h: newImg.height,
+          };
+          alert(imgSize.w + " " + imgSize.h);
+          const canvas = document.createElement("canvas");
+          canvas.setAttribute("height", `${imgSize.h}`);
+          canvas.setAttribute("width", `${imgSize.w}`);
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(newImg, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
+          console.log("imageData", imageData);
+          setUploadImage3(imageData);
+        };
+      } else {
+        console.log("INVALID IMAGE TYPE");
+      }
+    }
+  };
+
+  const handlePredictWithImage = () => {
+    predictUserOneFa(false, undefined, undefined, uploadImage3);
+  }
+
+  const doBackDlScanFromImage = () => {};
+
+  const [uploadImage4, setUploadImage4] = useState(null);
+  const handleUploadImage4 = async (e) => {
+    console.log(e.target.files);
+    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg|image[/]gif/;
+    if (e.target.files.length > 0) {
+      if (imageRegex.test(e.target.files[0].type)) {
+        const imageUrl = URL.createObjectURL(e.target.files[0]);
+
+        console.log(e.target.files[0]);
+
+        const getBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+
+            reader.onload = function () {
+              resolve(reader.result);
+            };
+            reader.onerror = function (error) {
+              reject(error);
+            };
+          });
+        };
+
+        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
+        console.log("====> GIF TEST: ", { base64 });
+        var newImg = new Image();
+        newImg.src = base64;
+        newImg.onload = async () => {
+          var imgSize = {
+            w: newImg.width,
+            h: newImg.height,
+          };
+          alert(imgSize.w + " " + imgSize.h);
+          const canvas = document.createElement("canvas");
+          canvas.setAttribute("height", `${imgSize.h}`);
+          canvas.setAttribute("width", `${imgSize.w}`);
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(newImg, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
+          console.log("imageData", imageData);
+          setUploadImage4(imageData);
+        };
+      } else {
+        console.log("INVALID IMAGE TYPE");
+      }
+    }
+  };
+
+  const doFrontDlScanFromImage = () => {};
+
+  function iOS() {
+    return ["iPad Simulator", "iPhone Simulator", "iPod Simulator", "iPad", "iPhone", "iPod"].includes(
+      navigator.platform
+    );
+  }
+
+  const {
+    doTwoStepFaceLogin,
+    faceLoginMessage: twoStepFaceLoginMessage,
+    faceLoginGUID: twoStepFaceLoginGUID,
+    faceLoginPUID: twoStepFaceLoginPUID,
+    faceLoginValidationStatus: twoStepFaceLoginStatus,
+  } = useTwoStepFaceLogin(setShowSuccess);
+
+  const handleTwoStepFaceLogin = async () => {
+    setCurrentAction("twoStepFaceLogin");
+    await doTwoStepFaceLogin();
+  };
+
+  const handleDocumentMugshotFaceCompare = () => {
+    console.log("comparing start!!!");
+    const callback = (result) => {
+      console.log("compare result", result);
+    };
+    documentMugshotFaceCompare(callback, enrollImageData, predictMugshotImageData);
   };
 
   return (
@@ -607,6 +1026,102 @@ const Ready = () => {
                 <></>
               )}
             </div>
+            {cameraSettingsList.focusDistance && (
+              <div>
+                Focus Slider:
+                <input
+                  type="range"
+                  min={cameraFocusMin}
+                  max={cameraFocusMax}
+                  defaultValue={cameraFocusCurrent}
+                  onChange={async (e) => {
+                    console.log("changed");
+                    await handleFocusChange(e.currentTarget.value);
+                  }}
+                />
+              </div>
+            )}
+
+            {cameraSettingsList.exposureTime && (
+              <div>
+                Exposure Time Slider:
+                <input
+                  type="range"
+                  min={cameraExposureTimeMin}
+                  max={cameraExposureTimeMax}
+                  defaultValue={cameraExposureTimeCurrent}
+                  onChange={async (e) => {
+                    console.log("changed");
+                    await handleExposureTimeChange(e.currentTarget.value);
+                  }}
+                />
+              </div>
+            )}
+
+            {cameraSettingsList.sharpness && (
+              <div>
+                Sharpness Slider:
+                <input
+                  type="range"
+                  min={cameraSharpnessMin}
+                  max={cameraSharpnessMax}
+                  defaultValue={cameraSharpnessCurrent}
+                  onChange={async (e) => {
+                    console.log("changed");
+                    await handleSharpnessChange(e.currentTarget.value);
+                  }}
+                />
+              </div>
+            )}
+
+            {cameraSettingsList.brightness && (
+              <div>
+                Brightness Slider:
+                <input
+                  type="range"
+                  min={cameraBrightnessMin}
+                  max={cameraBrightnessMax}
+                  defaultValue={cameraBrightnessCurrent}
+                  onChange={async (e) => {
+                    console.log("changed");
+                    await handleBrightnessChange(e.currentTarget.value);
+                  }}
+                />
+              </div>
+            )}
+
+            {cameraSettingsList.saturation && (
+              <div>
+                Saturation Slider:
+                <input
+                  type="range"
+                  min={cameraSaturationMin}
+                  max={cameraSaturationMax}
+                  defaultValue={cameraSaturationCurrent}
+                  onChange={async (e) => {
+                    console.log("changed");
+                    await handleSaturationChange(e.currentTarget.value);
+                  }}
+                />
+              </div>
+            )}
+
+            {cameraSettingsList.contrast && (
+              <div>
+                Contrast Slider:
+                <input
+                  type="range"
+                  min={cameraContrastMin}
+                  max={cameraContrastMax}
+                  defaultValue={cameraContrastCurrent}
+                  onChange={async (e) => {
+                    console.log("changed");
+                    await handleContrastChange(e.currentTarget.value);
+                  }}
+                />
+              </div>
+            )}
+
             <div className={"cameraContainer"}>
               {currentAction === "useEnrollOneFa" && (
                 <div className="enrollDisplay">
@@ -618,7 +1133,7 @@ const Ready = () => {
                   <span> {getRawFaceValidationStatus(faceLoginValidationStatus)} </span>
                 </div>
               )}
-               {currentAction === "useOscarLogin" && (
+              {currentAction === "useOscarLogin" && (
                 <div className="enrollDisplay">
                   <span> {getRawFaceValidationStatus(oscarLoginValidationStatus)} </span>
                 </div>
@@ -639,11 +1154,13 @@ const Ready = () => {
                   (currentAction === "useScanDocumentFront" ||
                   currentAction === "useScanDocumentBack" ||
                   currentAction === "useScanDocumentFrontValidity" ||
-                  currentAction === "useScanHealthcareCard" 
+                  currentAction === "useScanHealthcareCard"
                     ? `cameraDisplay`
                     : `cameraDisplay mirrored`) +
                   " " +
-                  (showSuccess ? "cameraDisplaySuccess" : "")
+                  (showSuccess ? "cameraDisplaySuccess" : "") +
+                  " " +
+                  (iOS() ? "cameraObjectFitFill" : "")
                 }
                 muted
                 autoPlay
@@ -698,6 +1215,30 @@ const Ready = () => {
                   <div>
                     Enroll PUID:&nbsp;
                     {`${enrollPUID}`}
+                  </div>
+                </div>
+              )}
+
+              {currentAction === "enrollWithAge" && (
+                <div>
+                  <div> Enroll Token: {ewaToken} </div>
+                  <div>
+                    Antispoof Performed:
+                    {JSON.stringify(ewaAntispoofPerformed)}
+                  </div>
+                  <div> Antispoof Status: {ewaAntispoofStatus} </div>
+                  <div> Validation Status: {ewaValidationStatus} </div>
+                  <div>
+                    Enroll GUID:&nbsp;
+                    {`${ewaGUID}`}
+                  </div>
+                  <div>
+                    Enroll PUID:&nbsp;
+                    {`${ewaPUID}`}
+                  </div>
+                  <div>
+                    Age Predicted:
+                    {`${ewaAge}`}
                   </div>
                 </div>
               )}
@@ -759,6 +1300,15 @@ const Ready = () => {
                 </div>
               )}
 
+              {currentAction === "twoStepFaceLogin" && (
+                <div>
+                  <div>{`Face Login Status: ${twoStepFaceLoginStatus}`} </div>
+                  <div>{`Message: ${twoStepFaceLoginMessage || ""}`}</div>
+                  <div>{`Face Login GUID: ${twoStepFaceLoginGUID}`}</div>
+                  <div>{`Face Login PUID: ${twoStepFaceLoginPUID}`}</div>
+                </div>
+              )}
+
               {currentAction === "useOscarLogin" && (
                 <div>
                   <div>{`Face Login Status: ${oscarLoginValidationStatus}`} </div>
@@ -781,15 +1331,19 @@ const Ready = () => {
                 <div>
                   <h2> {`Barcode Status Code: ${barcodeStatusCode}`}</h2>
                   <div>{`Scanned code data: ${scannedCodeData ? "success" : "not found"}`}</div>
-                  <div>{`First Name: ${scannedCodeData ? scannedCodeData.firstName : ""}`}</div>
-                  <div>{`Middle Name: ${scannedCodeData ? scannedCodeData.middleName : ""}`}</div>
-                  <div>{`Last Name: ${scannedCodeData ? scannedCodeData.lastName : ""}`}</div>
-                  <div>{`Date of Birth: ${scannedCodeData ? scannedCodeData.dateOfBirth : ""}`}</div>
-                  <div>{`Gender: ${scannedCodeData ? scannedCodeData.gender : ""}`}</div>
-                  <div>{`Street Address1: ${scannedCodeData ? scannedCodeData.streetAddress1 : ""}`}</div>
-                  <div>{`Street Address2: ${scannedCodeData ? scannedCodeData.streetAddress2 : ""}`}</div>
-                  <div>{`City: ${scannedCodeData ? scannedCodeData.city : ""}`}</div>
-                  <div>{`Postal Code: ${scannedCodeData ? scannedCodeData.postCode : ""}`}</div>
+                  <div>{`First Name: ${scannedCodeData ? scannedCodeData?.barcode_data?.first_name : ""}`}</div>
+                  <div>{`Middle Name: ${scannedCodeData ? scannedCodeData?.barcode_data?.middle_name : ""}`}</div>
+                  <div>{`Last Name: ${scannedCodeData ? scannedCodeData?.barcode_data?.last_name : ""}`}</div>
+                  <div>{`Date of Birth: ${scannedCodeData ? scannedCodeData?.barcode_data?.date_of_birth : ""}`}</div>
+                  <div>{`Gender: ${scannedCodeData ? scannedCodeData?.barcode_data?.gender : ""}`}</div>
+                  <div>{`Street Address1: ${
+                    scannedCodeData ? scannedCodeData?.barcode_data?.street_address1 : ""
+                  }`}</div>
+                  <div>{`Street Address2: ${
+                    scannedCodeData ? scannedCodeData?.barcode_data?.street_address2 : ""
+                  }`}</div>
+                  <div>{`City: ${scannedCodeData ? scannedCodeData?.barcode_data?.city : ""}`}</div>
+                  <div>{`Postal Code: ${scannedCodeData ? scannedCodeData?.barcode_data?.postal_code : ""}`}</div>
                   <div style={{ display: "flex", gap: "5px" }}>
                     {croppedBarcodeBase64 && (
                       <button
@@ -817,12 +1371,12 @@ const Ready = () => {
 
               {currentAction === "useScanDocumentFrontValidity" && (
                 <div>
-                  <div>{`Status Code: ${frontScanData ? frontScanData.returnValue.op_status : ""}`}</div>
+                  {/* <div>{`Status Code: ${frontScanData ? frontScanData.returnValue.op_status : ""}`}</div>
                   <div>
                     {`Status Message: ${
                       frontScanData ? getFrontDocumentStatusMessage(frontScanData.returnValue.op_status) : ""
                     }`}{" "}
-                  </div>
+                  </div> */}
                   <div>{`Document 4 corners found: ${
                     isfoundValidity ? "Document 4 corners available" : "not found"
                   }`}</div>
@@ -896,7 +1450,7 @@ const Ready = () => {
                 }
                 disabled={disableButtons}
               >
-                Predict Age
+                Multiframe Age Predict
               </button>
               <button
                 className="button"
@@ -912,6 +1466,21 @@ const Ready = () => {
               >
                 Enroll
               </button>
+              <button
+                className="button"
+                onClick={handleEnrollWithAge}
+                style={
+                  disableButtons && currentAction !== "enrollWithAge"
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Enroll With Age
+              </button>
+
               <button
                 className="button"
                 onClick={handlePredictOneFa}
@@ -940,7 +1509,7 @@ const Ready = () => {
               >
                 Face Login
               </button>
-              <button
+              {/* <button
                 className="button"
                 onClick={handleOscarLogin}
                 style={
@@ -953,7 +1522,7 @@ const Ready = () => {
                 disabled={disableButtons}
               >
                 Oscar Login
-              </button>
+              </button> */}
               {/* <button className="button" onClick={handleContinuousPredict}>
                 Continuous Authentication
               </button> */}
@@ -1015,20 +1584,9 @@ const Ready = () => {
               >
                 Scan Back Document
               </button>
-              {/* <button
-                className="button"
-                onClick={handlePrividFaceISO}
-                style={
-                  disableButtons
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
-              >
+              <button className="button" onClick={handlePrividFaceISO}>
                 Face ISO
-              </button> */}
+              </button>
               <button
                 className="button"
                 onClick={handleUseScanHealhcareCard}
@@ -1043,6 +1601,21 @@ const Ready = () => {
               >
                 Healthcare Card Scan
               </button>
+
+              <button
+                className="button"
+                onClick={handleTwoStepFaceLogin}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Do Two Step Face Login
+              </button>
               {/* <button
                 className="button"
                 onClick={handleLivenessCheck}
@@ -1056,6 +1629,73 @@ const Ready = () => {
                 disabled={disableButtons}
               >
                 Liveness Check
+              </button> */}
+            </div>
+
+            <div>
+              <button
+                className="button"
+                onClick={() => {
+                  handlePredictUrl("collection_d");
+                }}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Predict URL 1 with Identifier
+              </button>
+              <button
+                className="button"
+                onClick={() => {
+                  handleEnrollUrl("collection_d");
+                }}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Enroll URL 1 with Identifier
+              </button>
+              {/* <button
+                className="button"
+                onClick={()=>{ 
+                  handlePredictUrl("collection2");
+                }}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Predict URL 2
+              </button>
+              <button
+                className="button"
+                onClick={()=>{
+                  handleEnrollUrl("collection2");
+                }}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Enroll URL 2
               </button> */}
             </div>
 
@@ -1082,9 +1722,35 @@ const Ready = () => {
                 <span className="button">Face Image</span>
               </label>
 
-              <button className="button" onClick={handleDoCompare}>
+              <button className="button" onClick={handleDocumentMugshotFaceCompare}>
                 Do Compare
               </button>
+
+              {/* {/* <label>
+                <input
+                  type="file"
+                  name="upload"
+                  accept="image/png, image/gif, image/jpeg"
+                  onChange={handleUploadImage3}
+                  style={{ display: "none" }}
+                />
+                <span className="button">Upload Back Dl Test</span>
+              </label> 
+
+              <button onClick={doBackDlScanFromImage}>Handle back dl Scan</button>
+            */}
+              <label>
+                <input
+                  type="file"
+                  name="upload"
+                  accept="image/png, image/gif, image/jpeg"
+                  onChange={handleUploadImage3}
+                  style={{ display: "none" }}
+                />
+                <span className="button">UPLOAD FACEt</span>
+              </label>
+
+              <button onClick={handlePredictWithImage}>Predict Face Uploaded</button>
             </div>
           </div>
         </div>

@@ -12,7 +12,7 @@ const useDelete = (onDeleteEnd, ready) => {
   };
 
   const onDeleteUser = async (puid) => {
-    deleteUser(puid, callback);
+    deleteUser({uuid: puid, callback:callback});
   };
 
   return { loading, onDeleteUser };

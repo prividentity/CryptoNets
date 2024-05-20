@@ -19,44 +19,86 @@ let setCache = true;
 let checkWasmLoaded = false;
 let wasmPrivAntispoofModule;
 let antispoofVersion;
-const ModuleName = 'face_mask';
+const ModuleName = 'generic';
+const cdnUrl = 'https://privid-wasm.devel.privateid.com'; //Devel
+// const cdnUrl = 'https://privid-wasm.privateid.com'; // Prod
+let useCdnLink = false;
 
-const isLoad = (simd, url, key, debug_type, cacheConfig = true, liveness = false) =>
+
+const createImageArguments = (imageData, width, height) => {
+
+}
+
+const createStringArguments = () => {
+
+}
+
+const isLoad = (
+  simd,
+  url,
+  key,
+  debug_type,
+  cacheConfig = true,
+  timeout = 5000,
+  useCdn = false,
+) =>
   new Promise(async (resolve, reject) => {
     apiUrl = url;
     apiKey = key;
+    useCdnLink = useCdn;
     if (debug_type) {
       debugType = debug_type;
     }
+    let timeoutSession = 5000;
+    if (timeout) {
+      timeoutSession = timeout;
+    }
     setCache = cacheConfig;
+
     const modulePath = simd ? 'simd' : 'noSimd';
     const moduleName = 'privid_fhe';
     const cachedModule = await readKey(ModuleName);
-    const fetchdWasmVersion = await fetch(`../wasm/${ModuleName}/${modulePath}/version.json`);
-    const fetchdVersion = await fetchdWasmVersion.json();
-    console.log(
-      `check version ${`${
-        cachedModule ? cachedModule?.version.toString() : 'no cached version'
-      } - ${fetchdVersion?.version.toString()}`}`,
-    );
-    if (cachedModule && cachedModule?.version.toString() === fetchdVersion?.version.toString()) {
+   // const fetchdVersion = await fetchdWasmVersion.json();
+    const fetchdWasmVersion = await (await fetch(`../wasm/${ModuleName}/${modulePath}/version.json`)).json();
+    // console.log(
+    //   `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
+    //   `../wasm/${ModuleName}/${modulePath}/version.json`,
+    // );
+    // console.log(
+    //   `check version ${`${
+    //     cachedModule ? cachedModule?.version.toString() : 'no cached version'
+    //   } - ${fetchdWasmVersion?.version.toString()}`}`,
+    // );
+    // const fetchdWasmVersion = await fetchResource(
+    //   //  `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
+    //   `../wasm/${ModuleName}/${}/${modulePath}/version.json`,
+    //   `../wasm/${ModuleName}/${modulePath}/version.json`,
+    // );
+
+   
+  
+    
+    if (cachedModule && cachedModule?.version.toString() === fetchdWasmVersion?.version.toString()) {
       if (!wasmPrivModule) {
         const { cachedWasm, cachedScript } = cachedModule;
         eval(cachedScript);
         wasmPrivModule = await createTFLiteModule({ wasmBinary: cachedWasm });
         if (!checkWasmLoaded) {
-          await initializeWasmSession(url, key, debugType);
+          await initializeWasmSession(url, key, debugType, timeoutSession);
           checkWasmLoaded = true;
         }
       }
+      console.log('Module:', wasmPrivModule);
       resolve('Cache Loaded');
     } else {
-      wasmPrivModule = await loadWasmModule(modulePath, moduleName, true);
+      console.log("fetched version?:",fetchdWasmVersion )
+      wasmPrivModule = await loadWasmModule(modulePath, moduleName, true, `${fetchdWasmVersion?.version}`);
       if (!checkWasmLoaded) {
-        await initializeWasmSession(url, key, debugType);
+        await initializeWasmSession(url, key, debugType, timeoutSession);
         checkWasmLoaded = true;
       }
-      // console.log('WASM MODULES:', wasmPrivModule);
+
+      console.log('WASM MODULES:', wasmPrivModule);
       resolve('Loaded');
     }
   });
@@ -74,14 +116,19 @@ function flatten(arrays, TypedArray) {
 async function deleteUUID(uuid, cb) {
   privid_wasm_result = cb;
   const encoder = new TextEncoder();
-  const uuid_bytes = encoder.encode(`${uuid}\0`);
+  const uuid_bytes = encoder.encode(`${uuid}`);
 
   const uuidInputSize = uuid.length;
   const uuidInputPtr = wasmPrivModule._malloc(uuidInputSize);
   wasmPrivModule.HEAP8.set(uuid_bytes, uuidInputPtr / uuid_bytes.BYTES_PER_ELEMENT);
-
-  wasmPrivModule._privid_user_delete(wasmSession, null, 0, uuidInputPtr, uuidInputSize, 0, 0);
+ 
+  const config_bytes = encoder.encode(`{}`);
+  const configSize = "{}".length;
+  const configInputPtr = wasmPrivModule._malloc(configSize);
+  wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
+  wasmPrivModule._privid_user_delete(wasmSession, configInputPtr, configSize, uuidInputPtr, uuidInputSize, 0, 0);
   wasmPrivModule._free(uuidInputPtr);
+  wasmPrivModule._free(configInputPtr);
 }
 
 const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) => {
@@ -108,7 +155,7 @@ const isValidBarCode = async (imageInput, simd, cb, config, debug_type = 0) => {
   const croppedBarcodeBufferLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
   const encoder = new TextEncoder();
-  const config_bytes = encoder.encode(`${config}\0`);
+  const config_bytes = encoder.encode(`${config}`);
 
   const configInputSize = config.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
@@ -170,7 +217,7 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
   // const version = wasmPrivModule._get_version();
 
   const encoder = new TextEncoder();
-  const config_bytes = encoder.encode(`${config}\0`);
+  const config_bytes = encoder.encode(`${config}`);
 
   const configInputSize = config.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
@@ -196,6 +243,18 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
   let result = null;
 
   try {
+    console.log({
+      wasmSession,
+      configInputPtr,
+      configInputSize,
+      inputPtr,
+      width: imageInput.width,
+      height: imageInput.height,
+      croppedDocumentBufferFirstPtr,
+      croppedDocumentBufferLenPtr,
+      croppedMugshotBufferFirstPtr,
+      croppedMugshotBufferLenPtr,
+    })
     result = wasmPrivModule._privid_doc_scan_face(
       wasmSession,
       configInputPtr,
@@ -279,13 +338,13 @@ const FHE_enrollOnefa = async (imageData, simd, config, cb) => {
   const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   const encoder = new TextEncoder();
-  const config_bytes = encoder.encode(`${config}\0`);
+  const config_bytes = encoder.encode(`${config}`);
   const configInputSize = config_bytes.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
   const bestImageFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   const bestImageLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
-
+  console.log('Config:', config);
   try {
     wasmPrivModule._privid_enroll_onefa(
       wasmSession /* session pointer */,
@@ -308,7 +367,7 @@ const FHE_enrollOnefa = async (imageData, simd, config, cb) => {
   let bestImage = null;
 
   const [outputBufferSize] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, bestImageLenPtr, 1);
- 
+
   if (outputBufferSize > 0) {
     let outputBufferSecPtr = null;
     [outputBufferSecPtr] = new Uint32Array(wasmPrivModule.HEAPU8.buffer, bestImageFirstPtr, 1);
@@ -341,7 +400,7 @@ const FHE_predictOnefa = async (originalImages, simd, config, cb) => {
   // const version = wasmPrivModule._get_version();
 
   const encoder = new TextEncoder();
-  const config_bytes = encoder.encode(`${config}\0`);
+  const config_bytes = encoder.encode(`${config}`);
 
   const configInputSize = config.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
@@ -355,7 +414,20 @@ const FHE_predictOnefa = async (originalImages, simd, config, cb) => {
   const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
   // create a pointer to interger to hold the length of the output buffer
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
+  console.log('Config:', config);
 
+  console.log("predict internal data: ", {
+     wasmSession /* session pointer */,
+      configInputPtr,
+      configInputSize,
+      imageInputPtr /* input images */,
+      numImages /* number of input images */,
+      imageLen: originalImages[0].data.length /* size of one image */,
+      imageW: originalImages[0].width /* width of one image */,
+      imageH: originalImages[0].height /* height of one image */,
+      resultFirstPtr /* operation result output buffer */,
+      resultLenPtr 
+  }) 
   try {
     await wasmPrivModule._privid_face_predict_onefa(
       wasmSession /* session pointer */,
@@ -402,7 +474,7 @@ const isValidInternal = async (
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
   const encoder = new TextEncoder();
-  const config_bytes = encoder.encode(`${config}\0`);
+  const config_bytes = encoder.encode(`${config}`);
   const configInputSize = config.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
   wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
@@ -435,7 +507,7 @@ const antispoofCheck = async (data, width, height, config, cb) => {
   wasmPrivModule.HEAP8.set(data, imagePtr / data.BYTES_PER_ELEMENT);
 
   const encoder = new TextEncoder();
-  const config_bytes = encoder.encode(`${config}\0`);
+  const config_bytes = encoder.encode(`${config}`);
   const configInputSize = config.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
   wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
@@ -488,7 +560,7 @@ const prividAgePredict = async (
   const resultLenPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
 
   const encoder = new TextEncoder();
-  const config_bytes = encoder.encode(`${config}\0`);
+  const config_bytes = encoder.encode(`${config}`);
   const configInputSize = config.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
   wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
@@ -614,7 +686,7 @@ async function setCacheConfiguration() {
   db.onsuccess = async function () {
     const cacheObj = JSON.stringify({ cache_type: setCache ? 'basic' : 'nocache' });
     const encoder = new TextEncoder();
-    const cache_config_bytes = encoder.encode(`${cacheObj}\0`);
+    const cache_config_bytes = encoder.encode(`${cacheObj}`);
 
     const cacheInputSize = cacheObj.length;
     const cacheInputPtr = wasmPrivModule._malloc(cacheInputSize);
@@ -738,32 +810,34 @@ const output_ptr = function () {
   };
 };
 
-async function initializeWasmSession(url, key, debug_type) {
+async function initializeWasmSession(url, key, debug_type, timeout = 5000) {
   if (!wasmSession) {
-    const url_args = buffer_args(url);
-    const key_args = buffer_args(key);
+
     const session_out_ptr = output_ptr();
+    const settings  = {
+      ...url,
+      session_token: key,
+      debug_level: debug_type? parseInt(debugType) : 0,
+    }
+
+    console.log("Settings:", settings);
+    const settings_args = buffer_args(JSON.stringify(settings));
+
     const s_result = wasmPrivModule._privid_initialize_session(
-      ...key_args.args(),
-      ...url_args.args(),
-      debug_type,
+      ...settings_args.args(),
       session_out_ptr.outer_ptr(),
     );
-    url_args.free();
-    key_args.free();
+    settings_args.free();
 
     if (s_result) {
-      // console.log('[FAR_DEBUG] : session initialized successfully');
+      console.log('[DEBUG ISLOAD] : session initialized successfully');
     } else {
-      // console.log('[FAR_DEBUG] : session initialized failed');
+      console.log('[DEBUG ISLOADED] : session initialized failed');
       return;
     }
 
-    // get our inner session created by wasm and free the outer container ptr
     wasmSession = session_out_ptr.inner_ptr();
-
     await wasmPrivModule._privid_set_default_configuration(wasmSession, 1);
-    // wasmPrivModule._privid_set_operation_debug_enabled(true);
     if (setCache) {
       await setCacheConfiguration();
     }
@@ -784,18 +858,18 @@ const prividFaceISO = (imageInput, simd, debug_type = 0, cb, config = {}) =>
     const imageInputSize = imageData.length * imageData.BYTES_PER_ELEMENT;
 
     const encoder = new TextEncoder();
-    const config_bytes = encoder.encode(`${config}\0`);
+    const config_bytes = encoder.encode(`${config}`);
     const configInputSize = config.length;
     const configInputPtr = wasmPrivModule._malloc(configInputSize);
     wasmPrivModule.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
     const imageInputPtr = wasmPrivModule._malloc(imageInputSize);
 
-    wasmPrivModule.HEAP8.set(imageInput, imageInputPtr / imageInput.BYTES_PER_ELEMENT);
+    wasmPrivModule.HEAP8.set(imageData, imageInputPtr / imageData.BYTES_PER_ELEMENT);
 
-    const BufferSize = wasmPrivModule._spl_image_embedding_length();
+    // const BufferSize = wasmPrivModule._spl_image_embedding_length();
     // // outupt  ptr
-    const outputBufferSize = BufferSize * 4 * 80;
-    const outputBufferPtr = wasmPrivModule._malloc(outputBufferSize);
+    const outputBufferSize = 360 * 480 * 4 * 80;
+    const outputBufferPtr = wasmPrivModule._malloc(outputBufferSize); //wasmPrivModule._malloc(outputBufferSize);
 
     const resultFirstPtr = wasmPrivModule._malloc(Int32Array.BYTES_PER_ELEMENT);
     // create a pointer to interger to hold the length of the output buffer
@@ -866,7 +940,7 @@ const prividFaceCompareLocal = (imageInputA, imageInputB, simd, debug_type = 0, 
     wasmPrivModule.HEAP8.set(imageDataB, imageInputPtrB / imageDataB.BYTES_PER_ELEMENT);
 
     const encoder = new TextEncoder();
-    const config_bytes = encoder.encode(`${config}\0`);
+    const config_bytes = encoder.encode(`${config}`);
 
     const configInputSize = config.length;
     const configInputPtr = wasmPrivModule._malloc(configInputSize);
@@ -909,16 +983,24 @@ const prividFaceCompareLocal = (imageInputA, imageInputB, simd, debug_type = 0, 
     resolve({ result });
   });
 
-const loadWasmModule = async (modulePath, moduleName, saveCache) => {
-  const wasm = await fetch(`../wasm/face_mask/${modulePath}/${moduleName}.wasm`);
-  const script = await fetch(`../wasm/face_mask/${modulePath}/${moduleName}.js`);
+const loadWasmModule = async (modulePath, moduleName, saveCache, version) => {
+  const wasm = await fetchResource(
+    `${cdnUrl}/${ModuleName}/${modulePath}/${version}/${moduleName}.wasm`,
+    `../wasm/${ModuleName}/${modulePath}/${version}/${moduleName}.wasm`,
+  );
+  const script = await fetchResource(
+    `${cdnUrl}/${ModuleName}/${modulePath}/${version}/${moduleName}.js`,
+    `../wasm/${ModuleName}/${modulePath}/${version}/${moduleName}.js`,
+  );
+  // const wasm = await fetch(`../wasm/face_mask/${modulePath}/${moduleName}.wasm`);
+  // const script = await fetch(`../wasm/face_mask/${modulePath}/${moduleName}.js`);
   const scriptBuffer = await script.text();
   const buffer = await wasm.arrayBuffer();
   eval(scriptBuffer);
   const module = await createTFLiteModule({ wasmBinary: buffer });
   if (saveCache) {
     const version = module.UTF8ToString(module._privid_get_version());
-    await putKey('face_mask', buffer, scriptBuffer, version);
+    await putKey('generic', buffer, scriptBuffer, version);
   }
   return module;
 };
@@ -943,7 +1025,7 @@ const prividDocumentMugshotFaceCompare = (imageInputA, imageInputB, simd, debug_
     wasmPrivModule.HEAP8.set(imageDataB, imageInputPtrB / imageDataB.BYTES_PER_ELEMENT);
 
     const encoder = new TextEncoder();
-    const config_bytes = encoder.encode(`${config}\0`);
+    const config_bytes = encoder.encode(`${config}`);
 
     const configInputSize = config.length;
     const configInputPtr = wasmPrivModule._malloc(configInputSize);
@@ -994,7 +1076,7 @@ const scanDocumentNoFace = async (imageInput, simd, cb, config, debug_type = 0) 
   }
   configGlobal = config;
   const encoder = new TextEncoder();
-  const config_bytes = encoder.encode(`${config}\0`);
+  const config_bytes = encoder.encode(`${config}`);
 
   const configInputSize = config.length;
   const configInputPtr = wasmPrivModule._malloc(configInputSize);
@@ -1053,6 +1135,23 @@ const scanDocumentNoFace = async (imageInput, simd, cb, config, debug_type = 0) 
     imageData: imageBuffer,
   };
 };
+
+async function fetchResource(cdnUrl, localUrl) {
+  try {
+    if (useCdnLink) {
+      const response = await fetch(cdnUrl);
+      console.log("response?", response);
+      return response;
+    }
+    else{
+      const response = await fetch(localUrl);
+      return response
+    }
+  } catch (error) {
+    console.error(`Error fetching resource from CDN. Falling back to local path. Error: ${error}`);
+    return fetch(localUrl);
+  }
+}
 
 Comlink.expose({
   FHE_enrollOnefa,

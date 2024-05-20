@@ -62,9 +62,11 @@ export const canvasSizeOptions = [
   { label: "2K", value: "2K" },
   { label: "FHD (1080p)", value: "FHD" },
   { label: "UXGA", value: "UXGA" },
+  { label: "FACETIME", value: "FACETIME" },
 ];
 
 export const WIDTH_TO_STANDARDS = {
+  1552: "FACETIME",
   1600: "UXGA",
   1920: "FHD",
   2560: "2K",
@@ -84,6 +86,7 @@ const WEB_CANVAS_SIZE = {
   FHD: { width: 1920, height: 1080 },
   iPhoneCC: { width: 1920, height: 1440 },
   UXGA: { width: 1600, height: 1200 },
+  FACETIME: { width: 1552, height: 1552 },
 };
 
 const MOBILE_CANVAS_SIZE = {
