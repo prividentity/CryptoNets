@@ -18,7 +18,15 @@ const useTwoStepFaceLogin = (setShowSuccess = () => {}) => {
     if (result?.processing) {
       setFaceLoginMessage("PROCESSING ! ! !");
     } else {
-      if (result?.face_validation_status === 0 && result?.antispoof_status === 0) {
+      if(result?.noFaceFound){
+        setFaceLoginMessage(getStatusMessage(-1));
+        setFaceLoginAntispoofStatus(result?.antispoof_status);
+        setFaceLoginValidationStatus(result?.face_validation_status);
+        setFaceLoginGUID(result.guid);
+        setFaceLoginPUID(result.puid);
+        doTwoStepFaceLogin(skipAntispoofProcess, true);
+      }
+      else if (result?.face_validation_status === 0 && result?.antispoof_status === 0) {
         setFaceLoginMessage("Valid Face");
         setShowSuccess(true);
         setFaceLoginAntispoofStatus(result?.antispoof_status);

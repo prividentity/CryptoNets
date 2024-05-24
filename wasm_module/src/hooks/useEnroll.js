@@ -56,6 +56,7 @@ const useEnroll = ({ disableButtons, skipAntispoof = false }) => {
         collection_name: collectionNameGlobal,
         skip_antispoof: skipAntispoof,
         identifier: identifierGlobal,
+        send_original_images: true,
       },
     });
 
