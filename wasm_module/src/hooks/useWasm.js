@@ -20,20 +20,20 @@ const useWasm = () => {
           default: {
             named_urls: {
               base_url: apiUrl,
-              enroll: "https://api.develv3.cryptonets.ai/node/FACE4_2/enroll",
-              predict: "https://api.develv3.cryptonets.ai/node/FACE4_2/predict",
-              deleteUser: "https://api.develv3.cryptonets.ai/node/FACE4_2/deleteUser",
-              syncUUID: "https://api.develv3.cryptonets.ai/node/FACE4_2/syncUUID",
+              // enroll: "https://api.develv3.cryptonets.ai/node/FACE4_2/enroll",
+              // predict: "https://api.develv3.cryptonets.ai/node/FACE4_2/predict",
+              // deleteUser: "https://api.develv3.cryptonets.ai/node/FACE4_2/deleteUser",
+              // syncUUID: "https://api.develv3.cryptonets.ai/node/FACE4_2/syncUUID",
             },
           },
-          collection_d: {
-            named_urls: {
-              predict: "https://api.develv3.cryptonets.ai/node/FACE3_1/predict",
-              enroll: "https://api.develv3.cryptonets.ai/node/FACE3_1/enroll",
-              deleteUser: "https://api.develv3.cryptonets.ai/node/FACE3_1/deleteUser",
-              syncUUID: "https://api.develv3.cryptonets.ai/node/FACE3_1/syncUUID",
-            },
-          },
+          // collection_d: {
+          //   named_urls: {
+          //     predict: "https://api.develv3.cryptonets.ai/node/FACE3_1/predict",
+          //     enroll: "https://api.develv3.cryptonets.ai/node/FACE3_1/enroll",
+          //     deleteUser: "https://api.develv3.cryptonets.ai/node/FACE3_1/deleteUser",
+          //     syncUUID: "https://api.develv3.cryptonets.ai/node/FACE3_1/syncUUID",
+          //   },
+          // },
         },
       },
       api_key: apiKey,
