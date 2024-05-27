@@ -925,6 +925,7 @@ const Ready = () => {
     faceLoginGUID: twoStepFaceLoginGUID,
     faceLoginPUID: twoStepFaceLoginPUID,
     faceLoginValidationStatus: twoStepFaceLoginStatus,
+    faceLoginAntispoofStatus: twoStepFaceLoginAntispoofStatus,
   } = useTwoStepFaceLogin(setShowSuccess);
 
   const handleTwoStepFaceLogin = async () => {
@@ -1300,7 +1301,8 @@ const Ready = () => {
 
               {currentAction === "twoStepFaceLogin" && (
                 <div>
-                  <div>{`Face Login Status: ${twoStepFaceLoginStatus}`} </div>
+                  <div>{`Face Validation Status: ${twoStepFaceLoginStatus}`} </div>
+                  <div>{`Antispoof Status: ${twoStepFaceLoginAntispoofStatus}`} </div>
                   <div>{`Message: ${twoStepFaceLoginMessage || ""}`}</div>
                   <div>{`Face Login GUID: ${twoStepFaceLoginGUID}`}</div>
                   <div>{`Face Login PUID: ${twoStepFaceLoginPUID}`}</div>
