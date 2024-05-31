@@ -25,6 +25,9 @@ const useFaceLogin = (
       setFaceLoginPUID(result.puid);
       setFaceLoginAntispoofStatus(result.antispoof_status);
       setFaceLoginValidationStatus(result.face_validation_status);
+      setShowSuccess(true);
+      disableButtons(false);
+      onSuccess();
     } else {
       setFaceLoginAntispoofStatus(result.antispoof_status);
       setFaceLoginValidationStatus(result.face_validation_status);
