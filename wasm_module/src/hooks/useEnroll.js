@@ -57,7 +57,7 @@ const useEnroll = ({ disableButtons, skipAntispoof = false }) => {
         skip_antispoof: skipAntispoof,
         identifier: identifierGlobal,
         //send_original_images: true,
-        anti_spoofing_threshold: 0.95,
+        anti_spoofing_threshold: 0.97,
       },
     });
 

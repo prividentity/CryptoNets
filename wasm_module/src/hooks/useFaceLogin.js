@@ -52,7 +52,7 @@ const useFaceLogin = (
       config: {
         skipAntispoof: skipAntispoof,
         conf_score_thr_barcode: 85,
-        anti_spoofing_threshold: 0.95,
+        anti_spoofing_threshold: 0.97,
       },
     });
   };
