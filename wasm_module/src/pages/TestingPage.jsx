@@ -47,6 +47,7 @@ import useOscarLogin from "../hooks/useOscarLogin";
 import { useParams } from "react-router-dom";
 import useEnrollWithAge from "../hooks/useEnrollWithAge";
 import useTwoStepFaceLogin from "../hooks/useTwoStepFaceLogin";
+import useMultiframeTwoStepFaceLogin from "../hooks/useMultiframeTwoStepFaceLogin";
 
 let callingWasm = false;
 const Ready = () => {
@@ -857,7 +858,7 @@ const Ready = () => {
 
   const handlePredictWithImage = () => {
     predictUserOneFa(false, undefined, undefined, uploadImage3);
-  }
+  };
 
   const doBackDlScanFromImage = () => {};
 
@@ -939,6 +940,21 @@ const Ready = () => {
       console.log("compare result", result);
     };
     documentMugshotFaceCompare(callback, enrollImageData, predictMugshotImageData);
+  };
+
+  const {
+    doTwoStepFaceLogin: doTwoStepMultiframeFaceLogin,
+    faceLoginGUID: twoStepMultiframeFaceLoginGUID,
+    faceLoginPUID: twoStepMultiframeFaceLoginPUID,
+    faceLoginAntispoofPerformed: twoStepMultiframeFaceLoginAntispoofPerformed,
+    faceLoginAntispoofStatus: twoStepMultiframeFaceLoginAntispoofStatus,
+    faceLoginValidationStatus: twoStepMultiframeFaceLoginValidationStatus,
+    faceLoginMessage: twoStepMultiframeFaceLoginMessage,
+  } = useMultiframeTwoStepFaceLogin(setShowSuccess);
+
+  const handleMultiframeTwoStepFaceLogin = () => {
+    setCurrentAction("useMultiframeTwoStepFaceLogin");
+    doTwoStepMultiframeFaceLogin();
   };
 
   return (
@@ -1309,6 +1325,16 @@ const Ready = () => {
                 </div>
               )}
 
+              {currentAction === "useMultiframeTwoStepFaceLogin" && (
+                <div>
+                  <div>{`Face Validation Status: ${twoStepMultiframeFaceLoginValidationStatus}`} </div>
+                  <div>{`Antispoof Status: ${twoStepMultiframeFaceLoginAntispoofStatus}`} </div>
+                  <div>{`Message: ${twoStepMultiframeFaceLoginMessage || ""}`}</div>
+                  <div>{`Face Login GUID: ${twoStepMultiframeFaceLoginGUID}`}</div>
+                  <div>{`Face Login PUID: ${twoStepMultiframeFaceLoginPUID}`}</div>
+                </div>
+              )}
+
               {currentAction === "useOscarLogin" && (
                 <div>
                   <div>{`Face Login Status: ${oscarLoginValidationStatus}`} </div>
@@ -1616,6 +1642,21 @@ const Ready = () => {
               >
                 Do Two Step Face Login
               </button>
+              <button
+                className="button"
+                onClick={handleMultiframeTwoStepFaceLogin}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Do Multiframe Two Step Face Login
+              </button>
+
               {/* <button
                 className="button"
                 onClick={handleLivenessCheck}

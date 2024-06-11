@@ -53,6 +53,7 @@ const useFaceLogin = (
         skipAntispoof: skipAntispoof,
         conf_score_thr_barcode: 85,
         anti_spoofing_threshold: 0.98,
+        send_original_images: true,
       },
     });
   };

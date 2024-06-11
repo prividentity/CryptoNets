@@ -19,11 +19,11 @@ const useWasm = () => {
         collections: {
           default: {
             named_urls: {
-              base_url:  apiUrl, //"https://coreapi.devel.cryptonets.ai"
-              enroll: "https://api.develv3.cryptonets.ai/node/FACE4_2/enroll",
-              predict: "https://api.develv3.cryptonets.ai/node/FACE4_2/predict",
-              deleteUser: "https://api.develv3.cryptonets.ai/node/FACE4_2/deleteUser",
-              syncUUID: "https://api.develv3.cryptonets.ai/node/FACE4_2/syncUUID",
+              base_url: "https://coreapi.devel.cryptonets.ai",// apiUrl, //"https://coreapi.devel.cryptonets.ai"
+              // enroll: "https://api.develv3.cryptonets.ai/node/FACE4_2/enroll",
+              // predict: "https://api.develv3.cryptonets.ai/node/FACE4_2/predict",
+              // deleteUser: "https://api.develv3.cryptonets.ai/node/FACE4_2/deleteUser",
+              // syncUUID: "https://api.develv3.cryptonets.ai/node/FACE4_2/syncUUID",
             },
           },
           // collection_d: {

@@ -54,7 +54,7 @@ const isLoad = (
     }
     setCache = cacheConfig;
 
-    const modulePath = simd ? 'simd' : 'noSimd';
+    const modulePath = simd ? 'simd' : 'nosimd';
     const moduleName = 'privid_fhe';
     const cachedModule = await readKey(ModuleName);
    // const fetchdVersion = await fetchdWasmVersion.json();
