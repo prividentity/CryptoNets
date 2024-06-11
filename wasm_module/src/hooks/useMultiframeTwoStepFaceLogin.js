@@ -62,7 +62,9 @@ const useMultiframeTwoStepFaceLogin = (setShowSuccess = () => {}) => {
       setFaceLoginPUID("");
     }
 
-    await multiframeTwoStepFaceLogin({ callback });
+    await multiframeTwoStepFaceLogin({ callback, config: {
+      send_original_images: true,
+    } });
   };
 
   return {
