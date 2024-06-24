@@ -48,6 +48,7 @@ import { useParams } from "react-router-dom";
 import useEnrollWithAge from "../hooks/useEnrollWithAge";
 import useTwoStepFaceLogin from "../hooks/useTwoStepFaceLogin";
 import useMultiframeTwoStepFaceLogin from "../hooks/useMultiframeTwoStepFaceLogin";
+import useMultiframePredict from "../hooks/useMultiframePredict";
 
 let callingWasm = false;
 const Ready = () => {
@@ -957,6 +958,21 @@ const Ready = () => {
     doTwoStepMultiframeFaceLogin();
   };
 
+  const {
+    multiframePredictAntispoofPerformed,
+    multiframePredictAntispoofStatus,
+    multiframePredictGUID,
+    multiframePredictMessage,
+    multiframePredictPUID,
+    multiframePredictUserOneFa,
+    multiframePredictValidationStatus,
+  } = useMultiframePredict({ onSuccess: ()=>{}, disableButtons: setDisableButtons });
+
+
+  const handleMultiframePredict = async () => {
+    setCurrentAction("useMultiframePredict");
+    multiframePredictUserOneFa({mf_token: ""});
+  }
   return (
     <>
       {deviceSupported.isChecking ? (
@@ -1286,6 +1302,17 @@ const Ready = () => {
                 </div>
               )}
 
+              {currentAction === "useMultiframePredict" && (
+                <div>
+                  <div>{`Status: ${multiframePredictValidationStatus}`} </div>
+                  <div>{`Message: ${multiframePredictMessage || ""}`}</div>
+                  <div>{`Antispoof Performed: ${multiframePredictAntispoofPerformed}`}</div>
+                  <div>{`Antispoof Status: ${multiframePredictAntispoofStatus}`}</div>
+                  <div>{`Predicted GUID: ${multiframePredictGUID}`}</div>
+                  <div>{`Predicted PUID: ${multiframePredictPUID}`}</div>
+                </div>
+              )}
+
               {currentAction === "useContinuousPredictWithoutRestrictions" && (
                 <div>
                   <div>{`Status: ${continuousPredictWithoutRestrictionsValidationStatus}`} </div>
@@ -1521,6 +1548,21 @@ const Ready = () => {
               >
                 Predict
               </button>
+              <button
+                className="button"
+                onClick={handleMultiframePredict}
+                style={
+                  disableButtons && currentAction !== "useMultiframePredict"
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Multiframe-Predict
+              </button>
+
               <button
                 className="button"
                 onClick={handleFaceLogin}
