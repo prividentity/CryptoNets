@@ -36,6 +36,7 @@ const useMultiframePredict = (
     } else {
       setPredictAntispoofStatus(result.antispoof_status);
       setPredictValidationStatus(result.face_validation_status);
+      setPredictMessage(getStatusMessage(result.face_validation_status));
       if(loop){
         multiframePredictUserOneFa({mf_token:result?.mf_token});
       }
