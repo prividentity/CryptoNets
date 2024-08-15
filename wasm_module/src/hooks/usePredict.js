@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { predict } from "@privateid/cryptonets-web-sdk-alpha";
+import { predict } from "@privateid/ultra-web-sdk-alpha";
 import { getStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
 
 let loop = true;
@@ -68,6 +68,8 @@ const usePredict = (
         collection_name: collectionNameGlobal,
         skip_antispoof: skipAntispoofProcess,
         identifier,
+        //allowed_result: [10],
+        collection_name: "collection_d"
       },
       image: image,
     });

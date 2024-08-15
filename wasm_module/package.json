@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@privateid/cryptonets-web-sdk-alpha": "4.1.7-alpha",
+    "@privateid/cryptonets-web-sdk-alpha": "4.2.3-alpha",
     "@simplewebauthn/browser": "^7.2.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.3.0",
@@ -23,9 +23,9 @@
     "npm": "8.11.0"
   },
   "scripts": {
-    "prestart": "cp -R ./node_modules/@privateid/cryptonets-web-sdk-alpha/wasm public/&& cp -R ./node_modules/@privateid/cryptonets-web-sdk-alpha/workers public/",
+    "prestart": "cp -R ./node_modules/@privateid/ultra-web-sdk-alpha/wasm public/&& cp -R ./node_modules/@privateid/ultra-web-sdk-alpha/workers public/",
     "start": "cross-env GENERATE_SOURCEMAP=false react-scripts start",
-    "prebuild": "cp -R ./node_modules/@privateid/cryptonets-web-sdk-alpha/wasm public/ && cp -R ./node_modules/@privateid/cryptonets-web-sdk-alpha/workers public/",
+    "prebuild": "cp -R ./node_modules/@privateid/ultra-web-sdk-alpha/wasm public/ && cp -R ./node_modules/@privateid/ultra-web-sdk-alpha/workers public/",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

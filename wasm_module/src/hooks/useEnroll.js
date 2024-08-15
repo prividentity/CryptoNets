@@ -1,4 +1,4 @@
-import { convertCroppedImage, enroll } from "@privateid/cryptonets-web-sdk-alpha";
+import { convertCroppedImage, enroll } from "@privateid/ultra-web-sdk-alpha";
 import { useState } from "react";
 
 let skipAntispoofProcess = false;
@@ -56,18 +56,18 @@ const useEnroll = ({ disableButtons, skipAntispoof = false }) => {
         collection_name: collectionNameGlobal,
         skip_antispoof: skipAntispoof,
         identifier: identifierGlobal,
-        send_original_images: true,
-        anti_spoofing_threshold: 0.75,
       },
     });
 
     if (bestImage) {
-      setEnrollImageData(new ImageData(bestImage.imageData, bestImage.width, bestImage.height));
-      const bestImagePortrait = await convertCroppedImage(bestImage.imageData, bestImage.width, bestImage.height);
-      console.log("enroll image:", bestImagePortrait);
+      try {
+        setEnrollImageData(new ImageData(bestImage.imageData, bestImage.width, bestImage.height));
+        const bestImagePortrait = await convertCroppedImage(bestImage.imageData, bestImage.width, bestImage.height);
+        console.log("enroll image:", bestImagePortrait);
+      } catch (e) {}
     }
   };
-  
+
   return {
     enrollGUID,
     enrollPUID,

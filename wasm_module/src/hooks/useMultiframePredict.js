@@ -1,18 +1,8 @@
 import { useState } from "react";
-import { predict } from "@privateid/cryptonets-web-sdk-alpha";
+import { predict } from "@privateid/ultra-web-sdk-alpha";
 import { getStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
 
-let loop = true;
-let skipAntispoofProcess = false;
-let identifierGlobal = undefined;
-let collectionNameGlobal = undefined;
-
-const useMultiframePredict = (
-  {
-    onSuccess,
-    disableButtons
-  }
-) => {
+const useMultiframePredict = ({ onSuccess, disableButtons }) => {
   const [multiframePredictMessage, setPredictMessage] = useState("");
 
   const [multiframePredictAntispoofPerformed, setPredictAntispoofPerformed] = useState("");
@@ -20,7 +10,6 @@ const useMultiframePredict = (
   const [multiframePredictValidationStatus, setPredictValidationStatus] = useState("");
   const [multiframePredictGUID, setPredictGUID] = useState("");
   const [multiframePredictPUID, setPredictPUID] = useState("");
-  const [multiframePredictMfToken, setMultiframePredictMfToken] = useState("");
 
   const callback = async (result) => {
     console.log("predict callback hook result:", result);
@@ -34,22 +23,14 @@ const useMultiframePredict = (
       disableButtons(false);
       onSuccess();
     } else {
+      // if face_validation_status and antispoof_status !===0 display message
       setPredictAntispoofStatus(result.antispoof_status);
       setPredictValidationStatus(result.face_validation_status);
-      if(loop){
-        multiframePredictUserOneFa({mf_token:result?.mf_token});
-      }
+      multiframePredictUserOneFa({ mf_token: result?.mf_token });
     }
   };
 
-  const multiframePredictUserOneFa = async ({
-    mf_token,
-  }
-  
-  ) => {
-    // skipAntispoofProcess = skipAntispoof;
-    // collectionNameGlobal = collectionName;
-    // identifierGlobal = identifier;
+  const multiframePredictUserOneFa = async ({ mf_token }) => {
     // eslint-disable-next-line no-unused-vars
     setPredictAntispoofPerformed("");
     setPredictAntispoofStatus("");
@@ -58,20 +39,13 @@ const useMultiframePredict = (
     setPredictPUID("");
     disableButtons(true);
 
-    // if(image){
-    //   loop = false;
-    // }
-
     await predict({
       callback,
       config: {
-       // collection_name: collectionNameGlobal,
-       // skip_antispoof: skipAntispoofProcess,
-       // identifier,
-        disable_predict_mf:false,
+        disable_predict_mf: false,
         mf_token: mf_token || "",
+        collection_name: "collection_d",
       },
-      //image: image,
     });
   };
 
