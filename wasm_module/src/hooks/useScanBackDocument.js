@@ -26,7 +26,7 @@ const useScanBackDocument = (setShowSuccess) => {
   const documentCallback = (result) => {
     console.log("--------- Back scan callback result:", result);
 
-    if(result?.barcode_scan){
+    if(result.barcode_scan){
       if (result.barcode_detection_status === 0) {
         setBarcodeStatusCode(0);
         setIsFound(true);
@@ -38,14 +38,14 @@ const useScanBackDocument = (setShowSuccess) => {
       }
     }
     else{
-      if(result.document_validation_status === 0){
+      if(result.doc_validation_status === 0){
         setBarcodeStatusCode(0);
         setIsFound(true);
         setResultValue(result);
         setScannedCodeData(result);
       } 
       else{
-        setBarcodeStatusCode(result.document_validation_status || result.barcode_detection_status);
+        setBarcodeStatusCode(result.doc_validation_status);
         doScanBackDocument();
       }
     }
