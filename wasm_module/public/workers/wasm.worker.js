@@ -19,28 +19,15 @@ let setCache = true;
 let checkWasmLoaded = false;
 let antispoofVersion;
 const ModuleName = 'generic';
-//const cdnUrl = 'https://privid-wasm.devel.privateid.com'; //Devel
-const cdnUrl = 'https://privid-wasm.privateid.com'; // Prod
+const cdnUrl = 'https://privid-wasm.devel.privateid.com'; //Devel
+// const cdnUrl = 'https://privid-wasm.privateid.com'; // Prod
 let useCdnLink = false;
 
+const createImageArguments = (imageData, width, height) => {};
 
-const createImageArguments = (imageData, width, height) => {
+const createStringArguments = () => {};
 
-}
-
-const createStringArguments = () => {
-
-}
-
-const isLoad = (
-  simd,
-  url,
-  key,
-  debug_type,
-  cacheConfig = true,
-  timeout = 5000,
-  useCdn = false,
-) =>
+const isLoad = (simd, url, key, debug_type, cacheConfig = true, timeout = 5000, useCdn = false) =>
   new Promise(async (resolve, reject) => {
     apiUrl = url;
     apiKey = key;
@@ -57,7 +44,7 @@ const isLoad = (
     const modulePath = simd ? 'simd' : 'nosimd';
     const moduleName = 'privid_fhe';
     const cachedModule = await readKey(ModuleName);
-   // const fetchdVersion = await fetchdWasmVersion.json();
+    // const fetchdVersion = await fetchdWasmVersion.json();
     const fetchdWasmVersion = await (await fetch(`../wasm/${ModuleName}/${modulePath}/version.json`)).json();
     // console.log(
     //   `${cdnUrl}/wasm/${ModuleName}/${modulePath}/version.json`,
@@ -74,9 +61,6 @@ const isLoad = (
     //   `../wasm/${ModuleName}/${modulePath}/version.json`,
     // );
 
-   
-  
-    
     if (cachedModule && cachedModule?.version.toString() === fetchdWasmVersion?.version.toString()) {
       if (!wasmPrivModules) {
         const { cachedWasm, cachedScript } = cachedModule;
@@ -86,18 +70,19 @@ const isLoad = (
           await initializeWasmSession(url, key, debugType, timeoutSession);
           checkWasmLoaded = true;
         }
+        // console.log('WASM MODULES:', wasmPrivModules);
       }
-      console.log('Module:', wasmPrivModules);
+
       resolve('Cache Loaded');
     } else {
-      console.log("fetched version?:",fetchdWasmVersion )
+      console.log('fetched version?:', fetchdWasmVersion);
       wasmPrivModules = await loadWasmModule(modulePath, moduleName, true, `${fetchdWasmVersion?.version}`);
       if (!checkWasmLoaded) {
         await initializeWasmSession(url, key, debugType, timeoutSession);
         checkWasmLoaded = true;
       }
 
-      console.log('WASM MODULES:', wasmPrivModules);
+      // console.log('WASM MODULES:', wasmPrivModules);
       resolve('Loaded');
     }
   });
@@ -120,9 +105,9 @@ async function deleteUUID(uuid, cb) {
   const uuidInputSize = uuid.length;
   const uuidInputPtr = wasmPrivModules._malloc(uuidInputSize);
   wasmPrivModules.HEAP8.set(uuid_bytes, uuidInputPtr / uuid_bytes.BYTES_PER_ELEMENT);
- 
+
   const config_bytes = encoder.encode(`{}`);
-  const configSize = "{}".length;
+  const configSize = '{}'.length;
   const configInputPtr = wasmPrivModules._malloc(configSize);
   wasmPrivModules.HEAP8.set(config_bytes, configInputPtr / config_bytes.BYTES_PER_ELEMENT);
   wasmPrivModules._privid_user_delete(wasmSession, configInputPtr, configSize, uuidInputPtr, uuidInputSize, 0, 0);
@@ -253,7 +238,7 @@ const scanDocument = async (imageInput, simd, cb, doPredict, config, debug_type 
       croppedDocumentBufferLenPtr,
       croppedMugshotBufferFirstPtr,
       croppedMugshotBufferLenPtr,
-    })
+    });
     result = wasmPrivModules._privid_doc_scan_face(
       wasmSession,
       configInputPtr,
@@ -374,6 +359,7 @@ const FHE_enrollOnefa = async (imageData, simd, config, cb) => {
     const outputBuffer = Uint8ClampedArray.from(outputBufferPtr);
     const outputBufferData = outputBufferSize > 0 ? outputBuffer : null;
     bestImage = { imageData: outputBufferData, width: imageData.width, height: imageData.height };
+    wasmPrivModules._free(outputBufferPtr);
   }
 
   wasmPrivModules._free(imageInputPtr);
@@ -415,18 +401,18 @@ const FHE_predictOnefa = async (originalImages, simd, config, cb) => {
   const resultLenPtr = wasmPrivModules._malloc(Int32Array.BYTES_PER_ELEMENT);
   console.log('Config:', config);
 
-  console.log("predict internal data: ", {
-     wasmSession /* session pointer */,
-      configInputPtr,
-      configInputSize,
-      imageInputPtr /* input images */,
-      numImages /* number of input images */,
-      imageLen: originalImages[0].data.length /* size of one image */,
-      imageW: originalImages[0].width /* width of one image */,
-      imageH: originalImages[0].height /* height of one image */,
-      resultFirstPtr /* operation result output buffer */,
-      resultLenPtr 
-  }) 
+  // console.log("predict internal data: ", {
+  //    wasmSession /* session pointer */,
+  //     configInputPtr,
+  //     configInputSize,
+  //     imageInputPtr /* input images */,
+  //     numImages /* number of input images */,
+  //     imageLen: originalImages[0].data.length /* size of one image */,
+  //     imageW: originalImages[0].width /* width of one image */,
+  //     imageH: originalImages[0].height /* height of one image */,
+  //     resultFirstPtr /* operation result output buffer */,
+  //     resultLenPtr
+  // })
   try {
     await wasmPrivModules._privid_face_predict_onefa(
       wasmSession /* session pointer */,
@@ -459,7 +445,7 @@ const isValidInternal = async (
   cb,
 ) => {
   privid_wasm_result = cb;
-  
+
   if (!wasmPrivModules) {
     await isLoad(simd, apiUrl, apiKey, debugType);
   }
@@ -812,21 +798,17 @@ const output_ptr = function () {
 
 async function initializeWasmSession(url, key, debug_type, timeout = 5000) {
   if (!wasmSession) {
-
     const session_out_ptr = output_ptr();
-    const settings  = {
+    const settings = {
       ...url,
       session_token: key,
-      debug_level: debug_type? parseInt(debugType) : 0,
-    }
+      debug_level: debug_type ? parseInt(debugType) : 0,
+    };
 
-    console.log("Settings:", settings);
+    console.log('Settings:', settings);
     const settings_args = buffer_args(JSON.stringify(settings));
 
-    const s_result = wasmPrivModules._privid_initialize_session(
-      ...settings_args.args(),
-      session_out_ptr.outer_ptr(),
-    );
+    const s_result = wasmPrivModules._privid_initialize_session(...settings_args.args(), session_out_ptr.outer_ptr());
     settings_args.free();
 
     if (s_result) {
@@ -1140,12 +1122,11 @@ async function fetchResource(cdnUrl, localUrl) {
   try {
     if (useCdnLink) {
       const response = await fetch(cdnUrl);
-      console.log("response?", response);
+      console.log('response?', response);
       return response;
-    }
-    else{
+    } else {
       const response = await fetch(localUrl);
-      return response
+      return response;
     }
   } catch (error) {
     console.error(`Error fetching resource from CDN. Falling back to local path. Error: ${error}`);
