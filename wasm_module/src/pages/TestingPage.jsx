@@ -31,6 +31,7 @@ import {
 import "./styles.css";
 import usePredictAge from "../hooks/usePredictAge";
 import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocument";
+import useScanFrontDocumentOCR from "../hooks/useScanFrontDocumentOCR";
 import usePrividFaceISO from "../hooks/usePrividFaceISO";
 import useFaceLogin from "../hooks/useFaceLogin";
 import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
@@ -439,10 +440,20 @@ const Ready = () => {
     predictMugshotImageData,
     frontScanData,
   } = useScanFrontDocumentWithoutPredict(setShowSuccess);
-
   const handleFrontDLValidity = async () => {
     setCurrentAction("useScanDocumentFrontValidity");
     await scanFrontValidity(debugContext.functionLoop);
+  };
+
+  const {
+    isFound: isfoundOCR,
+    scanFrontDocument: scanFrontOCR,
+    ageOCR
+  } = useScanFrontDocumentOCR(setShowSuccess); 
+
+  const handleFrontDLOCR = async () => {
+    setCurrentAction("useScanDocumentFrontOCR");
+    await scanFrontOCR(debugContext.functionLoop);
   };
 
   // const handleCanvasSize = async (e, skipSwitchCamera = false) => {
@@ -1186,7 +1197,8 @@ const Ready = () => {
                   (currentAction === "useScanDocumentFront" ||
                   currentAction === "useScanDocumentBack" ||
                   currentAction === "useScanDocumentFrontValidity" ||
-                  currentAction === "useScanHealthcareCard"
+                    currentAction === "useScanHealthcareCard" ||
+                    currentAction === "useScanDocumentFrontOCR"
                     ? `cameraDisplay`
                     : `cameraDisplay mirrored`) +
                   " " +
@@ -1455,6 +1467,21 @@ const Ready = () => {
                     </div>
                   )}
                 </div>
+                )}
+                
+                {currentAction === "useScanDocumentFrontOCR" && (
+                <div>
+                  {/* <div>{`Status Code: ${frontScanData ? frontScanData.returnValue.op_status : ""}`}</div>
+                  <div>
+                    {`Status Message: ${
+                      frontScanData ? getFrontDocumentStatusMessage(frontScanData.returnValue.op_status) : ""
+                    }`}{" "}
+                  </div> */}
+                  <div>{`Document 4 corners found: ${
+                    isfoundOCR ? "Document 4 corners available" : "not found"
+                  }`}</div>
+                  <div>{`Age: ${ageOCR ? age : ''}`}</div>
+                </div>
               )}
 
               {currentAction === "privid_face_iso" && (
@@ -1637,6 +1664,21 @@ const Ready = () => {
                 disabled={disableButtons}
               >
                 Scan Front Document
+                </button>
+                
+                <button
+                className="button"
+                onClick={handleFrontDLOCR}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Scan Front Document With Age
               </button>
               <button
                 className="button"
