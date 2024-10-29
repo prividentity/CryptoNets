@@ -5,6 +5,14 @@ let skipAntispoofProcess = false;
 let identifierGlobal = undefined;
 let collectionNameGlobal = undefined;
 
+let threshold_user_too_close = 0.8;
+let threshold_user_too_far = 0.2;
+let threshold_profile_enroll = 0.6;
+let threshold_high_vertical_enroll = -0.1;
+let threshold_down_vertical_enroll = 0.1;
+
+let stop = false;
+
 const useEnroll = ({ disableButtons, skipAntispoof = false }) => {
   const [enrollAntispoofPerformed, setEnrollAntispoofPerformed] = useState(false);
   const [enrollAntispoofStatus, setEnrollAntispoofStatus] = useState("");
@@ -31,7 +39,10 @@ const useEnroll = ({ disableButtons, skipAntispoof = false }) => {
     } else {
       setEnrollValidationStatus(result.face_validation_status);
       setEnrollAntispoofStatus(result.antispoof_status);
-      enrollUserOneFa(result.mf_token, skipAntispoofProcess, collectionNameGlobal, identifierGlobal);
+
+      if(!stop){
+        enrollUserOneFa(result.mf_token, skipAntispoofProcess, collectionNameGlobal, identifierGlobal);
+      }
     }
   };
 
@@ -48,6 +59,22 @@ const useEnroll = ({ disableButtons, skipAntispoof = false }) => {
     disableButtons(true);
 
     // eslint-disable-next-line no-unused-vars
+
+    console.log("enroll call config:",{
+      input_image_format: "rgba",
+      mf_token: token,
+      collection_name: collectionNameGlobal,
+      skip_antispoof: skipAntispoof,
+      identifier: identifierGlobal,
+      anti_spoofing_threshold:0.75,
+      threshold_user_too_close,
+      threshold_user_too_far,
+      threshold_profile_enroll,
+      threshold_high_vertical_enroll,
+      threshold_down_vertical_enroll,
+    },)
+
+    stop = false;
     const bestImage = await enroll({
       callback: callback,
       config: {
@@ -56,8 +83,12 @@ const useEnroll = ({ disableButtons, skipAntispoof = false }) => {
         collection_name: collectionNameGlobal,
         skip_antispoof: skipAntispoof,
         identifier: identifierGlobal,
-        send_original_images: true,
-        anti_spoofing_threshold: 0.75,
+        anti_spoofing_threshold:0.75,
+        threshold_user_too_close,
+        threshold_user_too_far,
+        threshold_profile_enroll,
+        threshold_high_vertical_enroll,
+        threshold_down_vertical_enroll,
       },
     });
 
@@ -67,7 +98,37 @@ const useEnroll = ({ disableButtons, skipAntispoof = false }) => {
       console.log("enroll image:", bestImagePortrait);
     }
   };
-  
+
+  const changeThresholdEnroll = ({ name, newValue }) => {
+      
+    // stop = true;
+    console.log("Changing Config:", {name, newValue})
+    switch (name) {
+      case "threshold_user_too_close":
+        console.log("threshold_user_too_close:", newValue);
+        threshold_user_too_close = newValue;
+        break;
+      case "threshold_user_too_far":
+        console.log("threshold_user_too_far:", newValue);
+        threshold_user_too_far = newValue;
+        break;
+      case "threshold_profile_enroll":
+        console.log("threshold_profile_enroll:", newValue);
+        threshold_profile_enroll = newValue;
+        break;
+
+      case "threshold_high_vertical_enroll":
+        console.log("threshold_high_vertical_enroll:", newValue);
+        threshold_high_vertical_enroll = newValue;
+        break;
+
+      case "threshold_down_vertical_enroll":
+        console.log("threshold_down_vertical_enroll:", newValue);
+        threshold_down_vertical_enroll = newValue;
+        break;
+    }
+  };
+
   return {
     enrollGUID,
     enrollPUID,
@@ -77,6 +138,7 @@ const useEnroll = ({ disableButtons, skipAntispoof = false }) => {
     enrollToken,
     enrollUserOneFa,
     enrollImageData,
+    changeThresholdEnroll,
   };
 };
 

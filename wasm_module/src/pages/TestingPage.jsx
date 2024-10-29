@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   switchCamera,
   setStopLoopContinuousAuthentication,
@@ -230,6 +230,7 @@ const Ready = () => {
     enrollToken,
     enrollUserOneFa,
     enrollImageData,
+    changeThresholdEnroll,
   } = useEnroll({ onSuccess: useEnrollSuccess, disableButtons: setDisableButtons });
   const handleEnrollOneFa = async () => {
     setShowSuccess(false);
@@ -445,11 +446,7 @@ const Ready = () => {
     await scanFrontValidity(debugContext.functionLoop);
   };
 
-  const {
-    isFound: isfoundOCR,
-    scanFrontDocument: scanFrontOCR,
-    ageOCR
-  } = useScanFrontDocumentOCR(setShowSuccess); 
+  const { isFound: isfoundOCR, scanFrontDocument: scanFrontOCR, ageOCR } = useScanFrontDocumentOCR(setShowSuccess);
 
   const handleFrontDLOCR = async () => {
     setCurrentAction("useScanDocumentFrontOCR");
@@ -977,13 +974,19 @@ const Ready = () => {
     multiframePredictPUID,
     multiframePredictUserOneFa,
     multiframePredictValidationStatus,
-  } = useMultiframePredict({ onSuccess: ()=>{}, disableButtons: setDisableButtons });
-
+  } = useMultiframePredict({ onSuccess: () => {}, disableButtons: setDisableButtons });
 
   const handleMultiframePredict = async () => {
     setCurrentAction("useMultiframePredict");
-    multiframePredictUserOneFa({mf_token: ""});
-  }
+    multiframePredictUserOneFa({ mf_token: "" });
+  };
+
+  const threshold_user_too_close_ref = useRef();
+  const threshold_user_too_far_ref = useRef();
+  const threshold_profile_enroll_ref = useRef();
+  const threshold_high_vertical_enroll_ref = useRef();
+  const threshold_down_vertical_enroll_ref = useRef();
+
   return (
     <>
       {deviceSupported.isChecking ? (
@@ -1197,8 +1200,8 @@ const Ready = () => {
                   (currentAction === "useScanDocumentFront" ||
                   currentAction === "useScanDocumentBack" ||
                   currentAction === "useScanDocumentFrontValidity" ||
-                    currentAction === "useScanHealthcareCard" ||
-                    currentAction === "useScanDocumentFrontOCR"
+                  currentAction === "useScanHealthcareCard" ||
+                  currentAction === "useScanDocumentFrontOCR"
                     ? `cameraDisplay`
                     : `cameraDisplay mirrored`) +
                   " " +
@@ -1259,6 +1262,80 @@ const Ready = () => {
                   <div>
                     Enroll PUID:&nbsp;
                     {`${enrollPUID}`}
+                  </div>
+                  <div>
+                    Controls:
+                    <div>
+                      threshold_profile_enroll
+                      <input
+                        type="number"
+                        defaultValue={0.6}
+                        ref={threshold_profile_enroll_ref}
+                        onChange={() => {
+                          changeThresholdEnroll({
+                            name: "threshold_profile_enroll",
+                            newValue: threshold_profile_enroll_ref.current.value,
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      threshold_user_too_far
+                      <input
+                        type="number"
+                        defaultValue={0.2}
+                        ref={threshold_user_too_far_ref}
+                        onChange={() => {
+                          changeThresholdEnroll({
+                            name: "threshold_user_too_far",
+                            newValue: threshold_user_too_far_ref.current.value,
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      threshold_user_too_close
+                      <input
+                        type="number"
+                        defaultValue={0.8}
+                        ref={threshold_user_too_close_ref}
+                        onChange={() => {
+                          console.log("threshold_user_too_close_ref:", threshold_user_too_close_ref.current.value);
+                          changeThresholdEnroll({
+                            name: "threshold_user_too_close",
+                            newValue: threshold_user_too_close_ref.current.value,
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      threshold_down_vertical_enroll
+                      <input
+                        type="number"
+                        defaultValue={0.1}
+                        ref={threshold_down_vertical_enroll_ref}
+                        onChange={() => {
+                          changeThresholdEnroll({
+                            name: "threshold_down_vertical_enroll",
+                            newValue: threshold_down_vertical_enroll_ref.current.value,
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      threshold_high_vertical_enroll
+                      <input
+                        type="number"
+                        defaultValue={-0.1}
+                        ref={threshold_high_vertical_enroll_ref}
+                        onChange={() => {
+                          changeThresholdEnroll({
+                            name: "threshold_high_vertical_enroll",
+                            newValue: threshold_high_vertical_enroll_ref.current.value,
+                          });
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -1467,9 +1544,9 @@ const Ready = () => {
                     </div>
                   )}
                 </div>
-                )}
-                
-                {currentAction === "useScanDocumentFrontOCR" && (
+              )}
+
+              {currentAction === "useScanDocumentFrontOCR" && (
                 <div>
                   {/* <div>{`Status Code: ${frontScanData ? frontScanData.returnValue.op_status : ""}`}</div>
                   <div>
@@ -1477,10 +1554,8 @@ const Ready = () => {
                       frontScanData ? getFrontDocumentStatusMessage(frontScanData.returnValue.op_status) : ""
                     }`}{" "}
                   </div> */}
-                  <div>{`Document 4 corners found: ${
-                    isfoundOCR ? "Document 4 corners available" : "not found"
-                  }`}</div>
-                  <div>{`Age: ${ageOCR ? age : ''}`}</div>
+                  <div>{`Document 4 corners found: ${isfoundOCR ? "Document 4 corners available" : "not found"}`}</div>
+                  <div>{`Age: ${ageOCR ? age : ""}`}</div>
                 </div>
               )}
 
@@ -1664,9 +1739,9 @@ const Ready = () => {
                 disabled={disableButtons}
               >
                 Scan Front Document
-                </button>
-                
-                <button
+              </button>
+
+              <button
                 className="button"
                 onClick={handleFrontDLOCR}
                 style={
