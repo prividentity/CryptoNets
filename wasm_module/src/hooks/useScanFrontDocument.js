@@ -126,3 +126,5 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
 };
 
 export default useScanFrontDocumentWithoutPredict;
+
+

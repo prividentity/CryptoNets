@@ -1555,7 +1555,7 @@ const Ready = () => {
                     }`}{" "}
                   </div> */}
                   <div>{`Document 4 corners found: ${isfoundOCR ? "Document 4 corners available" : "not found"}`}</div>
-                  <div>{`Age: ${ageOCR ? age : ""}`}</div>
+                  <div>{`Age: ${ageOCR ? ageOCR : ""}`}</div>
                 </div>
               )}
 
