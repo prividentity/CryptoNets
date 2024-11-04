@@ -26,9 +26,6 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
           setFaceLoginGUID(result.returnValue.guid);
           setFaceLoginPUID(result.returnValue.puid);
           disableButtons(false);
-          onSuccess();
-          disableButtons(false);
-          setShowSuccess(true);
         }
         if (result.returnValue?.status !== 0) {
           const { status, message } = result.returnValue;

@@ -2,51 +2,28 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import {
   switchCamera,
-  setStopLoopContinuousAuthentication,
   closeCamera,
-  faceCompareLocal,
   documentMugshotFaceCompare,
 } from "@privateid/cryptonets-web-sdk";
-import platform, { os } from "platform";
-
 import {
   useCamera,
   useWasm,
-  useDelete,
-  useIsValid,
   useEnrollOneFa,
-  usePredictOneFa,
-  useScanFrontDocument,
   useScanBackDocument,
 } from "../hooks";
 import {
   CANVAS_SIZE,
   canvasSizeOptions,
-  isBackCamera,
-  isMobile,
   setMax2KForMobile,
   WIDTH_TO_STANDARDS,
 } from "../utils";
 
 import "./styles.css";
-import usePredictAge from "../hooks/usePredictAge";
 import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocument";
-import usePrividFaceISO from "../hooks/usePrividFaceISO";
 import useFaceLogin from "../hooks/useFaceLogin";
-import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
-import {
-  getEnrollFaceMessage,
-  getFaceValidationMessage,
-  getFrontDocumentStatusMessage,
-  getRawFaceValidationStatus,
-} from "@privateid/cryptonets-web-sdk/dist/utils";
+import { getFrontDocumentStatusMessage, getRawFaceValidationStatus } from "@privateid/cryptonets-web-sdk/dist/utils";
 import { DebugContext } from "../context/DebugContext";
-import useContinuousPredictWithoutRestrictions from "../hooks/useContinuousPredictWithoutRestriction";
-import useMultiFramePredictAge from "../hooks/useMultiFramePredictAge";
-import useOscarLogin from "../hooks/useOscarLogin";
 import { useParams } from "react-router-dom";
-import useEnrollWithAge from "../hooks/useEnrollWithAge";
-import useTwoStepFaceLogin from "../hooks/useTwoStepFaceLogin";
 
 let callingWasm = false;
 const Ready = () => {
@@ -159,24 +136,10 @@ const Ready = () => {
     return slicedArr;
   }, [capabilities, deviceCapabilities]);
   const initialCanvasSize = WIDTH_TO_STANDARDS[settings?.width];
-  const isBack = isBackCamera(devices, device);
   const [deviceId, setDeviceId] = useState(device);
   const [devicesList] = useState(devices);
 
   const [canvasSize, setCanvasSize] = useState();
-
-  // Use Continuous Predict
-  const predictRetryTimes = 1;
-  const [continuousPredictUUID, setContinuousPredictUUID] = useState(null);
-  const [continuousPredictGUID, setContinuousPredictGUID] = useState(null);
-  const continuousPredictSuccess = (UUID, GUID) => {
-    setContinuousPredictUUID(UUID);
-    setContinuousPredictGUID(GUID);
-  };
-  const continuousOnNotFoundAndFailure = () => {
-    setContinuousPredictUUID(null);
-    setContinuousPredictGUID(null);
-  };
 
   const [currentAction, setCurrentAction] = useState(null);
   const [skipAntiSpoof, setSkipAntispoof] = useState(false);
@@ -200,19 +163,6 @@ const Ready = () => {
     }
   }, [wasmReady, cameraReady]);
 
-  const {
-    isValidCall,
-    antispoofPerformed: isValidAntispoofPerformed,
-    antispoofStatus: isValidAntispoofStatus,
-    isValidStatus: isValidStatus,
-  } = useIsValid("userVideo");
-  // isValid
-  const handleIsValid = async () => {
-    setShowSuccess(false);
-    setCurrentAction("isValid");
-    await isValidCall(skipAntiSpoof);
-  };
-
   // Enroll ONEFA
   const useEnrollSuccess = () => {
     console.log("=======ENROLL SUCCESS=======");
@@ -231,25 +181,6 @@ const Ready = () => {
     setShowSuccess(false);
     setCurrentAction("useEnrollOneFa");
     enrollUserOneFa("", skipAntiSpoof);
-  };
-
-  const handlePreidctSuccess = (result) => {
-    console.log("======PREDICT SUCCESS========");
-  };
-  const {
-    predictAntispoofPerformed,
-    predictAntispoofStatus,
-    predictGUID,
-    predictPUID,
-    predictValidationStatus,
-    predictMessage,
-    predictUserOneFa,
-  } = usePredictOneFa("userVideo", handlePreidctSuccess, 4, null, setShowSuccess, setDisableButtons);
-  const handlePredictOneFa = async () => {
-    console.log("PREDICTING");
-    setShowSuccess(false);
-    setCurrentAction("usePredictOneFa");
-    predictUserOneFa(skipAntiSpoof);
   };
 
   const handleSwitchCamera = async (e) => {
@@ -320,30 +251,6 @@ const Ready = () => {
     }
   };
 
-  // Use Delete
-  // for useDelete, first we need to get the UUID of the user by doing a predict
-  const [deletionStatus, setDeletionStatus] = useState(null);
-  const useDeleteCallback = (deleteStatus) => {
-    setDeletionStatus(deleteStatus);
-  };
-  const { loading, onDeleteUser } = useDelete(useDeleteCallback, wasmReady);
-
-  const handleDelete = async () => {
-    setShowSuccess(false);
-    setDeletionStatus(null);
-    setCurrentAction("useDelete");
-    predictUserOneFa();
-  };
-
-  // deleting
-  useEffect(() => {
-    if (currentAction === "useDelete") {
-      if (predictPUID) {
-        onDeleteUser(predictPUID);
-      }
-    }
-  }, [currentAction, predictPUID]);
-
   // Scan Document Back
   const {
     scanBackDocument,
@@ -359,58 +266,6 @@ const Ready = () => {
     setCurrentAction("useScanDocumentBack");
     await scanBackDocument(undefined, debugContext.functionLoop);
   };
-
-  const isDocumentOrBackCamera =
-    ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) || isBack;
-
-  // Predict Age
-  // const {
-  //   doPredictAge,
-  //   age,
-  //   predictAgeHasFinished,
-  //   setPredictAgeHasFinished,
-  //   antispoofPerformed: predictAgeAntispoofPerformed,
-  //   antispoofStatus: predictAgeAntispoofStatus,
-  //   validationStatus: predictAgeValidationStatus,
-  // } = usePredictAge();
-
-  const {
-    doPredictAge,
-    age,
-    predictAgeHasFinished,
-    setPredictAgeHasFinished,
-    antispoofPerformed: predictAgeAntispoofPerformed,
-    antispoofStatus: predictAgeAntispoofStatus,
-    validationStatus: predictAgeValidationStatus,
-  } = useMultiFramePredictAge();
-
-  const handlePredictAge = async () => {
-    setShowSuccess(false);
-    setCurrentAction("usePredictAge");
-    await doPredictAge(skipAntiSpoof);
-  };
-
-  // to start and stop predictAge call when on loop
-  useEffect(() => {
-    // const doUsePredictAge = async () => {
-    //   await doPredictAge(skipAntiSpoof);
-    // };
-    // if (debugContext.functionLoop) {
-    //   if (currentAction === "usePredictAge" && predictAgeHasFinished) {
-    //     setPredictAgeHasFinished(false);
-    //   }
-    //   if (currentAction === "usePredictAge" && !predictAgeHasFinished) {
-    //     doUsePredictAge();
-    //   }
-    //   if (currentAction !== "usePredictAge" && predictAgeHasFinished) {
-    //     setPredictAgeHasFinished(false);
-    //   }
-    // } else {
-    //   setPredictAgeHasFinished(false);
-    // }
-  }, [currentAction, predictAgeHasFinished, debugContext.functionLoop]);
-
-  // Scan Front DL without predict
 
   const {
     isFound: isfoundValidity,
@@ -451,13 +306,6 @@ const Ready = () => {
     }
   };
 
-  const { doFaceISO, inputImage, faceISOImageData, faceISOStatus, faceISOError } = usePrividFaceISO();
-
-  const handlePrividFaceISO = () => {
-    setCurrentAction("privid_face_iso");
-    doFaceISO(debugContext.functionLoop);
-  };
-
   const handleReopenCamera = async () => {
     setReady(false);
     await closeCamera();
@@ -467,113 +315,6 @@ const Ready = () => {
   const handleCloseCamera = async () => {
     await closeCamera();
   };
-
-  const [uploadImage1, setUploadImage1] = useState(null);
-  const [uploadImage2, setUploadImage2] = useState(null);
-
-  const handleUploadImage1 = async (e) => {
-    console.log(e.target.files);
-    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
-    if (e.target.files.length > 0) {
-      if (imageRegex.test(e.target.files[0].type)) {
-        const imageUrl = URL.createObjectURL(e.target.files[0]);
-        console.log(e.target.files[0]);
-
-        const getBase64 = (file) => {
-          return new Promise((resolve, reject) => {
-            var reader = new FileReader();
-            reader.readAsDataURL(file);
-
-            reader.onload = function () {
-              resolve(reader.result);
-            };
-            reader.onerror = function (error) {
-              reject(error);
-            };
-          });
-        };
-
-        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
-        var newImg = new Image();
-        newImg.src = base64;
-        newImg.onload = async () => {
-          var imgSize = {
-            w: newImg.width,
-            h: newImg.height,
-          };
-          alert(imgSize.w + " " + imgSize.h);
-          const canvas = document.createElement("canvas");
-          canvas.setAttribute("height", `${imgSize.h}`);
-          canvas.setAttribute("width", `${imgSize.w}`);
-          var ctx = canvas.getContext("2d");
-          ctx.drawImage(newImg, 0, 0);
-
-          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
-          console.log("imageData", imageData);
-          setUploadImage1(imageData);
-        };
-      } else {
-        console.log("INVALID IMAGE TYPE");
-      }
-    }
-  };
-  const handleUploadImage2 = async (e) => {
-    console.log(e.target.files);
-    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg|image[/]gif/;
-    if (e.target.files.length > 0) {
-      if (imageRegex.test(e.target.files[0].type)) {
-        const imageUrl = URL.createObjectURL(e.target.files[0]);
-
-        console.log(e.target.files[0]);
-
-        const getBase64 = (file) => {
-          return new Promise((resolve, reject) => {
-            var reader = new FileReader();
-            reader.readAsDataURL(file);
-
-            reader.onload = function () {
-              resolve(reader.result);
-            };
-            reader.onerror = function (error) {
-              reject(error);
-            };
-          });
-        };
-
-        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
-        console.log("====> GIF TEST: ", { base64 });
-        var newImg = new Image();
-        newImg.src = base64;
-        newImg.onload = async () => {
-          var imgSize = {
-            w: newImg.width,
-            h: newImg.height,
-          };
-          alert(imgSize.w + " " + imgSize.h);
-          const canvas = document.createElement("canvas");
-          canvas.setAttribute("height", `${imgSize.h}`);
-          canvas.setAttribute("width", `${imgSize.w}`);
-          var ctx = canvas.getContext("2d");
-          ctx.drawImage(newImg, 0, 0);
-
-          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
-          console.log("imageData", imageData);
-          setUploadImage2(imageData);
-        };
-      } else {
-        console.log("INVALID IMAGE TYPE");
-      }
-    }
-  };
-
-  const handleDoCompare = async () => {
-    const callback = (result) => {
-      console.log("COMPARE RESULT", result);
-    };
-
-    await documentMugshotFaceCompare(callback, uploadImage1, uploadImage2);
-  };
-
   // Face Login
   const {
     doFaceLogin,
@@ -591,53 +332,8 @@ const Ready = () => {
     doFaceLogin(skipAntiSpoof);
   };
 
-  // Face Login
-  const {
-    doOscarLogin,
-    oscarLoginAntispoofPerformed,
-    oscarLoginAntispoofStatus,
-    oscarLoginGUID,
-    oscarLoginMessage,
-    oscarLoginPUID,
-    oscarLoginValidationStatus,
-  } = useOscarLogin("userVideo", () => {}, null, deviceId, setShowSuccess, setDisableButtons);
-
-  const handleOscarLogin = async () => {
-    setShowSuccess(false);
-    setCurrentAction("useOscarLogin");
-    doOscarLogin(skipAntiSpoof);
-  };
-
-  // Scan Healthcare Card
-  const { croppedDocumentBase64, doScanHealthcareCard } = useScanHealthcareCard(setShowSuccess);
-
-  const handleUseScanHealhcareCard = async () => {
-    setShowSuccess(false);
-    setCurrentAction("useScanHealthcareCard");
-    doScanHealthcareCard(undefined, debugContext.functionLoop);
-  };
-
   const handleCopyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-  };
-
-  // const handleLivenessCheck = async () => {
-  //   setCurrentAction("livenessCheck");
-  //   resetAllLivenessValues();
-  //   await doLivenessCheck();
-  // };
-
-  const {
-    continuousPredictWithoutRestrictionsGUID,
-    continuousPredictWithoutRestrictionsMessage,
-    continuousPredictWithoutRestrictionsPUID,
-    continuousPredictWithoutRestrictionsValidationStatus,
-    doContinuousPredictWithoutRestrictions,
-  } = useContinuousPredictWithoutRestrictions(setShowSuccess);
-
-  const handleBurningMan = () => {
-    setCurrentAction("useContinuousPredictWithoutRestrictions");
-    doContinuousPredictWithoutRestrictions();
   };
 
   const handleFocusChange = async (val) => {
@@ -771,94 +467,6 @@ const Ready = () => {
       // eslint-disable-next-line no-console
       console.log(e);
     }
-  };
-
-  // Enroll With Age
-  const {
-    ewaAge,
-    ewaGUID,
-    ewaPUID,
-    ewaAntispoofPerformed,
-    ewaAntispoofStatus,
-    ewaToken,
-    ewaValidationStatus,
-    enrollWithAge,
-  } = useEnrollWithAge("userVideo", () => {}, null, deviceId, setShowSuccess, setDisableButtons);
-
-  const handleEnrollWithAge = async () => {
-    setCurrentAction("enrollWithAge");
-    await enrollWithAge("");
-  };
-
-  const [uploadImage3, setUploadImage3] = useState(null);
-  const handleUploadImage3 = async (e) => {
-    console.log(e.target.files);
-    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg|image[/]gif/;
-    if (e.target.files.length > 0) {
-      if (imageRegex.test(e.target.files[0].type)) {
-        const imageUrl = URL.createObjectURL(e.target.files[0]);
-
-        console.log(e.target.files[0]);
-
-        const getBase64 = (file) => {
-          return new Promise((resolve, reject) => {
-            var reader = new FileReader();
-            reader.readAsDataURL(file);
-
-            reader.onload = function () {
-              resolve(reader.result);
-            };
-            reader.onerror = function (error) {
-              reject(error);
-            };
-          });
-        };
-
-        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
-        console.log("====> GIF TEST: ", { base64 });
-        var newImg = new Image();
-        newImg.src = base64;
-        newImg.onload = async () => {
-          var imgSize = {
-            w: newImg.width,
-            h: newImg.height,
-          };
-          alert(imgSize.w + " " + imgSize.h);
-          const canvas = document.createElement("canvas");
-          canvas.setAttribute("height", `${imgSize.h}`);
-          canvas.setAttribute("width", `${imgSize.w}`);
-          var ctx = canvas.getContext("2d");
-          ctx.drawImage(newImg, 0, 0);
-
-          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
-          console.log("imageData", imageData);
-          setUploadImage3(imageData);
-        };
-      } else {
-        console.log("INVALID IMAGE TYPE");
-      }
-    }
-  };
-
-  const doBackDlScanFromImage = () => {};
-
-  function iOS() {
-    return ["iPad Simulator", "iPhone Simulator", "iPod Simulator", "iPad", "iPhone", "iPod"].includes(
-      navigator.platform
-    );
-  }
-
-  const {
-    doTwoStepFaceLogin,
-    faceLoginMessage: twoStepFaceLoginMessage,
-    faceLoginGUID: twoStepFaceLoginGUID,
-    faceLoginPUID: twoStepFaceLoginPUID,
-    faceLoginValidationStatus: twoStepFaceLoginStatus
-  } = useTwoStepFaceLogin(setShowSuccess);
-
-  const handleTwoStepFaceLogin = async () => {
-    setCurrentAction("twoStepFaceLogin");
-    await doTwoStepFaceLogin();
   };
 
   return (
@@ -1053,21 +661,6 @@ const Ready = () => {
                   <span> {getRawFaceValidationStatus(faceLoginValidationStatus)} </span>
                 </div>
               )}
-              {currentAction === "useOscarLogin" && (
-                <div className="enrollDisplay">
-                  <span> {getRawFaceValidationStatus(oscarLoginValidationStatus)} </span>
-                </div>
-              )}
-              {currentAction === "usePredictOneFa" && (
-                <div className="enrollDisplay">
-                  <span> {getRawFaceValidationStatus(predictValidationStatus)} </span>
-                </div>
-              )}
-              {currentAction === "useContinuousPredictWithoutRestrictions" && (
-                <div className="enrollDisplay">
-                  <span> {getRawFaceValidationStatus(continuousPredictWithoutRestrictionsValidationStatus)} </span>
-                </div>
-              )}
               <video
                 id="userVideo"
                 className={
@@ -1087,11 +680,6 @@ const Ready = () => {
                 autoPlay
                 playsInline
               />
-              {currentAction === "usePredictAge" && age > 0 && (
-                <div className="age-box">
-                  <div>{Math.round(age)}</div>
-                </div>
-              )}
             </div>
 
             <div>
@@ -1140,75 +728,6 @@ const Ready = () => {
                 </div>
               )}
 
-              {currentAction === "enrollWithAge" && (
-                <div>
-                  <div> Enroll Token: {ewaToken} </div>
-                  <div>
-                    Antispoof Performed:
-                    {JSON.stringify(ewaAntispoofPerformed)}
-                  </div>
-                  <div> Antispoof Status: {ewaAntispoofStatus} </div>
-                  <div> Validation Status: {ewaValidationStatus} </div>
-                  <div>
-                    Enroll GUID:&nbsp;
-                    {`${ewaGUID}`}
-                  </div>
-                  <div>
-                    Enroll PUID:&nbsp;
-                    {`${ewaPUID}`}
-                  </div>
-                  <div>
-                    Age Predicted:
-                    {`${ewaAge}`}
-                  </div>
-                </div>
-              )}
-
-              {currentAction === "isValid" && (
-                <div>
-                  <div>{`Antispoof Performed: ${isValidAntispoofPerformed}`}</div>
-                  <div>{`Antispoof Status: ${isValidAntispoofStatus}`}</div>
-                  <div> {`Is Valid Status Code: ${isValidStatus}`} </div>
-                </div>
-              )}
-
-              {currentAction === "usePredictAge" && (
-                <div>
-                  <div>{`Antispoof Performed: ${predictAgeAntispoofPerformed}`}</div>
-                  <div>{`Antispoof Status: ${predictAgeAntispoofStatus}`}</div>
-                  <div>{`Validataion Status: ${predictAgeValidationStatus}`}</div>
-                </div>
-              )}
-
-              {currentAction === "usePredictOneFa" && (
-                <div>
-                  <div>{`Status: ${predictValidationStatus}`} </div>
-                  <div>{`Message: ${predictMessage || ""}`}</div>
-                  <div>{`Antispoof Performed: ${predictAntispoofPerformed}`}</div>
-                  <div>{`Antispoof Status: ${predictAntispoofStatus}`}</div>
-                  <div>{`Predicted GUID: ${predictGUID}`}</div>
-                  <div>{`Predicted PUID: ${predictPUID}`}</div>
-                </div>
-              )}
-
-              {currentAction === "useContinuousPredictWithoutRestrictions" && (
-                <div>
-                  <div>{`Status: ${continuousPredictWithoutRestrictionsValidationStatus}`} </div>
-                  <div>{`Message: ${continuousPredictWithoutRestrictionsMessage || ""}`}</div>
-                  <div>{`Predicted GUID: ${continuousPredictWithoutRestrictionsGUID}`}</div>
-                  <div>{`Predicted PUID: ${continuousPredictWithoutRestrictionsPUID}`}</div>
-                </div>
-              )}
-
-              {/* {currentAction === "useContinuousPredict" && (
-                <div>
-                  <div>{`Face Valid: ${continuousFaceDetected ? "Face Detected" : "Face not detected"}`}</div>
-                  <div>{`Message: ${continuousPredictMessage || ""}`}</div>
-                  <div>{`Predicted GUID: ${continuousPredictGUID ? continuousPredictGUID : ""}`}</div>
-                  <div>{`Predicted PUID: ${continuousPredictUUID ? continuousPredictUUID : ""}`}</div>
-                </div>
-              )} */}
-
               {currentAction === "useFaceLogin" && (
                 <div>
                   <div>{`Face Login Status: ${faceLoginValidationStatus}`} </div>
@@ -1217,33 +736,6 @@ const Ready = () => {
                   <div>{`Antispoof Status: ${faceLoginAntispoofStatus}`} </div>
                   <div>{`Face Login GUID: ${faceLoginGUID}`}</div>
                   <div>{`Face Login PUID: ${faceLoginPUID}`}</div>
-                </div>
-              )}
-
-              {currentAction === "twoStepFaceLogin" && (
-                <div>
-                  <div>{`Face Login Status: ${twoStepFaceLoginStatus}`} </div>
-                  <div>{`Message: ${twoStepFaceLoginMessage || ""}`}</div>
-                  <div>{`Face Login GUID: ${twoStepFaceLoginGUID}`}</div>
-                  <div>{`Face Login PUID: ${twoStepFaceLoginPUID}`}</div>
-                </div>
-              )}
-
-              {currentAction === "useOscarLogin" && (
-                <div>
-                  <div>{`Face Login Status: ${oscarLoginValidationStatus}`} </div>
-                  <div>{`Message: ${oscarLoginMessage || ""}`}</div>
-                  <div>{`Antispoof Performed: ${oscarLoginAntispoofPerformed}`} </div>
-                  <div>{`Antispoof Status: ${oscarLoginAntispoofStatus}`} </div>
-                  <div>{`Face Login GUID: ${oscarLoginGUID}`}</div>
-                  <div>{`Face Login PUID: ${oscarLoginPUID}`}</div>
-                </div>
-              )}
-
-              {currentAction === "useDelete" && (
-                <div>
-                  <div>{`Deletion Status: ${deletionStatus}`}</div>
-                  <div>{`User PUID: ${predictPUID}`}</div>
                 </div>
               )}
 
@@ -1319,55 +811,9 @@ const Ready = () => {
                   )}
                 </div>
               )}
-
-              {currentAction === "privid_face_iso" && (
-                <div style={{ display: "flex", gap: "30px", flexWrap: "wrap", flexDirection: "column" }}>
-                  <div>
-                    <h2>Output Image:</h2>
-                    {faceISOImageData && <img style={{ maxWidth: "400px" }} src={faceISOImageData} />}
-                  </div>
-                </div>
-              )}
-
-              {currentAction === "livenessCheck" && (
-                <div>
-                  <div>{`Progress: ${livenessProgress}`}</div>
-                  <div>{`Final Result: ${finalResult}`}</div>
-                  <div>{`Status Code: ${result}`}</div>
-                  <div>{`Status Message: ${resultMessage}`}</div>
-                </div>
-              )}
             </div>
 
             <div id="module_functions" className="buttonContainer">
-              <button
-                className="button"
-                style={
-                  disableButtons
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                onClick={handleIsValid}
-                disabled={disableButtons}
-              >
-                Is Valid
-              </button>
-              <button
-                className="button"
-                onClick={handlePredictAge}
-                style={
-                  disableButtons
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
-              >
-                Multiframe Age Predict
-              </button>
               <button
                 className="button"
                 onClick={handleEnrollOneFa}
@@ -1384,35 +830,6 @@ const Ready = () => {
               </button>
               <button
                 className="button"
-                onClick={handleEnrollWithAge}
-                style={
-                  disableButtons && currentAction !== "enrollWithAge"
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
-              >
-                Enroll With Age
-              </button>
-
-              <button
-                className="button"
-                onClick={handlePredictOneFa}
-                style={
-                  disableButtons && currentAction !== "usePredictOneFa"
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
-              >
-                Predict
-              </button>
-              <button
-                className="button"
                 onClick={handleFaceLogin}
                 style={
                   disableButtons && currentAction !== "useFaceLogin"
@@ -1424,53 +841,6 @@ const Ready = () => {
                 disabled={disableButtons}
               >
                 Face Login
-              </button>
-              {/* <button
-                className="button"
-                onClick={handleOscarLogin}
-                style={
-                  disableButtons && currentAction !== "useOscarLogin"
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
-              >
-                Oscar Login
-              </button> */}
-              {/* <button className="button" onClick={handleContinuousPredict}>
-                Continuous Authentication
-              </button> */}
-
-              <button
-                className="button"
-                onClick={handleBurningMan}
-                style={
-                  disableButtons && currentAction !== "useContinuousPredictWithoutRestrictions"
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
-              >
-                Continuous Authentication (No Restrictions)
-              </button>
-
-              <button
-                className="button"
-                onClick={handleDelete}
-                style={
-                  disableButtons
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
-              >
-                Delete
               </button>
               <button
                 className="button"
@@ -1500,104 +870,6 @@ const Ready = () => {
               >
                 Scan Back Document
               </button>
-              {/* <button
-                className="button"
-                onClick={handlePrividFaceISO}
-                style={
-                  disableButtons
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
-              >
-                Face ISO
-              </button> */}
-              <button
-                className="button"
-                onClick={handleUseScanHealhcareCard}
-                style={
-                  disableButtons
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
-              >
-                Healthcare Card Scan
-              </button>
-
-              <button
-                className="button"
-                onClick={handleTwoStepFaceLogin}
-                style={
-                  disableButtons
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
-              >
-                Do Two Step Face Login
-              </button>
-              {/* <button
-                className="button"
-                onClick={handleLivenessCheck}
-                style={
-                  disableButtons
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
-              >
-                Liveness Check
-              </button> */}
-            </div>
-
-            <div>
-              <p> Upload 2 images to use document and face compare: </p>
-              <label>
-                <input
-                  type="file"
-                  name="upload"
-                  accept="image/png, image/gif, image/jpeg"
-                  onChange={handleUploadImage1}
-                  style={{ display: "none" }}
-                />
-                <span className="button">Cropped Document Image</span>
-              </label>
-              <label>
-                <input
-                  type="file"
-                  name="upload"
-                  accept="image/png, image/gif, image/jpeg"
-                  onChange={handleUploadImage2}
-                  style={{ display: "none" }}
-                />
-                <span className="button">Face Image</span>
-              </label>
-
-              <button className="button" onClick={handleDoCompare}>
-                Do Compare
-              </button>
-
-              <label>
-                <input
-                  type="file"
-                  name="upload"
-                  accept="image/png, image/gif, image/jpeg"
-                  onChange={handleUploadImage3}
-                  style={{ display: "none" }}
-                />
-                <span className="button">Upload Back Dl Test</span>
-              </label>
-
-              <button onClick={doBackDlScanFromImage}>Handle back dl Scan</button>
             </div>
           </div>
         </div>
