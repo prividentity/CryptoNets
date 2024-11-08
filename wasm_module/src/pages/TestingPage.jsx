@@ -6,7 +6,7 @@ import {
   closeCamera,
   faceCompareLocal,
   documentMugshotFaceCompare,
-} from "@privateid/cryptonets-web-sdk-alpha";
+} from "@privateid/cryptonets-web-sdk";
 import platform, { os } from "platform";
 
 import {
@@ -40,7 +40,7 @@ import {
   getFaceValidationMessage,
   getFrontDocumentStatusMessage,
   getRawFaceValidationStatus,
-} from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
+} from "@privateid/cryptonets-web-sdk/dist/utils";
 import { DebugContext } from "../context/DebugContext";
 import useContinuousPredictWithoutRestrictions from "../hooks/useContinuousPredictWithoutRestriction";
 import useMultiFramePredictAge from "../hooks/useMultiFramePredictAge";
@@ -681,6 +681,7 @@ const Ready = () => {
           },
         ],
       });
+
       const newSettings = await track.getSettings();
 
       console.log("new Settings", newSettings);
@@ -1206,8 +1207,9 @@ const Ready = () => {
                     : `cameraDisplay mirrored`) +
                   " " +
                   (showSuccess ? "cameraDisplaySuccess" : "") +
-                  " " +
-                  (iOS() ? "cameraObjectFitFill" : "")
+                  " "
+                  // +
+                  // (iOS() ? "cameraObjectFitFill" : "")
                 }
                 muted
                 autoPlay

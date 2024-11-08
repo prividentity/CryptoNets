@@ -1,4 +1,4 @@
-import { convertCroppedImage, enroll } from "@privateid/cryptonets-web-sdk-alpha";
+import { convertCroppedImage, enroll } from "@privateid/cryptonets-web-sdk";
 import { useState } from "react";
 
 let skipAntispoofProcess = false;

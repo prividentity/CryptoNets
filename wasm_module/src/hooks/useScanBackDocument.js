@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { convertCroppedImage, backScanDocument } from "@privateid/cryptonets-web-sdk-alpha";
+import { convertCroppedImage, backScanDocument } from "@privateid/cryptonets-web-sdk";
 import { CANVAS_SIZE } from "../utils";
 
 let internalCanvasSize;

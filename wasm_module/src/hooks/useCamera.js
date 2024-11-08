@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { useState } from "react";
-import { openCamera } from "@privateid/cryptonets-web-sdk-alpha";
-import { mapDevices } from "../utils";
+import { openCamera } from "@privateid/cryptonets-web-sdk";
+import { iOS, mapDevices } from "../utils";
 import platform, { os } from "platform";
 
 const useCamera = (
@@ -136,6 +136,9 @@ const useCamera = (
           cameraSettings = {...settings, contrast: true};
         }
         setCameraSettingsList(cameraSettings);
+        if(!iOS()) {
+          setAutoFocusForWindows();
+        }
       }
     } catch (e) {
       console.log("Error Message", e);
@@ -166,6 +169,26 @@ const useCamera = (
   };
 
   return { ready, init, devices, device, setDevice, faceMode, ...cameraFeatures, setReady };
+};
+
+export const setAutoFocusForWindows = async () => {
+  const video = document.getElementById("userVideo");
+  const mediaStream = video.srcObject;
+  const track = await mediaStream.getTracks()[0];
+  const capabilities = track.getCapabilities() ? track.getCapabilities() : null;
+  if (
+      capabilities &&
+      capabilities?.zoom
+  ) {
+    // @ts-ignore
+    await track.applyConstraints({
+      advanced: [
+        {
+          zoom: capabilities?.zoom,
+        },
+      ],
+    });
+  }
 };
 
 export default useCamera;

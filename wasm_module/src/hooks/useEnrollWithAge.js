@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { enroll, predictImageAge } from "@privateid/cryptonets-web-sdk-alpha";
+import { enroll, predictImageAge } from "@privateid/cryptonets-web-sdk";
 
 let skipAntispoofProcess = false;
 const useEnrollWithAge = (

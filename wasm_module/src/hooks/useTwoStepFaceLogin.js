@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { twoStepFaceLogin } from "@privateid/cryptonets-web-sdk-alpha";
-import { getStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
+import { twoStepFaceLogin } from "@privateid/cryptonets-web-sdk";
+import { getStatusMessage } from "@privateid/cryptonets-web-sdk/dist/utils";
 
 const useTwoStepFaceLogin = (setShowSuccess = () => {}) => {
   const [faceLoginMessage, setFaceLoginMessage] = useState("");

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { predict } from "@privateid/cryptonets-web-sdk-alpha";
-import { getStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
+import { predict } from "@privateid/cryptonets-web-sdk";
+import { getStatusMessage } from "@privateid/cryptonets-web-sdk/dist/utils";
 
 let loop = true;
 let skipAntispoofProcess = false;

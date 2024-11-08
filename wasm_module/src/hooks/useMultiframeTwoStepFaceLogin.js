@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { multiframeTwoStepFaceLogin } from "@privateid/cryptonets-web-sdk-alpha";
-import { getStatusMessage } from "@privateid/cryptonets-web-sdk-alpha/dist/utils";
+import { multiframeTwoStepFaceLogin } from "@privateid/cryptonets-web-sdk";
+import { getStatusMessage } from "@privateid/cryptonets-web-sdk/dist/utils";
 
 const useMultiframeTwoStepFaceLogin = (setShowSuccess = () => {}) => {
   const [faceLoginMessage, setFaceLoginMessage] = useState("");
