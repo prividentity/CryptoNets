@@ -1,9 +1,9 @@
 export { default as useCamera } from "./useCamera";
 export { default as useContinuousPredict } from "./useContinuousAuthentication";
 export { default as useDelete } from "./useDelete";
-export { default as useEnrollOneFa } from "./useEnrollOneFa";
+export { default as useEnroll } from "./useEnroll";
 export { default as useIsValid } from "./useIsValid";
-export { default as usePredictOneFa } from "./usePredictOneFa";
+export { default as usePredict } from "./usePredict";
 export { default as useScanBackDocument } from "./useScanBackDocument";
 export { default as useScanFrontDocument } from "./useScanFrontDocument";
 export { default as useWasm } from "./useWasm";

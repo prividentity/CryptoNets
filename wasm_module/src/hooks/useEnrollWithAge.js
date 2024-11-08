@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { enroll1FA, predictImageAge } from "@privateid/cryptonets-web-sdk";
+import { enroll, predictImageAge } from "@privateid/cryptonets-web-sdk";
 
 let skipAntispoofProcess = false;
 const useEnrollWithAge = (
@@ -29,7 +29,7 @@ const useEnrollWithAge = (
     enrollTokenCurrent = token;
     disableButtons(true);
     // eslint-disable-next-line no-unused-vars
-    const bestImage = await enroll1FA(callback, {
+    const bestImage = await enroll(callback, {
       input_image_format: "rgba",
       mf_token: token,
     });

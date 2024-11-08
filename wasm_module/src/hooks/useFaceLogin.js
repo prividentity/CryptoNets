@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { faceLogin } from "@privateid/cryptonets-web-sdk";
-const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId = null, setShowSuccess, disableButtons) => {
+const useFaceLogin = (
+  element = "userVideo",
+  onSuccess,
+  retryTimes = 4,
+  deviceId = null,
+  setShowSuccess,
+  disableButtons
+) => {
   const [faceLoginMessage, setFaceLoginMessage] = useState("");
 
   const [faceLoginAntispoofPerformed, setFaceLoginAntispoofPerformed] = useState("");
@@ -13,42 +20,25 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
   const callback = async (result) => {
     console.log("faceLogin callback hook result:", result);
 
-    switch (result.status) {
-      case "WASM_RESPONSE":
-        if (result.returnValue?.status === 0) {
-          const { message } = result.returnValue;
-          setFaceLoginMessage(message);
-          onSuccess(result.returnValue);
-          setShowSuccess(true);
-          setFaceLoginAntispoofPerformed(result.returnValue.anti_spoof_performed || "");
-          setFaceLoginAntispoofStatus(result.returnValue.anti_spoof_status || "");
-          setFaceLoginValidationStatus(result.returnValue.status);
-          setFaceLoginGUID(result.returnValue.guid);
-          setFaceLoginPUID(result.returnValue.puid);
-          disableButtons(false);
-          onSuccess();
-          disableButtons(false);
-          setShowSuccess(true);
-        }
-        if (result.returnValue?.status !== 0) {
-          const { status, message } = result.returnValue;
-          setFaceLoginMessage(message);
-          setFaceLoginAntispoofPerformed(result.returnValue.anti_spoof_performed);
-          setFaceLoginAntispoofStatus(result.returnValue.anti_spoof_status);
-          setFaceLoginValidationStatus(result.returnValue.status);
-          setFaceLoginGUID(result.returnValue.guid);
-          setFaceLoginPUID(result.returnValue.puid);
-          doFaceLogin(skipAntispoofProcess, true);
-        }
-        break;
-      default:
+    if (result.guid && result.puid) {
+      setFaceLoginGUID(result.guid);
+      setFaceLoginPUID(result.puid);
+      setFaceLoginAntispoofStatus(result.antispoof_status);
+      setFaceLoginValidationStatus(result.face_validation_status);
+      setShowSuccess(true);
+      disableButtons(false);
+      onSuccess();
+    } else {
+      setFaceLoginAntispoofStatus(result.antispoof_status);
+      setFaceLoginValidationStatus(result.face_validation_status);
+      doFaceLogin(skipAntispoofProcess, true);
     }
   };
 
-  const doFaceLogin = async (skipAntispoof=true, isRunning = false) => {
+  const doFaceLogin = async (skipAntispoof = true, isRunning = false) => {
     // eslint-disable-next-line no-unused-vars
     skipAntispoofProcess = skipAntispoof;
-    if(!isRunning){
+    if (!isRunning) {
       setFaceLoginAntispoofPerformed("");
       setFaceLoginAntispoofStatus("");
       setFaceLoginValidationStatus("");
@@ -56,10 +46,15 @@ const useFaceLogin = (element = "userVideo", onSuccess, retryTimes = 4, deviceId
       setFaceLoginPUID("");
       disableButtons(true);
     }
-   
-    await faceLogin(callback, {
-      skipAntispoof: skipAntispoof,
-      conf_score_thr_barcode: 85,
+
+    await faceLogin({
+      callback: callback,
+      config: {
+        skipAntispoof: skipAntispoof,
+        conf_score_thr_barcode: 85,
+        anti_spoofing_threshold: 0.75,
+        send_original_images: true,
+      },
     });
   };
 

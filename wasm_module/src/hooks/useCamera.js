@@ -45,7 +45,10 @@ const useCamera = (
         stream,
         errorMessage,
         capabilities,
-      } = await openCamera(element, requireHd, null, "front", resolution);
+      } = await openCamera({ videoElementId: element, requestFaceMode:"front", canvasResolution:{
+        width:1440,
+        height:1440
+      } } );
       setCameraFeatures({ settings, capabilities });
       setFaceMode(faceMode);
       console.log({ devices, faceMode, settings, status, stream, errorMessage, capabilities });
@@ -62,29 +65,29 @@ const useCamera = (
       //     platform.os.family
       //   )
       // ) {
-      //   const setCameraFocus = async () => {
-      //     try {
-      //       const video = document.getElementById("userVideo");
-      //       const mediaStream = video.srcObject;
-      //       const track = await mediaStream.getTracks()[0];
-      //       const capabilities = track.getCapabilities();
-      //       if (typeof capabilities.focusDistance !== "undefined") {
-      //         await track.applyConstraints({
-      //           advanced: [
-      //             {
-      //               focusMode: capabilities.focusMode.includes("continuous") ? "continuous" : "manual",
-      //               focusDistance: 100,
-      //             },
-      //           ],
-      //         });
-      //       }
-      //     } catch (e) {
-      //       // eslint-disable-next-line no-console
-      //       console.log(e);
-      //     }
-      //   };
-      //   await setCameraFocus();
-      // }
+        const setCameraFocus = async () => {
+          try {
+            const video = document.getElementById("userVideo");
+            const mediaStream = video.srcObject;
+            const track = await mediaStream.getTracks()[0];
+            const capabilities = track.getCapabilities();
+            if (typeof capabilities.focusDistance !== "undefined") {
+              await track.applyConstraints({
+                advanced: [
+                  {
+                    focusMode: capabilities.focusMode.includes("continuous") ? "continuous" : "manual",
+                    focusDistance: 50,
+                  },
+                ],
+              });
+            }
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.log(e);
+          }
+        };
+        await setCameraFocus();
+      //}
       console.log("capabilities:", capabilities);
       console.log("settings", settings);
       if (capabilities) {

@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   switchCamera,
   setStopLoopContinuousAuthentication,
@@ -14,8 +14,8 @@ import {
   useWasm,
   useDelete,
   useIsValid,
-  useEnrollOneFa,
-  usePredictOneFa,
+  useEnroll,
+  usePredict,
   useScanFrontDocument,
   useScanBackDocument,
 } from "../hooks";
@@ -31,6 +31,7 @@ import {
 import "./styles.css";
 import usePredictAge from "../hooks/usePredictAge";
 import useScanFrontDocumentWithoutPredict from "../hooks/useScanFrontDocument";
+import useScanFrontDocumentOCR from "../hooks/useScanFrontDocumentOCR";
 import usePrividFaceISO from "../hooks/usePrividFaceISO";
 import useFaceLogin from "../hooks/useFaceLogin";
 import useScanHealthcareCard from "../hooks/useScanHealthcareCard";
@@ -47,6 +48,8 @@ import useOscarLogin from "../hooks/useOscarLogin";
 import { useParams } from "react-router-dom";
 import useEnrollWithAge from "../hooks/useEnrollWithAge";
 import useTwoStepFaceLogin from "../hooks/useTwoStepFaceLogin";
+import useMultiframeTwoStepFaceLogin from "../hooks/useMultiframeTwoStepFaceLogin";
+import useMultiframePredict from "../hooks/useMultiframePredict";
 
 let callingWasm = false;
 const Ready = () => {
@@ -226,14 +229,22 @@ const Ready = () => {
     enrollValidationStatus,
     enrollToken,
     enrollUserOneFa,
-  } = useEnrollOneFa("userVideo", useEnrollSuccess, null, deviceId, setShowSuccess, setDisableButtons);
+    enrollImageData,
+    changeThresholdEnroll,
+  } = useEnroll({ onSuccess: useEnrollSuccess, disableButtons: setDisableButtons });
   const handleEnrollOneFa = async () => {
     setShowSuccess(false);
     setCurrentAction("useEnrollOneFa");
     enrollUserOneFa("", skipAntiSpoof);
   };
 
-  const handlePreidctSuccess = (result) => {
+  const handleEnrollUrl = async (url) => {
+    setShowSuccess(false);
+    setCurrentAction("useEnrollOneFa");
+    enrollUserOneFa("", skipAntiSpoof, url, "test");
+  };
+
+  const handlePredictSuccess = () => {
     console.log("======PREDICT SUCCESS========");
   };
   const {
@@ -244,12 +255,19 @@ const Ready = () => {
     predictValidationStatus,
     predictMessage,
     predictUserOneFa,
-  } = usePredictOneFa("userVideo", handlePreidctSuccess, 4, null, setShowSuccess, setDisableButtons);
+  } = usePredict({ onSuccess: handlePredictSuccess, disableButtons: setDisableButtons });
   const handlePredictOneFa = async () => {
     console.log("PREDICTING");
     setShowSuccess(false);
     setCurrentAction("usePredictOneFa");
     predictUserOneFa(skipAntiSpoof);
+  };
+
+  const handlePredictUrl = async (url) => {
+    console.log("PREDICTING");
+    setShowSuccess(false);
+    setCurrentAction("usePredictWithUrl");
+    predictUserOneFa(skipAntiSpoof, url, "test");
   };
 
   const handleSwitchCamera = async (e) => {
@@ -353,15 +371,16 @@ const Ready = () => {
     croppedDocumentImage: croppedBackDocumentBase64,
     clearStatusBackScan,
   } = useScanBackDocument(setShowSuccess);
+
   const handleScanDocumentBack = async () => {
-    setShowSuccess(false);
+    // setShowSuccess(false);
     clearStatusBackScan();
     setCurrentAction("useScanDocumentBack");
-    await scanBackDocument(undefined, debugContext.functionLoop);
+    await scanBackDocument();
   };
 
-  const isDocumentOrBackCamera =
-    ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) || isBack;
+  // const isDocumentOrBackCamera =
+  //   ["useScanDocumentBack", "useScanDocumentFront", "useScanDocumentFrontValidity"].includes(currentAction) || isBack;
 
   // Predict Age
   // const {
@@ -416,40 +435,46 @@ const Ready = () => {
     isFound: isfoundValidity,
     scanFrontDocument: scanFrontValidity,
     confidenceValue,
-    predictMugshotImageData,
     isMugshotFound,
     croppedDocumentImage,
     predictMugshotImage,
+    predictMugshotImageData,
     frontScanData,
   } = useScanFrontDocumentWithoutPredict(setShowSuccess);
-
   const handleFrontDLValidity = async () => {
     setCurrentAction("useScanDocumentFrontValidity");
     await scanFrontValidity(debugContext.functionLoop);
   };
 
-  const handleCanvasSize = async (e, skipSwitchCamera = false) => {
-    if (currentAction === "useScanFrontValidity" || currentAction === "useScanDocumentBack") {
-      // setShouldTriggerCallback(false);
-      setCanvasSize(e.target.value);
-      const canvasSize = CANVAS_SIZE[e.target.value];
-      if (!skipSwitchCamera) {
-        const { capabilities = {} } = await switchCamera(null, deviceId || device, canvasSize);
-        setDeviceCapabilities(capabilities);
-      }
-      // setShouldTriggerCallback(true);
+  const { isFound: isfoundOCR, scanFrontDocument: scanFrontOCR, ageOCR } = useScanFrontDocumentOCR(setShowSuccess);
 
-      if (currentAction === "useScanFrontValidity") {
-        setTimeout(async () => {
-          await useScanFrontDocumentWithoutPredict(e.target.value);
-        }, 1000);
-      } else {
-        setTimeout(async () => {
-          await scanBackDocument(e.target.value);
-        }, 3000);
-      }
-    }
+  const handleFrontDLOCR = async () => {
+    setCurrentAction("useScanDocumentFrontOCR");
+    await scanFrontOCR(debugContext.functionLoop);
   };
+
+  // const handleCanvasSize = async (e, skipSwitchCamera = false) => {
+  //   if (currentAction === "useScanFrontValidity" || currentAction === "useScanDocumentBack") {
+  //     // setShouldTriggerCallback(false);
+  //     setCanvasSize(e.target.value);
+  //     const canvasSize = CANVAS_SIZE[e.target.value];
+  //     if (!skipSwitchCamera) {
+  //       const { capabilities = {} } = await switchCamera(null, deviceId || device, canvasSize);
+  //       setDeviceCapabilities(capabilities);
+  //     }
+  //     // setShouldTriggerCallback(true);
+
+  //     if (currentAction === "useScanFrontValidity") {
+  //       setTimeout(async () => {
+  //         await useScanFrontDocumentWithoutPredict(e.target.value);
+  //       }, 1000);
+  //     } else {
+  //       setTimeout(async () => {
+  //         await scanBackDocument(e.target.value);
+  //       }, 1000);
+  //     }
+  //   }
+  // };
 
   const { doFaceISO, inputImage, faceISOImageData, faceISOStatus, faceISOError } = usePrividFaceISO();
 
@@ -472,6 +497,7 @@ const Ready = () => {
   const [uploadImage2, setUploadImage2] = useState(null);
 
   const handleUploadImage1 = async (e) => {
+    console.log("clicked");
     console.log(e.target.files);
     const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg/;
     if (e.target.files.length > 0) {
@@ -840,7 +866,63 @@ const Ready = () => {
     }
   };
 
+  const handlePredictWithImage = () => {
+    predictUserOneFa(false, undefined, undefined, uploadImage3);
+  };
+
   const doBackDlScanFromImage = () => {};
+
+  const [uploadImage4, setUploadImage4] = useState(null);
+  const handleUploadImage4 = async (e) => {
+    console.log(e.target.files);
+    const imageRegex = /image[/]jpg|image[/]png|image[/]jpeg|image[/]gif/;
+    if (e.target.files.length > 0) {
+      if (imageRegex.test(e.target.files[0].type)) {
+        const imageUrl = URL.createObjectURL(e.target.files[0]);
+
+        console.log(e.target.files[0]);
+
+        const getBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+
+            reader.onload = function () {
+              resolve(reader.result);
+            };
+            reader.onerror = function (error) {
+              reject(error);
+            };
+          });
+        };
+
+        const base64 = await getBase64(e.target.files[0]); // prints the base64 string
+        console.log("====> GIF TEST: ", { base64 });
+        var newImg = new Image();
+        newImg.src = base64;
+        newImg.onload = async () => {
+          var imgSize = {
+            w: newImg.width,
+            h: newImg.height,
+          };
+          alert(imgSize.w + " " + imgSize.h);
+          const canvas = document.createElement("canvas");
+          canvas.setAttribute("height", `${imgSize.h}`);
+          canvas.setAttribute("width", `${imgSize.w}`);
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(newImg, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, imgSize.w, imgSize.h);
+          console.log("imageData", imageData);
+          setUploadImage4(imageData);
+        };
+      } else {
+        console.log("INVALID IMAGE TYPE");
+      }
+    }
+  };
+
+  const doFrontDlScanFromImage = () => {};
 
   function iOS() {
     return ["iPad Simulator", "iPhone Simulator", "iPod Simulator", "iPad", "iPhone", "iPod"].includes(
@@ -853,13 +935,58 @@ const Ready = () => {
     faceLoginMessage: twoStepFaceLoginMessage,
     faceLoginGUID: twoStepFaceLoginGUID,
     faceLoginPUID: twoStepFaceLoginPUID,
-    faceLoginValidationStatus: twoStepFaceLoginStatus
+    faceLoginValidationStatus: twoStepFaceLoginStatus,
+    faceLoginAntispoofStatus: twoStepFaceLoginAntispoofStatus,
   } = useTwoStepFaceLogin(setShowSuccess);
 
   const handleTwoStepFaceLogin = async () => {
     setCurrentAction("twoStepFaceLogin");
     await doTwoStepFaceLogin();
   };
+
+  const handleDocumentMugshotFaceCompare = () => {
+    console.log("comparing start!!!");
+    const callback = (result) => {
+      console.log("compare result", result);
+    };
+    documentMugshotFaceCompare(callback, enrollImageData, predictMugshotImageData);
+  };
+
+  const {
+    doTwoStepFaceLogin: doTwoStepMultiframeFaceLogin,
+    faceLoginGUID: twoStepMultiframeFaceLoginGUID,
+    faceLoginPUID: twoStepMultiframeFaceLoginPUID,
+    faceLoginAntispoofPerformed: twoStepMultiframeFaceLoginAntispoofPerformed,
+    faceLoginAntispoofStatus: twoStepMultiframeFaceLoginAntispoofStatus,
+    faceLoginValidationStatus: twoStepMultiframeFaceLoginValidationStatus,
+    faceLoginMessage: twoStepMultiframeFaceLoginMessage,
+  } = useMultiframeTwoStepFaceLogin(setShowSuccess);
+
+  const handleMultiframeTwoStepFaceLogin = () => {
+    setCurrentAction("useMultiframeTwoStepFaceLogin");
+    doTwoStepMultiframeFaceLogin();
+  };
+
+  const {
+    multiframePredictAntispoofPerformed,
+    multiframePredictAntispoofStatus,
+    multiframePredictGUID,
+    multiframePredictMessage,
+    multiframePredictPUID,
+    multiframePredictUserOneFa,
+    multiframePredictValidationStatus,
+  } = useMultiframePredict({ onSuccess: () => {}, disableButtons: setDisableButtons });
+
+  const handleMultiframePredict = async () => {
+    setCurrentAction("useMultiframePredict");
+    multiframePredictUserOneFa({ mf_token: "" });
+  };
+
+  const threshold_user_too_close_ref = useRef();
+  const threshold_user_too_far_ref = useRef();
+  const threshold_profile_enroll_ref = useRef();
+  const threshold_high_vertical_enroll_ref = useRef();
+  const threshold_down_vertical_enroll_ref = useRef();
 
   return (
     <>
@@ -1074,7 +1201,8 @@ const Ready = () => {
                   (currentAction === "useScanDocumentFront" ||
                   currentAction === "useScanDocumentBack" ||
                   currentAction === "useScanDocumentFrontValidity" ||
-                  currentAction === "useScanHealthcareCard"
+                  currentAction === "useScanHealthcareCard" ||
+                  currentAction === "useScanDocumentFrontOCR"
                     ? `cameraDisplay`
                     : `cameraDisplay mirrored`) +
                   " " +
@@ -1137,6 +1265,80 @@ const Ready = () => {
                     Enroll PUID:&nbsp;
                     {`${enrollPUID}`}
                   </div>
+                  {/* <div>
+                    Controls:
+                    <div>
+                      threshold_profile_enroll
+                      <input
+                        type="number"
+                        defaultValue={0.6}
+                        ref={threshold_profile_enroll_ref}
+                        onChange={() => {
+                          changeThresholdEnroll({
+                            name: "threshold_profile_enroll",
+                            newValue: threshold_profile_enroll_ref.current.value,
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      threshold_user_too_far
+                      <input
+                        type="number"
+                        defaultValue={0.2}
+                        ref={threshold_user_too_far_ref}
+                        onChange={() => {
+                          changeThresholdEnroll({
+                            name: "threshold_user_too_far",
+                            newValue: threshold_user_too_far_ref.current.value,
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      threshold_user_too_close
+                      <input
+                        type="number"
+                        defaultValue={0.8}
+                        ref={threshold_user_too_close_ref}
+                        onChange={() => {
+                          console.log("threshold_user_too_close_ref:", threshold_user_too_close_ref.current.value);
+                          changeThresholdEnroll({
+                            name: "threshold_user_too_close",
+                            newValue: threshold_user_too_close_ref.current.value,
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      threshold_down_vertical_enroll
+                      <input
+                        type="number"
+                        defaultValue={0.1}
+                        ref={threshold_down_vertical_enroll_ref}
+                        onChange={() => {
+                          changeThresholdEnroll({
+                            name: "threshold_down_vertical_enroll",
+                            newValue: threshold_down_vertical_enroll_ref.current.value,
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      threshold_high_vertical_enroll
+                      <input
+                        type="number"
+                        defaultValue={-0.1}
+                        ref={threshold_high_vertical_enroll_ref}
+                        onChange={() => {
+                          changeThresholdEnroll({
+                            name: "threshold_high_vertical_enroll",
+                            newValue: threshold_high_vertical_enroll_ref.current.value,
+                          });
+                        }}
+                      />
+                    </div>
+                  </div> */}
                 </div>
               )}
 
@@ -1191,6 +1393,17 @@ const Ready = () => {
                 </div>
               )}
 
+              {currentAction === "useMultiframePredict" && (
+                <div>
+                  <div>{`Status: ${multiframePredictValidationStatus}`} </div>
+                  <div>{`Message: ${multiframePredictMessage || ""}`}</div>
+                  <div>{`Antispoof Performed: ${multiframePredictAntispoofPerformed}`}</div>
+                  <div>{`Antispoof Status: ${multiframePredictAntispoofStatus}`}</div>
+                  <div>{`Predicted GUID: ${multiframePredictGUID}`}</div>
+                  <div>{`Predicted PUID: ${multiframePredictPUID}`}</div>
+                </div>
+              )}
+
               {currentAction === "useContinuousPredictWithoutRestrictions" && (
                 <div>
                   <div>{`Status: ${continuousPredictWithoutRestrictionsValidationStatus}`} </div>
@@ -1222,10 +1435,21 @@ const Ready = () => {
 
               {currentAction === "twoStepFaceLogin" && (
                 <div>
-                  <div>{`Face Login Status: ${twoStepFaceLoginStatus}`} </div>
+                  <div>{`Face Validation Status: ${twoStepFaceLoginStatus}`} </div>
+                  <div>{`Antispoof Status: ${twoStepFaceLoginAntispoofStatus}`} </div>
                   <div>{`Message: ${twoStepFaceLoginMessage || ""}`}</div>
                   <div>{`Face Login GUID: ${twoStepFaceLoginGUID}`}</div>
                   <div>{`Face Login PUID: ${twoStepFaceLoginPUID}`}</div>
+                </div>
+              )}
+
+              {currentAction === "useMultiframeTwoStepFaceLogin" && (
+                <div>
+                  <div>{`Face Validation Status: ${twoStepMultiframeFaceLoginValidationStatus}`} </div>
+                  <div>{`Antispoof Status: ${twoStepMultiframeFaceLoginAntispoofStatus}`} </div>
+                  <div>{`Message: ${twoStepMultiframeFaceLoginMessage || ""}`}</div>
+                  <div>{`Face Login GUID: ${twoStepMultiframeFaceLoginGUID}`}</div>
+                  <div>{`Face Login PUID: ${twoStepMultiframeFaceLoginPUID}`}</div>
                 </div>
               )}
 
@@ -1251,15 +1475,19 @@ const Ready = () => {
                 <div>
                   <h2> {`Barcode Status Code: ${barcodeStatusCode}`}</h2>
                   <div>{`Scanned code data: ${scannedCodeData ? "success" : "not found"}`}</div>
-                  <div>{`First Name: ${scannedCodeData ? scannedCodeData.firstName : ""}`}</div>
-                  <div>{`Middle Name: ${scannedCodeData ? scannedCodeData.middleName : ""}`}</div>
-                  <div>{`Last Name: ${scannedCodeData ? scannedCodeData.lastName : ""}`}</div>
-                  <div>{`Date of Birth: ${scannedCodeData ? scannedCodeData.dateOfBirth : ""}`}</div>
-                  <div>{`Gender: ${scannedCodeData ? scannedCodeData.gender : ""}`}</div>
-                  <div>{`Street Address1: ${scannedCodeData ? scannedCodeData.streetAddress1 : ""}`}</div>
-                  <div>{`Street Address2: ${scannedCodeData ? scannedCodeData.streetAddress2 : ""}`}</div>
-                  <div>{`City: ${scannedCodeData ? scannedCodeData.city : ""}`}</div>
-                  <div>{`Postal Code: ${scannedCodeData ? scannedCodeData.postCode : ""}`}</div>
+                  <div>{`First Name: ${scannedCodeData ? scannedCodeData?.barcode_data?.first_name : ""}`}</div>
+                  <div>{`Middle Name: ${scannedCodeData ? scannedCodeData?.barcode_data?.middle_name : ""}`}</div>
+                  <div>{`Last Name: ${scannedCodeData ? scannedCodeData?.barcode_data?.last_name : ""}`}</div>
+                  <div>{`Date of Birth: ${scannedCodeData ? scannedCodeData?.barcode_data?.date_of_birth : ""}`}</div>
+                  <div>{`Gender: ${scannedCodeData ? scannedCodeData?.barcode_data?.gender : ""}`}</div>
+                  <div>{`Street Address1: ${
+                    scannedCodeData ? scannedCodeData?.barcode_data?.street_address1 : ""
+                  }`}</div>
+                  <div>{`Street Address2: ${
+                    scannedCodeData ? scannedCodeData?.barcode_data?.street_address2 : ""
+                  }`}</div>
+                  <div>{`City: ${scannedCodeData ? scannedCodeData?.barcode_data?.city : ""}`}</div>
+                  <div>{`Postal Code: ${scannedCodeData ? scannedCodeData?.barcode_data?.postal_code : ""}`}</div>
                   <div style={{ display: "flex", gap: "5px" }}>
                     {croppedBarcodeBase64 && (
                       <button
@@ -1287,12 +1515,12 @@ const Ready = () => {
 
               {currentAction === "useScanDocumentFrontValidity" && (
                 <div>
-                  <div>{`Status Code: ${frontScanData ? frontScanData.returnValue.op_status : ""}`}</div>
+                  {/* <div>{`Status Code: ${frontScanData ? frontScanData.returnValue.op_status : ""}`}</div>
                   <div>
                     {`Status Message: ${
                       frontScanData ? getFrontDocumentStatusMessage(frontScanData.returnValue.op_status) : ""
                     }`}{" "}
-                  </div>
+                  </div> */}
                   <div>{`Document 4 corners found: ${
                     isfoundValidity ? "Document 4 corners available" : "not found"
                   }`}</div>
@@ -1317,6 +1545,19 @@ const Ready = () => {
                       </button>
                     </div>
                   )}
+                </div>
+              )}
+
+              {currentAction === "useScanDocumentFrontOCR" && (
+                <div>
+                  {/* <div>{`Status Code: ${frontScanData ? frontScanData.returnValue.op_status : ""}`}</div>
+                  <div>
+                    {`Status Message: ${
+                      frontScanData ? getFrontDocumentStatusMessage(frontScanData.returnValue.op_status) : ""
+                    }`}{" "}
+                  </div> */}
+                  <div>{`Document 4 corners found: ${isfoundOCR ? "Document 4 corners available" : "not found"}`}</div>
+                  <div>{`Age: ${ageOCR ? ageOCR : ""}`}</div>
                 </div>
               )}
 
@@ -1413,6 +1654,21 @@ const Ready = () => {
               </button>
               <button
                 className="button"
+                onClick={handleMultiframePredict}
+                style={
+                  disableButtons && currentAction !== "useMultiframePredict"
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Multiframe-Predict
+              </button>
+
+              <button
+                className="button"
                 onClick={handleFaceLogin}
                 style={
                   disableButtons && currentAction !== "useFaceLogin"
@@ -1486,6 +1742,21 @@ const Ready = () => {
               >
                 Scan Front Document
               </button>
+
+              <button
+                className="button"
+                onClick={handleFrontDLOCR}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Scan Front Document With Age
+              </button>
               <button
                 className="button"
                 onClick={handleScanDocumentBack}
@@ -1500,20 +1771,9 @@ const Ready = () => {
               >
                 Scan Back Document
               </button>
-              {/* <button
-                className="button"
-                onClick={handlePrividFaceISO}
-                style={
-                  disableButtons
-                    ? {
-                        backgroundColor: "gray",
-                      }
-                    : {}
-                }
-                disabled={disableButtons}
-              >
+              <button className="button" onClick={handlePrividFaceISO}>
                 Face ISO
-              </button> */}
+              </button>
               <button
                 className="button"
                 onClick={handleUseScanHealhcareCard}
@@ -1543,6 +1803,21 @@ const Ready = () => {
               >
                 Do Two Step Face Login
               </button>
+              <button
+                className="button"
+                onClick={handleMultiframeTwoStepFaceLogin}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Do Multiframe Two Step Face Login
+              </button>
+
               {/* <button
                 className="button"
                 onClick={handleLivenessCheck}
@@ -1556,6 +1831,73 @@ const Ready = () => {
                 disabled={disableButtons}
               >
                 Liveness Check
+              </button> */}
+            </div>
+
+            <div>
+              <button
+                className="button"
+                onClick={() => {
+                  handlePredictUrl("collection_d");
+                }}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Predict URL 1 with Identifier
+              </button>
+              <button
+                className="button"
+                onClick={() => {
+                  handleEnrollUrl("collection_d");
+                }}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Enroll URL 1 with Identifier
+              </button>
+              {/* <button
+                className="button"
+                onClick={()=>{ 
+                  handlePredictUrl("collection2");
+                }}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Predict URL 2
+              </button>
+              <button
+                className="button"
+                onClick={()=>{
+                  handleEnrollUrl("collection2");
+                }}
+                style={
+                  disableButtons
+                    ? {
+                        backgroundColor: "gray",
+                      }
+                    : {}
+                }
+                disabled={disableButtons}
+              >
+                Enroll URL 2
               </button> */}
             </div>
 
@@ -1582,11 +1924,11 @@ const Ready = () => {
                 <span className="button">Face Image</span>
               </label>
 
-              <button className="button" onClick={handleDoCompare}>
+              <button className="button" onClick={handleDocumentMugshotFaceCompare}>
                 Do Compare
               </button>
 
-              <label>
+              {/* {/* <label>
                 <input
                   type="file"
                   name="upload"
@@ -1595,9 +1937,22 @@ const Ready = () => {
                   style={{ display: "none" }}
                 />
                 <span className="button">Upload Back Dl Test</span>
-              </label>
+              </label> 
 
               <button onClick={doBackDlScanFromImage}>Handle back dl Scan</button>
+            */}
+              <label>
+                <input
+                  type="file"
+                  name="upload"
+                  accept="image/png, image/gif, image/jpeg"
+                  onChange={handleUploadImage3}
+                  style={{ display: "none" }}
+                />
+                <span className="button">UPLOAD FACEt</span>
+              </label>
+
+              <button onClick={handlePredictWithImage}>Predict Face Uploaded</button>
             </div>
           </div>
         </div>
