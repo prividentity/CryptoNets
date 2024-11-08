@@ -80,15 +80,6 @@ const useEnroll = ({ disableButtons, skipAntispoof = false }) => {
       config: {
         input_image_format: "rgba",
         mf_token: token,
-        collection_name: collectionNameGlobal,
-        skip_antispoof: skipAntispoof,
-        identifier: identifierGlobal,
-        anti_spoofing_threshold:0.75,
-        threshold_user_too_close,
-        threshold_user_too_far,
-        threshold_profile_enroll,
-        threshold_high_vertical_enroll,
-        threshold_down_vertical_enroll,
       },
     });
 

@@ -1263,7 +1263,7 @@ const Ready = () => {
                     Enroll PUID:&nbsp;
                     {`${enrollPUID}`}
                   </div>
-                  <div>
+                  {/* <div>
                     Controls:
                     <div>
                       threshold_profile_enroll
@@ -1336,7 +1336,7 @@ const Ready = () => {
                         }}
                       />
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               )}
 
