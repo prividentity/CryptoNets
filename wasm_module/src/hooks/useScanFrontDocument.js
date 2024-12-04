@@ -24,6 +24,7 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
   const documentCallback = (result) => {
     console.log("Front scan callback result:", result);
     setFrontScanData(result);
+    setScanResult(result.doc_validation_status);
     if (result.doc_validation_status === 0) {
       setIsFound(true);
       setResultValue(result);

@@ -435,6 +435,7 @@ const Ready = () => {
     isFound: isfoundValidity,
     scanFrontDocument: scanFrontValidity,
     confidenceValue,
+    scanResult,
     isMugshotFound,
     croppedDocumentImage,
     predictMugshotImage,
@@ -1513,8 +1514,8 @@ const Ready = () => {
 
               {currentAction === "useScanDocumentFrontValidity" && (
                 <div>
-                  {/* <div>{`Status Code: ${frontScanData ? frontScanData.returnValue.op_status : ""}`}</div>
-                  <div>
+                  <div>{`Status Code: ${scanResult}`}</div>
+                  {/* <div>
                     {`Status Message: ${
                       frontScanData ? getFrontDocumentStatusMessage(frontScanData.returnValue.op_status) : ""
                     }`}{" "}
