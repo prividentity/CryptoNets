@@ -103,6 +103,9 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
     } = await scanFrontDocumentModule({
       callback: documentCallback,
       image: uploadData,
+      config: {
+        blur_threshold_doc: 1000
+      }
     });
 
     setPredictMugshotRaw(croppedMugshot);
