@@ -104,7 +104,7 @@ const useScanFrontDocumentWithoutPredict = (setShowSuccess) => {
       callback: documentCallback,
       image: uploadData,
       config: {
-        blur_threshold_doc: 1200
+        blur_threshold_doc: 1500
       }
     });
 
