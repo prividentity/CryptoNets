@@ -36,6 +36,10 @@ const useCamera = (
 
   const init = async (requireHd = false) => {
     if (ready) return;
+
+    console.log("Platform: ", navigator.platform);
+    console.log("OS CPU: ", navigator.oscpu);
+    console.log("User Agent: ", navigator.userAgent)
     try {
       const {
         devices = [],
@@ -60,11 +64,6 @@ const useCamera = (
       }
       setReady(true);
       console.log(platform.os.family);
-      // if (
-      //   ["Windows", "Windows Server 2008 R2 / 7", "Windows Server 2008 / Vista", "Windows XP"].includes(
-      //     platform.os.family
-      //   )
-      // ) {
         const setCameraFocus = async () => {
           try {
             const video = document.getElementById("userVideo");
@@ -140,29 +139,6 @@ const useCamera = (
     } catch (e) {
       console.log("Error Message", e);
     }
-    // const setCameraFocus = async () => {
-    //   try {
-    //     const video = document.getElementById("userVideo");
-    //     const mediaStream = video.srcObject;
-    //     const track = await mediaStream.getTracks()[0];
-    //     const capabilities = track.getCapabilities();
-    //     if (typeof capabilities.focusDistance !== "undefined") {
-    //       await track.applyConstraints({
-    //         advanced: [
-    //           {
-    //             //focusMode: capabilities.focusMode.includes("continuous") ? "continuous" : "manual",
-    //             // focusDistance: 1,
-    //             width: {ideal: 1280}
-    //           },
-    //         ],
-    //       });
-    //     }
-    //   } catch (e) {
-    //     // eslint-disable-next-line no-console
-    //     console.log(e);
-    //   }
-    // };
-    // await setCameraFocus();
   };
 
   return { ready, init, devices, device, setDevice, faceMode, ...cameraFeatures, setReady };
