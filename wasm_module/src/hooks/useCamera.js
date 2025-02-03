@@ -34,6 +34,17 @@ const useCamera = (
   const [faceMode, setFaceMode] = useState(false);
   const [cameraFeatures, setCameraFeatures] = useState({});
 
+
+  const isSurfaceProWindows = () => {
+    if(navigator.platform === "windows"){
+      return true;
+    }
+
+    if(navigator.oscpu === "win32"){
+      return true
+    }
+  }
+
   const init = async (requireHd = false) => {
     if (ready) return;
 
@@ -49,7 +60,7 @@ const useCamera = (
         stream,
         errorMessage,
         capabilities,
-      } = await openCamera({ videoElementId: element, requestFaceMode:"front", canvasResolution:{
+      } = await openCamera({ videoElementId: element, requestFaceMode: isSurfaceProWindows()? "front" : "", canvasResolution:{
         width:1440,
         height:1440
       } } );
