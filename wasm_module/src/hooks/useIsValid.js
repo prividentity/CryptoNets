@@ -9,10 +9,9 @@ const useIsValid = (element = "userVideo", deviceId = null) => {
   const callback = (response) => {
     console.log("isValid Response:", response);
 
-    if (response?.returnValue?.faces?.length > 0) {
-      setAntispoofPerformed(response?.returnValue?.faces[0].anti_spoof_performed);
-      setAntispoofStatus(response?.returnValue?.faces[0].anti_spoof_status);
-      setIsValidStatus(response?.returnValue?.faces[0].status);
+    if (response?.call_status === 0) {
+      setAntispoofStatus(response?.antispoof_status);
+      setIsValidStatus(response?.face_validation_status);
     } else {
       setAntispoofPerformed("");
       setAntispoofStatus("");
@@ -23,10 +22,11 @@ const useIsValid = (element = "userVideo", deviceId = null) => {
 
   const isValidCall = async (skipAntispoof = true) => {
     // eslint-disable-next-line no-unused-vars
-    await isValid(callback, null, {
-      input_image_format: "rgba",
-      gray_scale_variance_threshold: 100.0,
-      gray_scale_threshold: 14,
+    await isValid({
+      callback,
+      config: {
+        input_image_format: "rgba",
+      },
     });
   };
 
